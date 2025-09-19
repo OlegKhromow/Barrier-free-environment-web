@@ -1,0 +1,51 @@
+<nav class="bg-light-olive-green text-deep-jungle-green shadow-md">
+  <div class="w-full px-4">
+    <div class="flex justify-between items-center h-14">
+
+      <!-- Лого -->
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl font-bold">PLM_router</span>
+      </div>
+
+      <!-- Меню -->
+      <div class="hidden md:flex space-x-6">
+        <a routerLink="/map" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
+          Карта
+        </a>
+        <a routerLink="/routes" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
+          Маршрути
+        </a>
+        <a routerLink="/accessibility" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
+          Доступність
+        </a>
+        <a routerLink="/about" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
+          Про проєкт
+        </a>
+      </div>
+
+      <!-- Бургер-меню для мобільних -->
+      <div class="md:hidden">
+        <button (click)="toggleMenu()"
+                class="focus:outline-none focus:ring-2 focus:ring-white">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Мобільне меню -->
+  @if (isOpen) {
+    <div class="md:hidden light-olive-green-background">
+      <a routerLink="/map" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Карта</a>
+      <a routerLink="/routes" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Маршрути</a>
+      <a routerLink="/accessibility" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Доступність</a>
+      <a routerLink="/about" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Про проєкт</a>
+    </div>
+  }
+</nav>
