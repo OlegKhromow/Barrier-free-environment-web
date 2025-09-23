@@ -1,10 +1,10 @@
 import {Component, Input} from '@angular/core';
 import {Location} from '../../core/models/location';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-location-sidebar',
-  imports: [CommonModule],
+  imports: [CommonModule, NgOptimizedImage],
   templateUrl: './location-sidebar.component.html',
   styleUrl: './location-sidebar.component.css'
 })

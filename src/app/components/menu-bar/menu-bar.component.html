@@ -8,19 +8,29 @@
       </div>
 
       <!-- Меню -->
-      <div class="hidden md:flex space-x-6">
+      <div class="hidden md:flex space-x-6 items-center">
         <a routerLink="/map" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
           Карта
-        </a>
-        <a routerLink="/routes" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
-          Маршрути
-        </a>
-        <a routerLink="/accessibility" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
-          Доступність
         </a>
         <a routerLink="/about" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
           Про проєкт
         </a>
+
+        @if (!isLogin){
+          <button (click)="openLogin()"
+                class="ml-4 px-4 py-1 rounded-lg bg-deep-jungle-green text-light-olive-green font-semibold hover:bg-light-olive-green hover:text-deep-jungle-green transition">
+          Увійти
+        </button>
+        } @else {
+          <a routerLink="/cabinet" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
+            Мій кабінет
+          </a>
+          <button (click)="logout()"
+                  class="ml-4 px-4 py-1 rounded-lg bg-deep-jungle-green text-light-olive-green font-semibold hover:bg-light-olive-green hover:text-deep-jungle-green transition">
+            Вийти
+          </button>
+        }
+
       </div>
 
       <!-- Бургер-меню для мобільних -->
@@ -43,9 +53,11 @@
   @if (isOpen) {
     <div class="md:hidden light-olive-green-background">
       <a routerLink="/map" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Карта</a>
-      <a routerLink="/routes" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Маршрути</a>
-      <a routerLink="/accessibility" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Доступність</a>
       <a routerLink="/about" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Про проєкт</a>
+      <button (click)="openLogin()"
+              class="ml-4 px-4 py-1 rounded-lg bg-deep-jungle-green text-light-olive-green font-semibold hover:bg-light-olive-green hover:text-deep-jungle-green transition">
+        Увійти
+      </button>
     </div>
   }
 </nav>
