@@ -26,11 +26,13 @@ export class Location {
     public rejectionReason: string | null
   ) {}
 
+  /** широта (latitude) — другий елемент масиву */
   public get latitude(): number {
-    return this.coordinates.coordinates[0];
+    return this.coordinates.coordinates[1];
   }
 
+  /** довгота (longitude) — перший елемент масиву */
   public get longitude(): number {
-    return this.coordinates.coordinates[1];
+    return this.coordinates.coordinates[0];
   }
 }

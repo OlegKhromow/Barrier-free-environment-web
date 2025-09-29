@@ -23,16 +23,32 @@ export class MapPage implements AfterViewInit {
   private locationService: LocationService = inject(LocationService);
 
   ngAfterViewInit(): void {
-    this.fetchLocations();
     this.initMap();
+    this.fetchLocations();
   }
 
   private fetchLocations(): void {
     this.locationService.getLocations().subscribe({
-      next: value => this.locations = value,
-      error: err => console.error(err.error?.message)
-    })
+      next: value => {
+        console.log('Locations from API:', value);
+        this.locations = value;
+        this.addMarkers(); // create markers after data arrives
+      },
+      error: err => console.error('Error loading locations:', err)
+    });
   }
+
+  private addMarkers(): void {
+    this.locations?.forEach(location => {
+      const iconUrl = `assets/map-markers/1.png`;
+      const icon = this.createMarkerIcon(iconUrl, [35, 40]);
+      const marker = L.marker([location.latitude, location.longitude], {icon}).addTo(this.map);
+      marker.on('click', () => this.clickOnMarker(location, marker));
+      this.markers.push({marker, iconUrl, baseSize: [35, 40]});
+    });
+  }
+
+
 
   private initMap(): void {
     this.map = L.map('map', {
