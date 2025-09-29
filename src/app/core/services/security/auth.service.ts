@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {environment} from '../../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/environment';
 import {BehaviorSubject, Subject, tap} from 'rxjs';
 
 @Injectable({
