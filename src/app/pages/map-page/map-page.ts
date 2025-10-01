@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import {AfterViewInit, Component, inject} from '@angular/core';
 import * as L from 'leaflet';
 import {Location} from '../../core/models/location';
@@ -7,12 +8,14 @@ import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-map-page',
+  standalone: true,          // якщо ще не standalone, додай
   imports: [
+    CommonModule,             // <-- обов’язково
     LocationSidebarComponent,
     RouterLink
   ],
   templateUrl: './map-page.html',
-  styleUrl: './map-page.css'
+  styleUrls: ['./map-page.css'] // поправив typo styleUrl → styleUrls
 })
 export class MapPage implements AfterViewInit {
   private map!: L.Map;
@@ -30,10 +33,21 @@ export class MapPage implements AfterViewInit {
     this.fetchLocations();
   }
 
-  enableAddingMode(): void {
-    this.addingMode = true;
-    this.map.getContainer().style.cursor = 'crosshair'; // курсор як при виборі
+  toggleAddingMode(): void {
+    this.addingMode = !this.addingMode;
+
+    if (this.addingMode) {
+      this.map.getContainer().style.cursor = 'crosshair'; // режим вибору
+    } else {
+      this.map.getContainer().style.cursor = ''; // нормальний курсор
+      // Якщо був тимчасовий маркер і ми відмінили — прибираємо його
+      if (this.tempMarker) {
+        this.map.removeLayer(this.tempMarker);
+        this.tempMarker = null;
+      }
+    }
   }
+
 
 
 

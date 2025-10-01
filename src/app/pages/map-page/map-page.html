@@ -7,13 +7,18 @@
 
     <!-- Контейнер для карти -->
     <div class="flex-1 relative">
-      <!-- Кнопка Додати локацію -->
+      <!-- Кнопка Додати/Відмінити локацію -->
+      <!-- Кнопка Додати/Відмінити локацію -->
       <button
-        (click)="enableAddingMode()"
-        class="absolute z-[500] bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition"
+        (click)="toggleAddingMode()"
+        [ngClass]="addingMode
+    ? 'bg-red-600 hover:bg-red-700'
+    : 'bg-blue-600 hover:bg-blue-700'"
+        class="absolute z-[500] bottom-4 right-4 text-white px-4 py-2 rounded-full shadow-lg transition"
       >
-        ➕ Додати локацію
+        {{ addingMode ? '✖ Відмінити' : '➕ Додати локацію' }}
       </button>
+
 
       <div id="map" class="absolute inset-0 z-0"></div>
     </div>
