@@ -19,6 +19,9 @@ export class MapPage implements AfterViewInit {
   locations: Location[] | undefined;
   selectedLocation: Location | null = null;
   markers: any [] = [];
+  addingMode = false;
+  tempMarker: L.Marker | null = null;
+
 
   private locationService: LocationService = inject(LocationService);
 
@@ -26,6 +29,14 @@ export class MapPage implements AfterViewInit {
     this.initMap();
     this.fetchLocations();
   }
+
+  enableAddingMode(): void {
+    this.addingMode = true;
+    this.map.getContainer().style.cursor = 'crosshair'; // курсор як при виборі
+  }
+
+
+
 
   private fetchLocations(): void {
     this.locationService.getLocations().subscribe({
@@ -77,6 +88,26 @@ export class MapPage implements AfterViewInit {
         m.marker.setIcon(newIcon);
       });
     });
+
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+      if (this.addingMode) {
+        // Якщо вже був тимчасовий маркер – прибираємо
+        if (this.tempMarker) {
+          this.map.removeLayer(this.tempMarker);
+        }
+
+        const coords = e.latlng;
+        this.tempMarker = L.marker([coords.lat, coords.lng]).addTo(this.map);
+
+        // Вимикаємо режим після вибору точки
+        this.addingMode = false;
+        this.map.getContainer().style.cursor = '';
+
+        // Відкрити форму (тут замість alert зробиш відкриття свого LocationSidebar або діалога)
+        alert(`Створення локації\nLat: ${coords.lat}\nLng: ${coords.lng}`);
+      }
+    });
+
 
     // // Додаємо точки по кліку
     // this.map.on('click', (e: L.LeafletMouseEvent) => {

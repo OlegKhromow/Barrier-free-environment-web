@@ -1,19 +1,21 @@
 <div class="flex h-full">
-
   <div class="flex flex-1">
-    <app-location-sidebar class="w-1/5 bg-gray-100 border-l border-gray-300 p-4" [location]="selectedLocation"></app-location-sidebar>
+    <app-location-sidebar
+      class="w-1/5 bg-gray-100 border-l border-gray-300 p-4"
+      [location]="selectedLocation">
+    </app-location-sidebar>
 
     <!-- Контейнер для карти -->
     <div class="flex-1 relative">
-      <!-- Посилання поверх карти -->
-      <a
-        [routerLink]="['/add-location']"
-        class="absolute z-[500] bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition no-underline"
+      <!-- Кнопка Додати локацію -->
+      <button
+        (click)="enableAddingMode()"
+        class="absolute z-[500] bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition"
       >
         ➕ Додати локацію
-      </a>
-      <div id="map" class="absolute inset-0 z-0"></div>
+      </button>
 
+      <div id="map" class="absolute inset-0 z-0"></div>
     </div>
   </div>
 </div>
