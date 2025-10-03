@@ -5,6 +5,9 @@ import {Location} from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
 import {LocationSidebarComponent} from '../../components/location-sidebar/location-sidebar.component';
 import {RouterLink} from '@angular/router';
+import {MatDialog} from '@angular/material/dialog';
+import {LocationCreateFormComponent} from '../../components/location-create-form/location-create-form.component';
+
 
 @Component({
   selector: 'app-map-page',
@@ -24,6 +27,7 @@ export class MapPage implements AfterViewInit {
   markers: any [] = [];
   addingMode = false;
   tempMarker: L.Marker | null = null;
+  private dialog = inject(MatDialog);
 
 
   private locationService: LocationService = inject(LocationService);
@@ -105,22 +109,40 @@ export class MapPage implements AfterViewInit {
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       if (this.addingMode) {
-        // Якщо вже був тимчасовий маркер – прибираємо
-        if (this.tempMarker) {
-          this.map.removeLayer(this.tempMarker);
-        }
-
-        const coords = e.latlng;
-        this.tempMarker = L.marker([coords.lat, coords.lng]).addTo(this.map);
-
-        // Вимикаємо режим після вибору точки
+        // Вимикаємо режим після кліку
         this.addingMode = false;
         this.map.getContainer().style.cursor = '';
 
-        // Відкрити форму (тут замість alert зробиш відкриття свого LocationSidebar або діалога)
-        alert(`Створення локації\nLat: ${coords.lat}\nLng: ${coords.lng}`);
+        // Беремо координати з кліку
+        const { lat, lng } = e.latlng;
+
+        // Відкриваємо форму у діалозі
+        const dialogRef = this.dialog.open(LocationCreateFormComponent, {
+          width: '500px',
+          data: { lat, lng }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (result) {
+            console.log('Форма повернула DTO:', result);
+
+            // Додаємо lastVerifiedAt "зараз"
+            const dto = {
+              ...result,
+              lastVerifiedAt: new Date().toISOString()
+            };
+
+            this.locationService.createLocation(dto).subscribe({
+              next: () => this.fetchLocations(),
+              error: err => console.error('Помилка при створенні локації:', err)
+            });
+          }
+        });
       }
     });
+
+
+
 
 
     // // Додаємо точки по кліку

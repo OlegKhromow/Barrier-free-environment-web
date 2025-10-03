@@ -15,6 +15,11 @@ export class LocationService {
   }
 
 
+  createLocation(dto: any) {
+    return this.http.post<Location>(this.baseUrl, dto);
+  }
+
+
   getLocations(): Observable<Location[]> {
     return this.http.get<any>(this.baseUrl).pipe(
       map(res =>

@@ -1,0 +1,13 @@
+<h2>Створення локації</h2>
+
+<form [formGroup]="form" class="flex flex-col gap-4">
+  <input formControlName="name" placeholder="Назва" />
+  <input formControlName="address" placeholder="Адреса" />
+  <textarea formControlName="description" placeholder="Опис"></textarea>
+  <input formControlName="type" placeholder="UUID типу" />
+
+  <div class="flex justify-end gap-2">
+    <button type="button" (click)="cancel()">Скасувати</button>
+    <button type="button" (click)="save()" [disabled]="form.invalid">Зберегти</button>
+  </div>
+</form>
