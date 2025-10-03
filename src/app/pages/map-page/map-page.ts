@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, inject } from '@angular/core';
+import {AfterViewInit, Component, inject, OnInit} from '@angular/core';
 import * as L from 'leaflet';
 import { Location } from '../../core/models/location';
 import { LocationService } from '../../core/services/location.service';
@@ -19,7 +19,7 @@ import { LocationCreateFormComponent } from '../../components/location-create-fo
   templateUrl: './map-page.html',
   styleUrls: ['./map-page.css']
 })
-export class MapPage implements AfterViewInit {
+export class MapPage implements OnInit, AfterViewInit {
   private map!: L.Map;
   locations: Location[] | undefined;
   selectedLocation: Location | null = null;
@@ -36,6 +36,10 @@ export class MapPage implements AfterViewInit {
   ngAfterViewInit(): void {
     this.initMap();
     this.fetchLocations();
+  }
+
+  ngOnInit(): void {
+    this.locationService.loadLocationTypes(); // підвантажили один раз
   }
 
   toggleAddingMode(): void {

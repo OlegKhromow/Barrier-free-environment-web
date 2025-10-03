@@ -1,7 +1,10 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import {LocationStatusEnum} from '../../core/models/location-status-enum';
+import { LocationStatusEnum } from '../../core/models/location-status-enum';
+import { LocationService } from '../../core/services/location.service';
+import { Observable } from 'rxjs';
+import { LocationType } from '../../core/models/location-type';
 
 @Component({
   selector: 'app-location-create-form',
@@ -14,19 +17,27 @@ export class LocationCreateFormComponent {
   @Input() lng!: number;
   @Output() close = new EventEmitter<any>();
 
-  form: any;
+  private fb = inject(FormBuilder);
+  private locationService = inject(LocationService);
 
-  constructor(private fb: FormBuilder) {
-    this.form = this.fb.group({
-      name: ['', Validators.required],
-      address: ['', Validators.required],
-      type: ['', Validators.required],
-      description: ['']
-    });
-  }
+  // форма з блоком contacts
+  form: FormGroup = this.fb.group({
+    name: ['', Validators.required],
+    address: ['', Validators.required],
+    type: ['', Validators.required], // UUID вибраного LocationType
+    description: [''],
+    contacts: this.fb.group({
+      phone: [null],
+      email: [null, Validators.email],
+      website: [null]
+    })
+  });
+
+  locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypes();
 
   save() {
     if (!this.form.valid) return;
+
     const dto = {
       ...this.form.value,
       coordinates: { lat: this.lat, lng: this.lng },
@@ -34,6 +45,7 @@ export class LocationCreateFormComponent {
       lastVerifiedAt: new Date().toISOString(),
       status: LocationStatusEnum.PENDING
     };
+
     this.close.emit(dto);
   }
 

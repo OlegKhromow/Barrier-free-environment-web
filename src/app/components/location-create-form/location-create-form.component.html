@@ -4,7 +4,33 @@
   <input formControlName="name" placeholder="Назва" />
   <input formControlName="address" placeholder="Адреса" />
   <textarea formControlName="description" placeholder="Опис"></textarea>
-  <input formControlName="type" placeholder="UUID типу" />
+  <div>
+    <label for="type">Тип локації</label>
+    <select id="type" formControlName="type">
+      <option value="" disabled selected>Оберіть тип</option>
+      <option *ngFor="let t of (locationTypes$ | async)" [value]="t.id">
+        {{ t.name }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Контакти -->
+  <div formGroupName="contacts">
+    <div>
+      <label for="phone">Телефон</label>
+      <input id="phone" formControlName="phone" type="text" />
+    </div>
+
+    <div>
+      <label for="email">Email</label>
+      <input id="email" formControlName="email" type="email" />
+    </div>
+
+    <div>
+      <label for="website">Веб-сайт</label>
+      <input id="website" formControlName="website" type="text" />
+    </div>
+  </div>
 
   <div class="flex justify-end gap-2">
     <button type="button" (click)="cancel()">Скасувати</button>
