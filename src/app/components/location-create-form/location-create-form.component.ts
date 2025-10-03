@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import {LocationStatusEnum} from '../../core/models/location-status-enum';
 
 @Component({
   selector: 'app-location-create-form',
@@ -31,7 +32,7 @@ export class LocationCreateFormComponent {
       coordinates: { lat: this.lat, lng: this.lng },
       createdBy: 'c4b22cb9-85cb-4e3d-b6c0-ff70cc98b555',
       lastVerifiedAt: new Date().toISOString(),
-      status: 'pending'
+      status: LocationStatusEnum.PENDING
     };
     this.close.emit(dto);
   }

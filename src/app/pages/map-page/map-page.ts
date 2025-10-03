@@ -117,10 +117,12 @@ export class MapPage implements AfterViewInit {
   }
 
   clickOnMarker(location: Location, marker: L.Marker) {
-    this.selectedLocation = location;
+    this.selectedLocation = JSON.parse(JSON.stringify(location)) as Location;
     this.markers.forEach(m => m.marker.setZIndexOffset(0));
     marker.setZIndexOffset(1000);
   }
+
+
 
   private createMarkerIcon(iconUrl: string, size: [number, number]): L.Icon {
     return new L.Icon({
