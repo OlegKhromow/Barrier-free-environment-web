@@ -30,7 +30,8 @@ export class LocationCreateFormComponent {
       ...this.form.value,
       coordinates: { lat: this.lat, lng: this.lng },
       createdBy: 'c4b22cb9-85cb-4e3d-b6c0-ff70cc98b555',
-      lastVerifiedAt: new Date().toISOString()
+      lastVerifiedAt: new Date().toISOString(),
+      status: 'pending'
     };
     this.close.emit(dto);
   }

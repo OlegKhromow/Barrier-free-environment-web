@@ -5,22 +5,32 @@
       [location]="selectedLocation">
     </app-location-sidebar>
 
-    <!-- Контейнер для карти -->
     <div class="flex-1 relative">
-      <!-- Кнопка Додати/Відмінити локацію -->
-      <!-- Кнопка Додати/Відмінити локацію -->
       <button
         (click)="toggleAddingMode()"
         [ngClass]="addingMode
-    ? 'bg-red-600 hover:bg-red-700'
-    : 'bg-blue-600 hover:bg-blue-700'"
+          ? 'bg-red-600 hover:bg-red-700'
+          : 'bg-blue-600 hover:bg-blue-700'"
         class="absolute z-[500] bottom-4 right-4 text-white px-4 py-2 rounded-full shadow-lg transition"
       >
         {{ addingMode ? '✖ Відмінити' : '➕ Додати локацію' }}
       </button>
 
-
       <div id="map" class="absolute inset-0 z-0"></div>
+
+      <!-- Вікно створення локації -->
+      <div
+        *ngIf="showCreateForm && clickedLat && clickedLng"
+        class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]"
+      >
+        <div class="bg-white p-6 rounded shadow-lg w-[400px]">
+          <app-location-create-form
+            [lat]="clickedLat"
+            [lng]="clickedLng"
+            (close)="handleFormClose($event)">
+          </app-location-create-form>
+        </div>
+      </div>
     </div>
   </div>
 </div>
