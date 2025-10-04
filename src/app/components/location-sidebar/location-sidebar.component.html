@@ -46,57 +46,17 @@
     <div class="mb-4">
       <h3 class="font-semibold text-gray-800">Графік роботи</h3>
 
-      @if (location.workingHours
-      && (location.workingHours.monday || location.workingHours.tuesday || location.workingHours.wednesday
-        || location.workingHours.thursday || location.workingHours.friday
-        || location.workingHours.saturday || location.workingHours.sunday)) {
-
-        @if (location.workingHours.monday) {
-          <div>Понеділок: {{ location.workingHours.monday.open }} – {{ location.workingHours.monday.close }}</div>
-        } @else {
-          <div>Понеділок: вихідний</div>
-        }
-
-        @if (location.workingHours.tuesday) {
-          <div>Вівторок: {{ location.workingHours.tuesday.open }} – {{ location.workingHours.tuesday.close }}</div>
-        } @else {
-          <div>Вівторок: вихідний</div>
-        }
-
-        @if (location.workingHours.wednesday) {
-          <div>Середа: {{ location.workingHours.wednesday.open }} – {{ location.workingHours.wednesday.close }}</div>
-        } @else {
-          <div>Середа: вихідний</div>
-        }
-
-        @if (location.workingHours.thursday) {
-          <div>Четвер: {{ location.workingHours.thursday.open }} – {{ location.workingHours.thursday.close }}</div>
-        } @else {
-          <div>Четвер: вихідний</div>
-        }
-
-        @if (location.workingHours.friday) {
-          <div>П’ятниця: {{ location.workingHours.friday.open }} – {{ location.workingHours.friday.close }}</div>
-        } @else {
-          <div>П’ятниця: вихідний</div>
-        }
-
-        @if (location.workingHours.saturday) {
-          <div>Субота: {{ location.workingHours.saturday.open }} – {{ location.workingHours.saturday.close }}</div>
-        } @else {
-          <div>Субота: вихідний</div>
-        }
-
-        @if (location.workingHours.sunday) {
-          <div>Неділя: {{ location.workingHours.sunday.open }} – {{ location.workingHours.sunday.close }}</div>
-        } @else {
-          <div>Неділя: вихідний</div>
-        }
-
+      @if (location?.workingHours && !hasNoSchedule(location.workingHours)) {
+        <div *ngFor="let d of days">
+          <div>
+            {{ d.label }}: {{ getDaySchedule(d.key, location.workingHours) }}
+          </div>
+        </div>
       } @else {
         <p class="text-sm text-gray-500">Немає розкладу</p>
       }
     </div>
+
 
     <!-- Статус -->
     <div class="mb-4">

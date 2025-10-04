@@ -1,10 +1,10 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { LocationStatusEnum } from '../../core/models/location-status-enum';
-import { LocationService } from '../../core/services/location.service';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, ValidationErrors, AbstractControl } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { LocationType } from '../../core/models/location-type';
+import { LocationStatusEnum } from '../../core/models/location-status-enum';
+import { LocationService } from '../../core/services/location.service';
 
 @Component({
   selector: 'app-location-create-form',
@@ -20,23 +20,50 @@ export class LocationCreateFormComponent {
   private fb = inject(FormBuilder);
   private locationService = inject(LocationService);
 
-  // форма з блоком contacts
+  days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+
   form: FormGroup = this.fb.group({
     name: ['', Validators.required],
     address: ['', Validators.required],
-    type: ['', Validators.required], // UUID вибраного LocationType
+    type: ['', Validators.required],
     description: [''],
     contacts: this.fb.group({
-      phone: [null],
-      email: [null, Validators.email],
-      website: [null]
-    })
+      phone: [''],
+      email: ['', Validators.email],
+      website: ['']
+    }),
+    workingHours: this.fb.group(
+      this.days.reduce((acc, day) => {
+        acc[day] = this.fb.group({
+          open: [''],
+          close: ['']
+        });
+        return acc;
+      }, {} as Record<string, FormGroup>),
+      { validators: [workingHoursValidator] } // ✅ кастомна перевірка
+    )
   });
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypes();
 
+  selectedImages: { file: File, preview: string }[] = [];
+
+  onImageSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+
+    this.selectedImages = Array.from(input.files).map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }));
+  }
+
+
   save() {
-    if (!this.form.valid) return;
+    if (this.form.invalid) {
+      console.warn('Форма невалідна', this.form.errors, this.form.get('workingHours')?.errors);
+      return;
+    }
 
     const dto = {
       ...this.form.value,
@@ -46,10 +73,34 @@ export class LocationCreateFormComponent {
       status: LocationStatusEnum.PENDING
     };
 
+    console.log('DTO to save:', dto);
     this.close.emit(dto);
   }
 
   cancel() {
     this.close.emit(null);
   }
+}
+
+/**
+ * ✅ Кастомний валідатор для графіку роботи
+ * Якщо open заповнене, а close — ні (або навпаки), форма невалідна.
+ */
+function workingHoursValidator(control: AbstractControl): ValidationErrors | null {
+  const group = control as FormGroup;
+  if (!group.controls) return null;
+
+  for (const [day, subGroup] of Object.entries(group.controls)) {
+    const open = subGroup.get('open')?.value;
+    const close = subGroup.get('close')?.value;
+
+    const onlyOneFilled =
+      (open && !close) || (!open && close);
+
+    if (onlyOneFilled) {
+      return { workingHoursIncomplete: true };
+    }
+  }
+
+  return null;
 }
