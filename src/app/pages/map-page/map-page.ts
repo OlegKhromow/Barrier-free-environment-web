@@ -124,7 +124,15 @@ export class MapPage implements OnInit, AfterViewInit {
     this.selectedLocation = JSON.parse(JSON.stringify(location)) as Location;
     this.markers.forEach(m => m.marker.setZIndexOffset(0));
     marker.setZIndexOffset(1000);
+
+    // Smoothly center and slightly zoom in
+    const zoomLevel = Math.min(this.map.getZoom() + 2, 17); // zoom in a bit, max 17
+    this.map.flyTo(marker.getLatLng(), zoomLevel, {
+      animate: true,
+      duration: 0.8
+    });
   }
+
 
 
 
