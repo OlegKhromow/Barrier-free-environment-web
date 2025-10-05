@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>Знайдено схожі локації</h2>
+
+<mat-dialog-content class="flex flex-col gap-3">
+  <div
+    *ngFor="let loc of data.similar"
+    class="border rounded-lg p-3 flex justify-between items-center"
+  >
+    <div>
+      <div class="font-medium">{{ loc.name }}</div>
+      <div class="text-gray-500 text-sm">
+        Схожість: {{ loc.likeness | number: '1.0-0' }}%
+      </div>
+    </div>
+
+    <button mat-stroked-button color="primary" (click)="onView(loc.id)">
+      Переглянути
+    </button>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Скасувати</button>
+  <button mat-flat-button color="primary" (click)="onProceed()">Все одно додати</button>
+</mat-dialog-actions>

@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {BehaviorSubject, map, Observable} from 'rxjs';
 import {Location} from '../models/location';
 import {environment} from '../../../environments/environment';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpResponse} from '@angular/common/http';
 import {LocationType} from '../models/location-type';
 
 @Injectable({
@@ -30,6 +30,11 @@ export class LocationService {
   // щоб компоненти могли підписатись
   getLocationTypes(): Observable<LocationType[]> {
     return this.locationTypes$.asObservable();
+  }
+
+  checkDuplicates(dto: any): Observable<HttpResponse<any>> {
+    console.log(`${this.baseUrl}locations/check-duplicates`)
+    return this.http.post<any>(`${this.baseUrl}locations/check-duplicates`, dto, { observe: 'response' });
   }
 
   // щоб зручно діставати ім’я по id
