@@ -1,10 +1,11 @@
-<!-- Overlay -->
-<div class="fixed inset-0 bg-black bg-opacity-30 flex items-start justify-center pt-20 z-50">
-  <!-- Modal -->
+<!-- app-location-create-form.component.html -->
+<!-- overlay: fixed, покриває весь viewport -->
+<div class="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-start justify-center pt-20"
+     role="dialog" aria-modal="true">
+  <!-- modal -->
   <div class="bg-white w-full max-w-lg h-[80vh] flex flex-col rounded-lg shadow-lg overflow-hidden">
-
-    <!-- Content scrollable -->
-    <div class="overflow-y-auto p-6 flex-1" *ngIf="!showDuplicates">
+    <!-- scrollable content -->
+    <div class="p-6 flex-1 overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable]">
       <h2 class="text-2xl font-semibold mb-4 text-center">Створення локації</h2>
 
       <form [formGroup]="form" class="flex flex-col gap-4">
@@ -68,57 +69,20 @@
       </form>
     </div>
 
-    <!-- 🔍 Duplicate modal -->
-    <div *ngIf="showDuplicates" class="p-6 overflow-y-auto flex-1">
-      <h3 class="text-xl font-semibold mb-4 text-center text-yellow-700">
-        Знайдено схожі локації
-      </h3>
-      <p class="text-gray-600 mb-4 text-center">
-        Можливо, ця локація вже існує. Перегляньте список нижче:
-      </p>
-
-      <ul class="divide-y border rounded">
-        <li *ngFor="let loc of similarLocations"
-            class="p-3 hover:bg-gray-100 cursor-pointer transition flex justify-between items-center"
-            (click)="onViewDuplicate(loc)">
-          <div>
-            <div class="font-semibold">{{ loc.name }}</div>
-            <div class="text-sm text-gray-500">{{ loc.address }}</div>
-            <div class="text-xs text-gray-400">Схожість: {{ (loc.likeness * 100) | number: '1.0-1' }}%</div>
-          </div>
-          <button
-            type="button"
-            (click)="onViewDuplicate(loc)"
-            class="text-blue-600 text-sm hover:underline ml-4">
-            Переглянути
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Fixed buttons -->
-    <div class="border-t p-4 flex justify-end gap-2 bg-white">
-      <button *ngIf="!showDuplicates" type="button" (click)="cancel()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
+    <!-- buttons: sticky so видимі при прокрутці -->
+    <div class="border-t p-4 flex justify-end gap-2 bg-white sticky bottom-0">
+      <button type="button" (click)="cancel()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
         Скасувати
       </button>
 
-      <button *ngIf="!showDuplicates"
-              type="button"
-              (click)="save()"
-              [disabled]="form.invalid"
-              class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+      <button
+        type="button"
+        (click)="save()"
+        [disabled]="form.invalid"
+        class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+      >
         Зберегти
       </button>
-
-      <!-- Buttons for duplicate modal -->
-      <ng-container *ngIf="showDuplicates">
-        <button (click)="showDuplicates = false" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
-          Назад
-        </button>
-        <button (click)="forceSave()" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">
-          Все одно додати
-        </button>
-      </ng-container>
     </div>
   </div>
 </div>

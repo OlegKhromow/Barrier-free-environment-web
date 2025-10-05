@@ -1,11 +1,20 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, ValidationErrors, AbstractControl } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  ValidationErrors,
+  AbstractControl
+} from '@angular/forms';
 import { Observable } from 'rxjs';
 import { LocationType } from '../../core/models/location-type';
 import { LocationStatusEnum } from '../../core/models/location-status-enum';
 import { LocationService } from '../../core/services/location.service';
 import { FormStateService } from '../../core/services/form-state.service';
+import { MatDialog } from '@angular/material/dialog';
+import { DuplicatesDialogComponent } from '../duplicates-dialog/duplicates-dialog.component';
 
 @Component({
   selector: 'app-location-create-form',
@@ -21,6 +30,7 @@ export class LocationCreateFormComponent {
   private fb = inject(FormBuilder);
   private locationService = inject(LocationService);
   private formState = inject(FormStateService);
+  private dialog = inject(MatDialog);
 
   days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 
@@ -49,8 +59,6 @@ export class LocationCreateFormComponent {
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypes();
 
   selectedImages: { file: File, preview: string }[] = [];
-  showDuplicates = false;
-  similarLocations: any[] = [];
 
   ngOnInit() {
     const saved = this.formState.getFormData();
@@ -84,32 +92,65 @@ export class LocationCreateFormComponent {
       status: LocationStatusEnum.PENDING
     };
 
+    // перевіряємо дублікат
     this.locationService.checkDuplicates(dto).subscribe({
       next: (res) => {
-        // якщо дублікати знайдені
         if (res.status === 409) {
-          this.similarLocations = res.body || [];
-          this.showDuplicates = true;
-          this.formState.saveFormData({
-            formValue: this.form.value,
-            selectedImages: this.selectedImages
-          });
+          const similarArr = (res.body?.similar || []).map((it: any) => ({
+            id: it.location?.id,
+            name: it.location?.name,
+            address: it.location?.address,
+            likeness: it.likeness
+          }));
+          this.openDuplicatesDialog(similarArr, dto);
         } else {
+          // немає дублікатів — просто повертаємо dto або створюємо відразу
           this.close.emit(dto);
         }
       },
       error: (err) => {
         if (err.status === 409) {
-          this.similarLocations = err.error || [];
-          this.showDuplicates = true;
-          this.formState.saveFormData({
-            formValue: this.form.value,
-            selectedImages: this.selectedImages
-          });
+          const similarArr = (err.error?.similar || []).map((it: any) => ({
+            id: it.location?.id,
+            name: it.location?.name,
+            address: it.location?.address,
+            likeness: it.likeness
+          }));
+          this.openDuplicatesDialog(similarArr, dto);
         } else {
           console.error('Помилка перевірки дублікатів', err);
           this.close.emit(dto);
         }
+      }
+    });
+  }
+
+  private openDuplicatesDialog(similar: Array<{id:string,name:string,address?:string,likeness:number}>, dto: any) {
+    // зберігаємо стан форми перед відкриттям
+    this.formState.saveFormData({
+      formValue: this.form.value,
+      selectedImages: this.selectedImages
+    });
+
+    const ref = this.dialog.open(DuplicatesDialogComponent, {
+      data: { similar },
+      width: '600px'
+    });
+
+    ref.afterClosed().subscribe(result => {
+      if (!result) {
+        // закрито без дії
+        return;
+      }
+
+      if (result.action === 'proceed') {
+        // користувач хоче примусово додати
+        this.forceSave();
+      } else if (result.action === 'view' && result.id) {
+        // переглянути існуючу
+        window.open(`/locations/${result.id}`, '_blank');
+      } else if (result.action === 'cancel') {
+        // нічого не робимо
       }
     });
   }
@@ -125,16 +166,20 @@ export class LocationCreateFormComponent {
     this.locationService.createLocation(dto).subscribe(() => {
       this.formState.clearFormData();
       this.close.emit(dto);
+    }, err => {
+      console.error('Помилка створення локації', err);
     });
   }
 
   onViewDuplicate(loc: any) {
-    // наприклад, відкриваємо іншу модалку або сторінку
+    // якщо десь ще використовується — просто відкриватиме сторінку
     this.formState.saveFormData({
       formValue: this.form.value,
       selectedImages: this.selectedImages
     });
-    window.open(`/locations/${loc.id}`, '_blank');
+    if (loc?.id) {
+      window.open(`/locations/${loc.id}`, '_blank');
+    }
   }
 
   cancel() {
@@ -148,8 +193,8 @@ function workingHoursValidator(control: AbstractControl): ValidationErrors | nul
   const group = control as FormGroup;
   if (!group.controls) return null;
   for (const [day, subGroup] of Object.entries(group.controls)) {
-    const open = subGroup.get('open')?.value;
-    const close = subGroup.get('close')?.value;
+    const open = (subGroup as FormGroup).get('open')?.value;
+    const close = (subGroup as FormGroup).get('close')?.value;
     if ((open && !close) || (!open && close)) {
       return { workingHoursIncomplete: true };
     }

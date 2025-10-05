@@ -18,19 +18,14 @@
 
       <div id="map" class="absolute inset-0 z-0"></div>
 
-      <!-- Вікно створення локації -->
-      <div
+      <!-- Рендеримо компонент модалки напряму — він сам створює fixed overlay -->
+      <app-location-create-form
         *ngIf="showCreateForm && clickedLat && clickedLng"
-        class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]"
-      >
-        <div class="bg-white p-6 rounded shadow-lg w-[400px]">
-          <app-location-create-form
-            [lat]="clickedLat"
-            [lng]="clickedLng"
-            (close)="handleFormClose($event)">
-          </app-location-create-form>
-        </div>
-      </div>
+        [lat]="clickedLat"
+        [lng]="clickedLng"
+        (close)="handleFormClose($event)">
+      </app-location-create-form>
+
     </div>
   </div>
 </div>

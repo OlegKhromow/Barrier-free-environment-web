@@ -3,6 +3,13 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 
+export interface SimilarLoc {
+  id: string;
+  name: string;
+  address?: string;
+  likeness: number; // 0..100
+}
+
 @Component({
   selector: 'app-duplicates-dialog',
   standalone: true,
@@ -11,8 +18,9 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrls: ['./duplicates-dialog.component.css'],
 })
 export class DuplicatesDialogComponent {
+  // очікуємо data.similar: SimilarLoc[]
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: { similar: SimilarLoc[] },
     private dialogRef: MatDialogRef<DuplicatesDialogComponent>
   ) {}
 
