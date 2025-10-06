@@ -104,7 +104,7 @@ export class LocationCreateFormComponent {
           }));
           this.openDuplicatesDialog(similarArr, dto);
         } else {
-          // немає дублікатів — просто повертаємо dto або створюємо відразу
+          // ✅ просто віддаємо dto нагору
           this.close.emit(dto);
         }
       },
@@ -138,48 +138,16 @@ export class LocationCreateFormComponent {
     });
 
     ref.afterClosed().subscribe(result => {
-      if (!result) {
-        // закрито без дії
-        return;
-      }
+      if (!result) return;
 
       if (result.action === 'proceed') {
-        // користувач хоче примусово додати
-        this.forceSave();
+        // ✅ користувач хоче примусово додати — не створюємо тут, а просто емітимо нагору
+        this.formState.clearFormData();
+        this.close.emit({ ...dto, force: true }); // ✅ changed
       } else if (result.action === 'view' && result.id) {
-        // переглянути існуючу
         window.open(`/locations/${result.id}`, '_blank');
-      } else if (result.action === 'cancel') {
-        // нічого не робимо
       }
     });
-  }
-
-  forceSave() {
-    const dto = {
-      ...this.form.value,
-      coordinates: { lat: this.lat, lng: this.lng },
-      createdBy: 'c4b22cb9-85cb-4e3d-b6c0-ff70cc98b555',
-      lastVerifiedAt: new Date().toISOString(),
-      status: LocationStatusEnum.PENDING
-    };
-    this.locationService.createLocation(dto).subscribe(() => {
-      this.formState.clearFormData();
-      this.close.emit(dto);
-    }, err => {
-      console.error('Помилка створення локації', err);
-    });
-  }
-
-  onViewDuplicate(loc: any) {
-    // якщо десь ще використовується — просто відкриватиме сторінку
-    this.formState.saveFormData({
-      formValue: this.form.value,
-      selectedImages: this.selectedImages
-    });
-    if (loc?.id) {
-      window.open(`/locations/${loc.id}`, '_blank');
-    }
   }
 
   cancel() {
