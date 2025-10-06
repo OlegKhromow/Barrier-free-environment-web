@@ -2,15 +2,18 @@
   <div class="flex flex-1">
     <app-location-sidebar
       class="w-1/5 bg-gray-100 border-l border-gray-300 p-4"
-      [location]="selectedLocation">
+      [location]="selectedLocation"
+      [duplicateMode]="duplicateMode"
+      (duplicateAnswer)="onDuplicateAnswer($event)"
+    >
     </app-location-sidebar>
 
     <div class="flex-1 relative">
+      <!-- ховаємо кнопку додавання в duplicate режимі -->
       <button
+        *ngIf="!duplicateMode"
         (click)="toggleAddingMode()"
-        [ngClass]="addingMode
-          ? 'bg-red-600 hover:bg-red-700'
-          : 'bg-blue-600 hover:bg-blue-700'"
+        [ngClass]="addingMode ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
         class="absolute z-[500] bottom-4 right-4 text-white px-4 py-2 rounded-full shadow-lg transition"
       >
         {{ addingMode ? '✖ Відмінити' : '➕ Додати локацію' }}
@@ -23,9 +26,10 @@
         *ngIf="showCreateForm && clickedLat && clickedLng"
         [lat]="clickedLat"
         [lng]="clickedLng"
-        (close)="handleFormClose($event)">
+        (close)="handleFormClose($event)"
+        (viewDuplicate)="handleViewDuplicate($event)"
+      >
       </app-location-create-form>
-
     </div>
   </div>
 </div>

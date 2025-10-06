@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Location } from '../../core/models/location';
 
@@ -7,10 +7,15 @@ import { Location } from '../../core/models/location';
   standalone: true,
   imports: [CommonModule, NgOptimizedImage],
   templateUrl: './location-sidebar.component.html',
-  styleUrl: './location-sidebar.component.css'
+  styleUrls: ['./location-sidebar.component.css']
 })
 export class LocationSidebarComponent {
   @Input() location: Location | null = null;
+
+  // Новий @Input для duplicate режиму
+  @Input() duplicateMode: boolean = false;
+  // Повідомляємо MapPage про вибір користувача у сайдбарі
+  @Output() duplicateAnswer = new EventEmitter<'yes' | 'no'>();
 
   days = [
     { key: 'monday', label: 'Понеділок' },
@@ -38,5 +43,14 @@ export class LocationSidebarComponent {
     if (!open && !close) return 'вихідний';
     if (open && close) return `${open} – ${close}`;
     return 'вихідний';
+  }
+
+  // обробники кнопок дублікатного питання
+  confirmYes() {
+    this.duplicateAnswer.emit('yes');
+  }
+
+  confirmNo() {
+    this.duplicateAnswer.emit('no');
   }
 }

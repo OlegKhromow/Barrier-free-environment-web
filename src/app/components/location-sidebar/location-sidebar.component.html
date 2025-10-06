@@ -1,85 +1,74 @@
-<aside>
-  @if (location) {
-    <h2 class="text-xl font-bold mb-2 text-green-700">
-      {{ location.name }}
-    </h2>
-    <p class="text-gray-600 mb-4">{{ location.address }}</p>
+<aside class="flex flex-col h-full justify-between">
+  <div>
+    <ng-container *ngIf="location; else empty">
+      <h2 class="text-xl font-bold mb-2 text-green-700">{{ location.name }}</h2>
+      <p class="text-gray-600 mb-4">{{ location.address }}</p>
 
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">Опис</h3>
-      <p class="text-sm text-gray-700">{{ location.description || 'Немає опису' }}</p>
-    </div>
+      <div class="mb-4">
+        <h3 class="font-semibold text-gray-800">Опис</h3>
+        <p class="text-sm text-gray-700">{{ location.description || 'Немає опису' }}</p>
+      </div>
 
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">Категорія</h3>
-      <p class="text-sm text-gray-700">{{ location.type.name }}</p>
-      <p class="text-sm text-gray-700">{{ location.type.description }}</p>
-    </div>
+      <div class="mb-4">
+        <h3 class="font-semibold text-gray-800">Категорія</h3>
+        <p class="text-sm text-gray-700">{{ location.type?.name }}</p>
+        <p class="text-sm text-gray-700">{{ location.type?.description }}</p>
+      </div>
 
-    <!-- Контакти -->
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">Контакти</h3>
+      <!-- Контакти -->
+      <div class="mb-4">
+        <h3 class="font-semibold text-gray-800">Контакти</h3>
+        <ng-container *ngIf="location.contacts && (location.contacts.phone || location.contacts.email || location.contacts.website); else noContacts">
+          <ul class="text-sm text-gray-700">
+            <li *ngIf="location.contacts.phone">📞 {{ location.contacts.phone }}</li>
+            <li *ngIf="location.contacts.email">✉️ {{ location.contacts.email }}</li>
+            <li *ngIf="location.contacts.website">🌍 <a [href]="location.contacts.website" target="_blank" class="text-blue-600 underline">{{ location.contacts.website }}</a></li>
+          </ul>
+        </ng-container>
+        <ng-template #noContacts>
+          <p class="text-sm text-gray-500">Немає контактів</p>
+        </ng-template>
+      </div>
 
-      @if (location.contacts
-      && (location.contacts.phone || location.contacts.email || location.contacts.website)) {
-        <ul class="text-sm text-gray-700">
-          @if (location.contacts.phone) {
-            <li>📞 {{ location.contacts.phone }}</li>
-          }
-          @if (location.contacts.email) {
-            <li>✉️ {{ location.contacts.email }}</li>
-          }
-          @if (location.contacts.website) {
-            <li>
-              🌍 <a [href]="location.contacts.website" target="_blank" class="text-blue-600 underline">
-              {{ location.contacts.website }}
-            </a>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="text-sm text-gray-500">Немає контактів</p>
-      }
-    </div>
-
-    <!-- Розклад -->
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">Графік роботи</h3>
-
-      @if (location?.workingHours && !hasNoSchedule(location.workingHours)) {
-        <div *ngFor="let d of days">
-          <div>
-            {{ d.label }}: {{ getDaySchedule(d.key, location.workingHours) }}
+      <!-- Розклад -->
+      <div class="mb-4">
+        <h3 class="font-semibold text-gray-800">Графік роботи</h3>
+        <ng-container *ngIf="location?.workingHours && !hasNoSchedule(location.workingHours); else noSchedule">
+          <div *ngFor="let d of days">
+            <div>{{ d.label }}: {{ getDaySchedule(d.key, location.workingHours) }}</div>
           </div>
-        </div>
-      } @else {
-        <p class="text-sm text-gray-500">Немає розкладу</p>
-      }
-    </div>
+        </ng-container>
+        <ng-template #noSchedule>
+          <p class="text-sm text-gray-500">Немає розкладу</p>
+        </ng-template>
+      </div>
 
+      <!-- Статус -->
+      <div class="mb-4">
+        <h3 class="font-semibold text-gray-800">Стан</h3>
+        <ng-container [ngSwitch]="location.status">
+          <p *ngSwitchCase="'published'" class="text-sm font-medium text-green-600">Опубліковано</p>
+          <p *ngSwitchCase="'pending'" class="text-sm font-medium text-yellow-600">Очікує перевірки</p>
+          <p *ngSwitchCase="'rejected'" class="text-sm font-medium text-red-600">Відхилено</p>
+          <p *ngSwitchDefault class="text-sm font-medium text-gray-500">Невідомий статус</p>
+        </ng-container>
+      </div>
+    </ng-container>
 
-    <!-- Статус -->
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">Стан</h3>
-      @switch (location.status) {
-        @case ('published') {
-          <p class="text-sm font-medium text-green-600">Опубліковано</p>
-        }
-        @case ('pending') {
-          <p class="text-sm font-medium text-yellow-600">Очікує перевірки</p>
-        }
-        @case ('rejected') {
-          <p class="text-sm font-medium text-red-600">Відхилено</p>
-        }
-        @default {
-          <p class="text-sm font-medium text-gray-500">Невідомий статус</p>
-        }
-      }
+    <ng-template #empty>
+      <div class="flex flex-col items-center justify-center">
+        <h1 class="font-semibold text-2xl text-center">Виберіть локацію <br> на карті </h1>
+        <img ngSrc="assets/hand-point.png" alt="hand point" height="128" width="128">
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Блок питання про дублікат (внизу сайдбару) -->
+  <div *ngIf="duplicateMode && location" class="mt-4 border-t pt-3">
+    <p class="font-medium text-gray-700 mb-2">Це ваша локація?</p>
+    <div class="flex gap-3">
+      <button (click)="confirmYes()" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Так</button>
+      <button (click)="confirmNo()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Ні</button>
     </div>
-  } @else {
-    <div class="flex flex-col items-center justify-center">
-      <h1 class="font-semibold text-2xl text-center">Виберіть локацію <br> на карті </h1>
-      <img ngSrc="assets/hand-point.png" alt="hand point" height="128" width="128">
-    </div>
-  }
+  </div>
 </aside>

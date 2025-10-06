@@ -1,13 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-  ValidationErrors,
-  AbstractControl
-} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, ValidationErrors, AbstractControl } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { LocationType } from '../../core/models/location-type';
 import { LocationStatusEnum } from '../../core/models/location-status-enum';
@@ -26,6 +19,8 @@ export class LocationCreateFormComponent {
   @Input() lat!: number;
   @Input() lng!: number;
   @Output() close = new EventEmitter<any>();
+  // Новий EventEmitter, щоб повідомити MapPage про перегляд дубліката
+  @Output() viewDuplicate = new EventEmitter<{ id: string, similar: Array<any>, dto: any }>();
 
   private fb = inject(FormBuilder);
   private locationService = inject(LocationService);
@@ -46,10 +41,7 @@ export class LocationCreateFormComponent {
     }),
     workingHours: this.fb.group(
       this.days.reduce((acc, day) => {
-        acc[day] = this.fb.group({
-          open: [''],
-          close: ['']
-        });
+        acc[day] = this.fb.group({ open: [''], close: [''] });
         return acc;
       }, {} as Record<string, FormGroup>),
       { validators: [workingHoursValidator] }
@@ -57,8 +49,11 @@ export class LocationCreateFormComponent {
   });
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypes();
-
   selectedImages: { file: File, preview: string }[] = [];
+
+  // збережемо останній similar і dto, щоб MapPage / діалог міг ними оперувати
+  private _lastSimilar: Array<any> | null = null;
+  private _lastDto: any | null = null;
 
   ngOnInit() {
     const saved = this.formState.getFormData();
@@ -71,11 +66,7 @@ export class LocationCreateFormComponent {
   onImageSelect(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
-
-    this.selectedImages = Array.from(input.files).map(file => ({
-      file,
-      preview: URL.createObjectURL(file)
-    }));
+    this.selectedImages = Array.from(input.files).map(file => ({ file, preview: URL.createObjectURL(file) }));
   }
 
   save() {
@@ -100,7 +91,9 @@ export class LocationCreateFormComponent {
             id: it.location?.id,
             name: it.location?.name,
             address: it.location?.address,
-            likeness: it.likeness
+            likeness: it.likeness,
+            latitude: it.location?.latitude,
+            longitude: it.location?.longitude
           }));
           this.openDuplicatesDialog(similarArr, dto);
         } else {
@@ -114,7 +107,9 @@ export class LocationCreateFormComponent {
             id: it.location?.id,
             name: it.location?.name,
             address: it.location?.address,
-            likeness: it.likeness
+            likeness: it.likeness,
+            latitude: it.location?.latitude,
+            longitude: it.location?.longitude
           }));
           this.openDuplicatesDialog(similarArr, dto);
         } else {
@@ -125,27 +120,27 @@ export class LocationCreateFormComponent {
     });
   }
 
-  private openDuplicatesDialog(similar: Array<{id:string,name:string,address?:string,likeness:number}>, dto: any) {
+  private openDuplicatesDialog(similar: Array<{id:string,name:string,address?:string,likeness:number,latitude?:number,longitude?:number}>, dto: any) {
     // зберігаємо стан форми перед відкриттям
-    this.formState.saveFormData({
-      formValue: this.form.value,
-      selectedImages: this.selectedImages
-    });
+    this.formState.saveFormData({ formValue: this.form.value, selectedImages: this.selectedImages });
 
-    const ref = this.dialog.open(DuplicatesDialogComponent, {
-      data: { similar },
-      width: '600px'
-    });
+    // зберігаємо локально, щоб потім мали доступ при view/no
+    this._lastSimilar = similar;
+    this._lastDto = dto;
+
+    const ref = this.dialog.open(DuplicatesDialogComponent, { data: { similar }, width: '600px' });
 
     ref.afterClosed().subscribe(result => {
       if (!result) return;
 
       if (result.action === 'proceed') {
-        // ✅ користувач хоче примусово додати — не створюємо тут, а просто емітимо нагору
+        // ✅ користувач хоче примусово додати — не створюємо тут, а просто емітимо нагору (як у тебе було)
         this.formState.clearFormData();
-        this.close.emit({ ...dto, force: true }); // ✅ changed
+        this.close.emit({ ...dto, force: true });
       } else if (result.action === 'view' && result.id) {
-        window.open(`/locations/${result.id}`, '_blank');
+        // замість відкривати нову сторінку — повідомляємо MapPage щоб він зробив flyTo і зайшов у duplicateMode
+        this.viewDuplicate.emit({ id: result.id, similar: similar, dto: dto });
+        // не закриваємо форму — даємо користувачу можливість відповісти в сайдбарі
       }
     });
   }
