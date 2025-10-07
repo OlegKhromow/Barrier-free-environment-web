@@ -1,0 +1,24 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Робимо верхній блок прокручуваним */
+aside {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+aside > div:first-child {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 8px; /* невеликий відступ, щоб не з’їдало скролбар */
+}
+
+/* Нижній блок (з кнопками) не прокручується */
+aside > div:last-child {
+  flex-shrink: 0;
+  background: white;
+}

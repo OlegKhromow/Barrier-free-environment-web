@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import {Component, Input, Output, EventEmitter, OnChanges} from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Location } from '../../core/models/location';
+import {LocationService} from '../../core/services/location.service';
 
 @Component({
   selector: 'app-location-sidebar',
@@ -9,13 +10,16 @@ import { Location } from '../../core/models/location';
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })
-export class LocationSidebarComponent {
+export class LocationSidebarComponent implements OnChanges{
   @Input() location: Location | null = null;
+  criteriaTree: any | null = null;
 
   // Новий @Input для duplicate режиму
   @Input() duplicateMode: boolean = false;
   // Повідомляємо MapPage про вибір користувача у сайдбарі
   @Output() duplicateAnswer = new EventEmitter<'yes' | 'no'>();
+
+  constructor(private locationService: LocationService) {}
 
   days = [
     { key: 'monday', label: 'Понеділок' },
@@ -52,5 +56,33 @@ export class LocationSidebarComponent {
 
   confirmNo() {
     this.duplicateAnswer.emit('no');
+  }
+
+  showGroup = true;
+  openTypes = new Set<any>();
+
+  toggleGroup() {
+    this.showGroup = !this.showGroup;
+  }
+
+  toggleType(type: any) {
+    if (this.openTypes.has(type)) {
+      this.openTypes.delete(type);
+    } else {
+      this.openTypes.add(type);
+    }
+  }
+
+  isTypeOpen(type: any) {
+    return this.openTypes.has(type);
+  }
+
+
+
+  ngOnChanges() {
+    if (this.location?.type?.id) {
+      this.locationService.getCriteriaTreeByTypeId(this.location.type.id)
+        .subscribe(tree => this.criteriaTree = tree);
+    }
   }
 }

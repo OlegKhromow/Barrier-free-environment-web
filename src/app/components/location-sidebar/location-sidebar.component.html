@@ -1,14 +1,16 @@
-<aside class="flex flex-col h-full justify-between">
+<aside class="sidebar flex flex-col h-full justify-between">
   <div>
     <ng-container *ngIf="location; else empty">
       <h2 class="text-xl font-bold mb-2 text-green-700">{{ location.name }}</h2>
       <p class="text-gray-600 mb-4">{{ location.address }}</p>
 
+      <!-- Опис -->
       <div class="mb-4">
         <h3 class="font-semibold text-gray-800">Опис</h3>
         <p class="text-sm text-gray-700">{{ location.description || 'Немає опису' }}</p>
       </div>
 
+      <!-- Категорія -->
       <div class="mb-4">
         <h3 class="font-semibold text-gray-800">Категорія</h3>
         <p class="text-sm text-gray-700">{{ location.type?.name }}</p>
@@ -22,7 +24,11 @@
           <ul class="text-sm text-gray-700">
             <li *ngIf="location.contacts.phone">📞 {{ location.contacts.phone }}</li>
             <li *ngIf="location.contacts.email">✉️ {{ location.contacts.email }}</li>
-            <li *ngIf="location.contacts.website">🌍 <a [href]="location.contacts.website" target="_blank" class="text-blue-600 underline">{{ location.contacts.website }}</a></li>
+            <li *ngIf="location.contacts.website">
+              🌍 <a [href]="location.contacts.website" target="_blank" class="text-blue-600 underline">
+              {{ location.contacts.website }}
+            </a>
+            </li>
           </ul>
         </ng-container>
         <ng-template #noContacts>
@@ -53,17 +59,47 @@
           <p *ngSwitchDefault class="text-sm font-medium text-gray-500">Невідомий статус</p>
         </ng-container>
       </div>
+
+      <!-- Критерії (група/тип/пункти) -->
+      <div *ngIf="criteriaTree" class="mb-4">
+        <div class="ml-1">
+          <!-- Група -->
+          <div class="cursor-pointer select-none font-semibold text-gray-800 flex items-center"
+               (click)="toggleGroup()">
+            <span [class.rotate-90]="showGroup" class="mr-1 transition-transform duration-200">▶</span>
+            {{ criteriaTree.group.name }}
+          </div>
+
+          <div *ngIf="showGroup" class="ml-4 mt-2 transition-all duration-200">
+            <div *ngFor="let type of criteriaTree.group.types" class="mb-2">
+              <!-- Тип -->
+              <div class="cursor-pointer select-none flex items-center text-gray-700"
+                   (click)="toggleType(type)">
+                <span [class.rotate-90]="isTypeOpen(type)" class="mr-1 transition-transform duration-200">▶</span>
+                <strong>{{ type.name }}</strong>
+              </div>
+
+              <!-- Критерії -->
+              <ul *ngIf="isTypeOpen(type)" class="ml-6 list-disc text-sm text-gray-700 mt-1">
+                <li *ngFor="let c of type.criterias">
+                  {{ c.description }} <small class="text-gray-500">({{ c.rank }})</small>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </ng-container>
 
     <ng-template #empty>
-      <div class="flex flex-col items-center justify-center">
-        <h1 class="font-semibold text-2xl text-center">Виберіть локацію <br> на карті </h1>
+      <div class="flex flex-col items-center justify-center h-full text-center">
+        <h1 class="font-semibold text-2xl mb-3">Виберіть локацію<br>на карті</h1>
         <img ngSrc="assets/hand-point.png" alt="hand point" height="128" width="128">
       </div>
     </ng-template>
   </div>
 
-  <!-- Блок питання про дублікат (внизу сайдбару) -->
+  <!-- Нижній блок (дублікат) -->
   <div *ngIf="duplicateMode && location" class="mt-4 border-t pt-3">
     <p class="font-medium text-gray-700 mb-2">Це ваша локація?</p>
     <div class="flex gap-3">
