@@ -1,10 +1,9 @@
 :host {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - var(--menu-bar-height)); /* 🔥 Віднімаємо реальну висоту menu-bar */
 }
 
-/* Робимо верхній блок прокручуваним */
 aside {
   display: flex;
   flex-direction: column;
@@ -14,10 +13,10 @@ aside {
 aside > div:first-child {
   overflow-y: auto;
   flex: 1;
-  padding-right: 8px; /* невеликий відступ, щоб не з’їдало скролбар */
+  min-height: 0;
+  padding-right: 8px;
 }
 
-/* Нижній блок (з кнопками) не прокручується */
 aside > div:last-child {
   flex-shrink: 0;
   background: white;
