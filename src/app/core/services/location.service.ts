@@ -47,6 +47,10 @@ export class LocationService {
     return this.http.get(`${this.baseUrl}location-types/${typeId}/criteria-tree`);
   }
 
+  getLocationById(id: string) {
+    return this.http.get(`${this.baseUrl}locations/${id}/`);
+  }
+
 
 
   getLocations(): Observable<Location[]> {

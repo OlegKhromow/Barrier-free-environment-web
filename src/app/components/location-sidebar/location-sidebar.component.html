@@ -60,7 +60,7 @@
         </ng-container>
       </div>
 
-      <!-- Критерії (група/тип/пункти) -->
+      <!-- Критерії -->
       <div *ngIf="criteriaTree" class="mb-4">
         <div class="ml-1">
           <!-- Група -->
@@ -101,10 +101,25 @@
 
   <!-- Нижній блок (дублікат) -->
   <div *ngIf="duplicateMode && location" class="mt-4 border-t pt-3">
-    <p class="font-medium text-gray-700 mb-2">Це ваша локація?</p>
+    <p class="font-medium text-gray-700 mb-2">Це ваша локація?(перейти до редагування)</p>
     <div class="flex gap-3">
       <button (click)="confirmYes()" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Так</button>
       <button (click)="confirmNo()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Ні</button>
     </div>
+  </div>
+
+  <!-- Нижній блок із посиланнями -->
+  <div *ngIf="location" class="mt-6 border-t pt-4 text-sm text-gray-700 space-y-2">
+    <p>
+      Дайте оцінку локації згідно критеріям безбар'єрності:
+      <a [routerLink]="['/evaluate', location.id]" class="text-blue-600 underline hover:text-blue-800">
+        Перейти до оцінки локації
+      </a>
+    </p>
+
+    <p *ngIf="!duplicateMode">
+      Хочете оновити дані локації?
+      <a href="#" class="text-blue-600 underline hover:text-blue-800">Перейти до внесення нових даних</a>
+    </p>
   </div>
 </aside>

@@ -2,11 +2,12 @@ import {Component, Input, Output, EventEmitter, OnChanges} from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Location } from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-location-sidebar',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage],
+  imports: [CommonModule, NgOptimizedImage, RouterLink],
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })

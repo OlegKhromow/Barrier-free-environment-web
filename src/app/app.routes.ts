@@ -1,9 +1,27 @@
 import { Routes } from '@angular/router';
-import {MapPage} from './pages/map-page/map-page';
-import {authGuard} from './core/services/security/auth.guard';
-import {AddLocationPage} from './pages/add-location-page/add-location-page';
+import { MapPage } from './pages/map-page/map-page';
+import { AddLocationPage } from './pages/add-location-page/add-location-page';
+import { CriteriaEvaluationComponent } from './pages/criteria-evaluation/criteria-evaluation.component';
+import { authGuard } from './core/services/security/auth.guard';
 
 export const routes: Routes = [
-  {path: 'map', component: MapPage},
-  {path: 'add-location', component: AddLocationPage, canActivate: [authGuard]}
+  {
+    path: '',
+    redirectTo: 'map',
+    pathMatch: 'full'
+  },
+  {
+    path: 'map',
+    component: MapPage
+  },
+  {
+    path: 'add-location',
+    component: AddLocationPage,
+    canActivate: [authGuard]
+  },
+  { path: 'evaluate/:id', component: CriteriaEvaluationComponent },
+  {
+    path: '**',
+    redirectTo: 'map'
+  }
 ];
