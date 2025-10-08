@@ -70,9 +70,9 @@
             {{ criteriaTree.group.name }}
           </div>
 
+          <!-- Типи -->
           <div *ngIf="showGroup" class="ml-4 mt-2 transition-all duration-200">
             <div *ngFor="let type of criteriaTree.group.types" class="mb-2">
-              <!-- Тип -->
               <div class="cursor-pointer select-none flex items-center text-gray-700"
                    (click)="toggleType(type)">
                 <span [class.rotate-90]="isTypeOpen(type)" class="mr-1 transition-transform duration-200">▶</span>
@@ -80,9 +80,45 @@
               </div>
 
               <!-- Критерії -->
-              <ul *ngIf="isTypeOpen(type)" class="ml-6 list-disc text-sm text-gray-700 mt-1">
+              <ul *ngIf="isTypeOpen(type)" class="ml-6 list-disc text-sm text-gray-700 mt-1 space-y-1">
                 <li *ngFor="let c of type.criterias">
-                  {{ c.description }} <small class="text-gray-500">({{ c.rank }})</small>
+                  <div class="font-medium text-gray-800">
+                    {{ c.name }}
+                    <small class="text-gray-500">({{ c.rank }})</small>
+                  </div>
+                  <div class="text-gray-600 text-xs mb-1">{{ c.description }}</div>
+
+                  <!-- Новий блок перевірок -->
+                  <div *ngIf="c.barrierlessCriteriaChecks?.length > 0; else noChecks" class="ml-4 text-xs text-gray-700 mt-2">
+                    <!-- Лічильники -->
+                    <div class="flex items-center gap-3 mb-1">
+                      <span class="text-green-600 font-medium">
+                        ✅ Без проблем: {{ countChecks(c, false) }}
+                      </span>
+                      <span class="text-red-600 font-medium">
+                        ⚠️ Є проблема: {{ countChecks(c, true) }}
+                      </span>
+                    </div>
+
+                    <!-- Кнопка для розкриття коментарів -->
+                    <div class="cursor-pointer text-blue-600 hover:underline select-none"
+                         (click)="toggleComments(c)">
+                      💬 Коментарі ({{ getComments(c).length }})
+                    </div>
+
+                    <!-- Список коментарів -->
+                    <ul *ngIf="isCommentsOpen(c)" class="ml-4 mt-1 list-disc text-gray-600 text-xs space-y-1">
+                      <li *ngFor="let comment of getComments(c)">
+                        "{{ comment }}"
+                      </li>
+                    </ul>
+                  </div>
+
+                  <ng-template #noChecks>
+                    <p class="text-gray-400 text-xs italic ml-2">
+                      Немає перевірок
+                    </p>
+                  </ng-template>
                 </li>
               </ul>
             </div>
@@ -91,6 +127,7 @@
       </div>
     </ng-container>
 
+    <!-- Порожній стан -->
     <ng-template #empty>
       <div class="flex flex-col items-center justify-center h-full text-center">
         <h1 class="font-semibold text-2xl mb-3">Виберіть локацію<br>на карті</h1>
@@ -101,7 +138,7 @@
 
   <!-- Нижній блок (дублікат) -->
   <div *ngIf="duplicateMode && location" class="mt-4 border-t pt-3">
-    <p class="font-medium text-gray-700 mb-2">Це ваша локація?(перейти до редагування)</p>
+    <p class="font-medium text-gray-700 mb-2">Це ваша локація? (перейти до редагування)</p>
     <div class="flex gap-3">
       <button (click)="confirmYes()" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Так</button>
       <button (click)="confirmNo()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Ні</button>

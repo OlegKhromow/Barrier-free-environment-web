@@ -43,8 +43,8 @@ export class LocationService {
     return type ? type.name : 'Невідомо';
   }
 
-  getCriteriaTreeByTypeId(typeId: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}location-types/${typeId}/criteria-tree`);
+  getCriteriaTreeByTypeId(locationId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}locations/${locationId}/criteria-tree`);
   }
 
   getLocationById(id: string) {

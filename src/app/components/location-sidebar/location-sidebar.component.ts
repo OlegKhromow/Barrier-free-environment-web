@@ -81,9 +81,31 @@ export class LocationSidebarComponent implements OnChanges{
 
 
   ngOnChanges() {
-    if (this.location?.type?.id) {
-      this.locationService.getCriteriaTreeByTypeId(this.location.type.id)
+    if (this.location?.id) {
+      this.locationService.getCriteriaTreeByTypeId(this.location.id)
         .subscribe(tree => this.criteriaTree = tree);
     }
   }
+
+  showCommentsMap = new Map<any, boolean>();
+
+  countChecks(c: any, hasIssue: boolean): number {
+    return c.barrierlessCriteriaChecks?.filter((ch: any) => ch.hasIssue === hasIssue).length || 0;
+  }
+
+  getComments(c: any): string[] {
+    return c.barrierlessCriteriaChecks
+      ?.map((ch: any) => ch.comment)
+      .filter((comment: string) => !!comment?.trim()) || [];
+  }
+
+  toggleComments(c: any) {
+    const isOpen = this.showCommentsMap.get(c) || false;
+    this.showCommentsMap.set(c, !isOpen);
+  }
+
+  isCommentsOpen(c: any): boolean {
+    return this.showCommentsMap.get(c) || false;
+  }
+
 }

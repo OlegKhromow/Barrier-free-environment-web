@@ -34,7 +34,7 @@ export class CriteriaEvaluationComponent implements OnInit {
 
       // ✅ передаємо просто ID типу
       this.locationService
-        .getCriteriaTreeByTypeId(location.type)
+        .getCriteriaTreeByTypeId(location.id)
         .subscribe(tree => (this.criteriaTree = tree));
     });
   }
@@ -88,7 +88,7 @@ export class CriteriaEvaluationComponent implements OnInit {
 
   /** 🔥 Відправка на бекенд */
   submitEvaluation() {
-    const defaultUserId = '2fda00ee-d44a-49ef-bfdf-0b9e61f30f79';
+    const defaultUserId = '4c88cc0e-b5f8-478c-928b-08cc12f38423';
 
     // Формуємо масив DTO
     const checkList = Object.entries(this.scores).map(([criteriaId, data]: any) => ({
