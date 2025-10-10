@@ -19,7 +19,7 @@ export const routes: Routes = [
     component: AddLocationPage,
     canActivate: [authGuard]
   },
-  { path: 'evaluate/:id', component: CriteriaEvaluationComponent },
+  { path: 'evaluate/:id', component: CriteriaEvaluationComponent,canActivate: [authGuard]},
   {
     path: '**',
     redirectTo: 'map'

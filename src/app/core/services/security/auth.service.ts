@@ -71,4 +71,8 @@ export class AuthService {
   getByUsername(username: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/users/by-name/${username}`);
   }
+
+  getAuthoritiesByUsername(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/me/authorities`);
+  }
 }
