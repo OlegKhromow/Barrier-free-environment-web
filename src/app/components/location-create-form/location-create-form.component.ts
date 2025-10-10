@@ -1,13 +1,21 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, ValidationErrors, AbstractControl } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { LocationType } from '../../core/models/location-type';
-import { LocationStatusEnum } from '../../core/models/location-status-enum';
-import { LocationService } from '../../core/services/location.service';
-import { FormStateService } from '../../core/services/form-state.service';
-import { MatDialog } from '@angular/material/dialog';
-import { DuplicatesDialogComponent } from '../duplicates-dialog/duplicates-dialog.component';
+import {Component, Input, Output, EventEmitter, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  ValidationErrors,
+  AbstractControl
+} from '@angular/forms';
+import {Observable} from 'rxjs';
+import {LocationType} from '../../core/models/location-type';
+import {LocationStatusEnum} from '../../core/models/location-status-enum';
+import {LocationService} from '../../core/services/location.service';
+import {FormStateService} from '../../core/services/form-state.service';
+import {MatDialog} from '@angular/material/dialog';
+import {DuplicatesDialogComponent} from '../duplicates-dialog/duplicates-dialog.component';
+import {AuthService} from '../../core/services/security/auth.service';
 
 @Component({
   selector: 'app-location-create-form',
@@ -15,7 +23,7 @@ import { DuplicatesDialogComponent } from '../duplicates-dialog/duplicates-dialo
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './location-create-form.component.html'
 })
-export class LocationCreateFormComponent {
+export class LocationCreateFormComponent implements OnInit {
   @Input() lat!: number;
   @Input() lng!: number;
   @Output() close = new EventEmitter<any>();
@@ -26,8 +34,11 @@ export class LocationCreateFormComponent {
   private locationService = inject(LocationService);
   private formState = inject(FormStateService);
   private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+  currentUserId: string | null = null;
 
-  days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+
+  days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   form: FormGroup = this.fb.group({
     name: ['', Validators.required],
@@ -41,10 +52,10 @@ export class LocationCreateFormComponent {
     }),
     workingHours: this.fb.group(
       this.days.reduce((acc, day) => {
-        acc[day] = this.fb.group({ open: [''], close: [''] });
+        acc[day] = this.fb.group({open: [''], close: ['']});
         return acc;
       }, {} as Record<string, FormGroup>),
-      { validators: [workingHoursValidator] }
+      {validators: [workingHoursValidator]}
     )
   });
 
@@ -61,12 +72,26 @@ export class LocationCreateFormComponent {
       this.form.patchValue(saved.formValue);
       this.selectedImages = saved.selectedImages || [];
     }
+
+    const username = this.authService.getUsernameFromToken();
+    if (username) {
+      this.authService.getByUsername(username).subscribe({
+        next: (user) => {
+          this.currentUserId = user.id;
+        },
+        error: (err) => console.error('Не вдалося отримати користувача:', err)
+      });
+    } else {
+      console.warn('Username не знайдено у токені');
+    }
   }
+
+
 
   onImageSelect(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
-    this.selectedImages = Array.from(input.files).map(file => ({ file, preview: URL.createObjectURL(file) }));
+    this.selectedImages = Array.from(input.files).map(file => ({file, preview: URL.createObjectURL(file)}));
   }
 
   save() {
@@ -77,8 +102,8 @@ export class LocationCreateFormComponent {
 
     const dto = {
       ...this.form.value,
-      coordinates: { lat: this.lat, lng: this.lng },
-      createdBy: 'c4b22cb9-85cb-4e3d-b6c0-ff70cc98b555',
+      coordinates: {lat: this.lat, lng: this.lng},
+      createdBy: this.currentUserId,
       lastVerifiedAt: new Date().toISOString(),
       status: LocationStatusEnum.PENDING
     };
@@ -120,15 +145,22 @@ export class LocationCreateFormComponent {
     });
   }
 
-  private openDuplicatesDialog(similar: Array<{id:string,name:string,address?:string,likeness:number,latitude?:number,longitude?:number}>, dto: any) {
+  private openDuplicatesDialog(similar: Array<{
+    id: string,
+    name: string,
+    address?: string,
+    likeness: number,
+    latitude?: number,
+    longitude?: number
+  }>, dto: any) {
     // зберігаємо стан форми перед відкриттям
-    this.formState.saveFormData({ formValue: this.form.value, selectedImages: this.selectedImages });
+    this.formState.saveFormData({formValue: this.form.value, selectedImages: this.selectedImages});
 
     // зберігаємо локально, щоб потім мали доступ при view/no
     this._lastSimilar = similar;
     this._lastDto = dto;
 
-    const ref = this.dialog.open(DuplicatesDialogComponent, { data: { similar }, width: '600px' });
+    const ref = this.dialog.open(DuplicatesDialogComponent, {data: {similar}, width: '600px'});
 
     ref.afterClosed().subscribe(result => {
       if (!result) return;
@@ -136,10 +168,10 @@ export class LocationCreateFormComponent {
       if (result.action === 'proceed') {
         // ✅ користувач хоче примусово додати — не створюємо тут, а просто емітимо нагору (як у тебе було)
         this.formState.clearFormData();
-        this.close.emit({ ...dto, force: true });
+        this.close.emit({...dto, force: true});
       } else if (result.action === 'view' && result.id) {
         // замість відкривати нову сторінку — повідомляємо MapPage щоб він зробив flyTo і зайшов у duplicateMode
-        this.viewDuplicate.emit({ id: result.id, similar: similar, dto: dto });
+        this.viewDuplicate.emit({id: result.id, similar: similar, dto: dto});
         // не закриваємо форму — даємо користувачу можливість відповісти в сайдбарі
       }
     });
@@ -159,7 +191,7 @@ function workingHoursValidator(control: AbstractControl): ValidationErrors | nul
     const open = (subGroup as FormGroup).get('open')?.value;
     const close = (subGroup as FormGroup).get('close')?.value;
     if ((open && !close) || (!open && close)) {
-      return { workingHoursIncomplete: true };
+      return {workingHoursIncomplete: true};
     }
   }
   return null;

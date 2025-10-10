@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { LocationService } from '../../core/services/location.service';
 import { BarrierlessCriteriaCheckService } from '../../core/services/barrierless-criteria-check.service';
+import {AuthService} from '../../core/services/security/auth.service';
 
 @Component({
   selector: 'app-criteria-evaluation',
@@ -15,31 +16,72 @@ export class CriteriaEvaluationComponent implements OnInit {
   criteriaTree: any | null = null;
   selectedTypes: any[] = [];
   scores: { [criteriaId: string]: any } = {};
-  locationId!: string; // 👈 буде зчитано з маршруту
+  locationId!: string;
+  currentUserId!: string;
 
   constructor(
     private route: ActivatedRoute,
     private locationService: LocationService,
-    private checkService: BarrierlessCriteriaCheckService
+    private checkService: BarrierlessCriteriaCheckService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
     this.locationId = this.route.snapshot.paramMap.get('id')!;
 
+    // ✅ 1. Отримуємо username з токена
+    const username = this.authService.getUsernameFromToken();
+
+    if (username) {
+      // ✅ 2. Отримуємо userId з бекенду
+      this.authService.getByUsername(username).subscribe({
+        next: (user) => {
+          this.currentUserId = user.id;
+          // ✅ 3. Коли userId відомий — підтягуємо дерево критеріїв
+          this.loadCriteriaTreeForUser();
+        },
+        error: (err) => console.error('❌ Не вдалося отримати користувача:', err)
+      });
+    } else {
+      console.warn('⚠️ Username не знайдено у токені');
+    }
+  }
+
+  /** 🔹 Отримує дерево критеріїв і заповнює форму, якщо є старі відгуки */
+  loadCriteriaTreeForUser() {
     this.locationService.getLocationById(this.locationId).subscribe((location: any) => {
       if (!location?.type) {
         console.error('❌ Локація не має поля type!');
         return;
       }
 
-      // ✅ передаємо просто ID типу
-      this.locationService
-        .getCriteriaTreeByTypeId(location.id)
-        .subscribe(tree => (this.criteriaTree = tree));
+      // ✅ Запит з userId, щоб прийшли лише його чеки
+      this.locationService.getCriteriaTreeByTypeId(location.id, this.currentUserId).subscribe(tree => {
+        this.criteriaTree = tree;
+        this.initializeScoresFromTree(tree);
+      });
     });
   }
 
+  /** 🧩 Заповнює форму попередніми оцінками користувача */
+  initializeScoresFromTree(tree: any) {
+    if (!tree?.group?.types) return;
 
+    tree.group.types.forEach((type: any) => {
+      type.criterias.forEach((criteria: any) => {
+        if (criteria.barrierlessCriteriaChecks?.length > 0) {
+          const userCheck = criteria.barrierlessCriteriaChecks[0]; // бо фільтр уже по userId
+          this.scores[criteria.id] = {
+            value: userCheck.hasIssue ? 'no' : 'yes',
+            comment: userCheck.comment || '',
+            photos: [] // якщо фото будуть у DTO — вставимо пізніше
+          };
+          // Автоматично відкриваємо тип, де є заповнені критерії
+          if (!this.selectedTypes.includes(type)) this.selectedTypes.push(type);
+        }
+      });
+    });
+  }
 
   toggleType(type: any) {
     const index = this.selectedTypes.indexOf(type);
@@ -88,14 +130,16 @@ export class CriteriaEvaluationComponent implements OnInit {
 
   /** 🔥 Відправка на бекенд */
   submitEvaluation() {
-    const defaultUserId = '4c88cc0e-b5f8-478c-928b-08cc12f38423';
+    if (!this.currentUserId) {
+      alert('❌ Користувача не знайдено');
+      return;
+    }
 
-    // Формуємо масив DTO
     const checkList = Object.entries(this.scores).map(([criteriaId, data]: any) => ({
-      locationId: this.locationId, // 👈 тепер автоматично з URL
+      locationId: this.locationId,
       barrierlessCriteriaId: criteriaId,
-      userId: defaultUserId,
-      createdBy: defaultUserId,
+      userId: this.currentUserId,
+      createdBy: this.currentUserId,
       comment: data.comment || null,
       hasIssue: data.value === 'no',
       barrierFreeRating: null,

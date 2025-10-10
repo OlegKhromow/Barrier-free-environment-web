@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../../environments/environment';
-import {BehaviorSubject, Subject, tap} from 'rxjs';
+import {BehaviorSubject, Observable, Subject, tap} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -15,14 +15,17 @@ export class AuthService {
 
   private isLoggedInSubject = new BehaviorSubject<boolean>(false);
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
+  private baseUrl = `${environment.apiEndpoint}`;
 
   constructor(private http: HttpClient) {
+    const hasToken = !!this.getToken();
+    this.isLoggedInSubject.next(hasToken);
   }
 
   login(username: string, password: string) {
     return this.http.post<{ refreshToken: string, accessToken: string }>(`${this.apiUrl}/login`, {username, password})
       .pipe(
-        tap((response: { refreshToken: string, accessToken: string }) => {
+        tap((response) => {
           localStorage.setItem('auth_token', response.accessToken);
           this.isLoggedInSubject.next(true);
         })
@@ -38,8 +41,21 @@ export class AuthService {
     return localStorage.getItem('auth_token');
   }
 
+  getUsernameFromToken(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || payload.username || null;
+    } catch (e) {
+      console.error('Помилка декодування токена', e);
+      return null;
+    }
+  }
+
   isLoggedIn(): boolean {
-    const isLogged: boolean = !!this.getToken();
+    const isLogged = !!this.getToken();
     this.isLoggedInSubject.next(isLogged);
     return isLogged;
   }
@@ -50,5 +66,9 @@ export class AuthService {
 
   closeLoginModal() {
     this.loginModalSubject.next(false);
+  }
+
+  getByUsername(username: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users/by-name/${username}`);
   }
 }
