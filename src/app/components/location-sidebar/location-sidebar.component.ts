@@ -78,6 +78,22 @@ export class LocationSidebarComponent implements OnChanges{
     return this.openTypes.has(type);
   }
 
+  getBarrierlessRatio(c: any): number {
+    const total = c.barrierlessCriteriaChecks?.length || 0;
+    const noIssue = this.countChecks(c, false);
+    return total > 0 ? (noIssue / total) * 100 : 0;
+  }
+
+  getBalancePosition(c: any): number {
+    const total = c.barrierlessCriteriaChecks?.length || 0;
+    if (total === 0) return 50; // по центру, якщо немає голосів
+
+    const noIssue = this.countChecks(c, false);
+    const hasIssue = this.countChecks(c, true);
+
+    // Баланс: 0 = повністю зелений, 100 = повністю червоний
+    return (hasIssue / total) * 100;
+  }
 
 
   ngOnChanges() {

@@ -90,15 +90,28 @@
 
                   <!-- Новий блок перевірок -->
                   <div *ngIf="c.barrierlessCriteriaChecks?.length > 0; else noChecks" class="ml-4 text-xs text-gray-700 mt-2">
-                    <!-- Лічильники -->
-                    <div class="flex items-center gap-3 mb-1">
-                      <span class="text-green-600 font-medium">
-                        ✅ Без проблем: {{ countChecks(c, false) }}
-                      </span>
-                      <span class="text-red-600 font-medium">
-                        ⚠️ Є проблема: {{ countChecks(c, true) }}
-                      </span>
+                    <!-- Баланс думок -->
+                    <div class="mt-2">
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="text-green-700 font-medium">Безбар’єрно: {{ countChecks(c, false) }}</span>
+                        <span class="text-red-700 font-medium">Проблеми: {{ countChecks(c, true) }}</span>
+                      </div>
+
+                      <!-- Контейнер повзунка -->
+                      <div class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
+                        <!-- Повзунок -->
+                        <div
+                          class="absolute top-1/2 -translate-y-1/2 w-2 h-4 bg-gray-800 rounded-full shadow-md transition-all duration-300"
+                          [style.left.%]="getBalancePosition(c)">
+                        </div>
+                      </div>
+
+                      <div class="text-xs text-gray-500 mt-1 text-center">
+                        {{ 100 - getBalancePosition(c) | number:'1.0-0' }}% безбар’єрно /
+                        {{ getBalancePosition(c) | number:'1.0-0' }}% з проблемами
+                      </div>
                     </div>
+
 
                     <!-- Кнопка для розкриття коментарів -->
                     <div class="cursor-pointer text-blue-600 hover:underline select-none"
