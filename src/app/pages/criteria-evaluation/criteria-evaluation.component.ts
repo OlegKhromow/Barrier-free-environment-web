@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { LocationService } from '../../core/services/location.service';
-import { BarrierlessCriteriaCheckService } from '../../core/services/barrierless-criteria-check.service';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ActivatedRoute} from '@angular/router';
+import {LocationService} from '../../core/services/location.service';
+import {BarrierlessCriteriaCheckService} from '../../core/services/barrierless-criteria-check.service';
 import {AuthService} from '../../core/services/security/auth.service';
 
 @Component({
@@ -24,27 +24,20 @@ export class CriteriaEvaluationComponent implements OnInit {
     private locationService: LocationService,
     private checkService: BarrierlessCriteriaCheckService,
     private authService: AuthService
-  ) {}
+  ) {
+  }
 
   ngOnInit() {
     this.locationId = this.route.snapshot.paramMap.get('id')!;
 
-    // ✅ 1. Отримуємо username з токена
-    const username = this.authService.getUsernameFromToken();
-
-    if (username) {
-      // ✅ 2. Отримуємо userId з бекенду
-      this.authService.getByUsername(username).subscribe({
-        next: (user) => {
-          this.currentUserId = user.id;
-          // ✅ 3. Коли userId відомий — підтягуємо дерево критеріїв
-          this.loadCriteriaTreeForUser();
-        },
-        error: (err) => console.error('❌ Не вдалося отримати користувача:', err)
-      });
-    } else {
-      console.warn('⚠️ Username не знайдено у токені');
-    }
+    this.authService.getByUsername().subscribe({
+      next: (user) => {
+        this.currentUserId = user.id;
+        // ✅ 3. Коли userId відомий — підтягуємо дерево критеріїв
+        this.loadCriteriaTreeForUser();
+      },
+      error: (err) => console.error('❌ Не вдалося отримати користувача:', err)
+    });
   }
 
   /** 🔹 Отримує дерево критеріїв і заповнює форму, якщо є старі відгуки */
@@ -56,7 +49,7 @@ export class CriteriaEvaluationComponent implements OnInit {
       }
 
       // ✅ Запит з userId, щоб прийшли лише його чеки
-      this.locationService.getCriteriaTreeByTypeId(location.id, this.currentUserId).subscribe(tree => {
+      this.locationService.getCriteriaTreeByTypeId(location.id).subscribe(tree => {
         this.criteriaTree = tree;
         this.initializeScoresFromTree(tree);
       });

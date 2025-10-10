@@ -73,19 +73,13 @@ export class LocationCreateFormComponent implements OnInit {
       this.selectedImages = saved.selectedImages || [];
     }
 
-    const username = this.authService.getUsernameFromToken();
-    if (username) {
-      this.authService.getByUsername(username).subscribe({
-        next: (user) => {
-          this.currentUserId = user.id;
-        },
-        error: (err) => console.error('Не вдалося отримати користувача:', err)
-      });
-    } else {
-      console.warn('Username не знайдено у токені');
-    }
+    this.authService.getByUsername().subscribe({
+      next: (user) => {
+        this.currentUserId = user.id;
+      },
+      error: (err) => console.error('Не вдалося отримати користувача:', err)
+    });
   }
-
 
 
   onImageSelect(event: Event) {

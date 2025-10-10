@@ -43,11 +43,8 @@ export class LocationService {
     return type ? type.name : 'Невідомо';
   }
 
-  getCriteriaTreeByTypeId(locationId: string, userId?: string) {
-    const url = userId
-      ? `${this.baseUrl}locations/${locationId}/criteria-tree?userId=${userId}`
-      : `${this.baseUrl}locations/${locationId}/criteria-tree`;
-    return this.http.get<any>(url);
+  getCriteriaTreeByTypeId(locationId: string) {
+    return this.http.get<any>(`${this.baseUrl}locations/${locationId}/criteria-tree`);
   }
 
 

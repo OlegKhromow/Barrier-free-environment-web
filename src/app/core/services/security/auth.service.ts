@@ -68,11 +68,11 @@ export class AuthService {
     this.loginModalSubject.next(false);
   }
 
-  getByUsername(username: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/users/by-name/${username}`);
+  getByUsername(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users/me/`);
   }
 
   getAuthoritiesByUsername(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/me/authorities`);
+    return this.http.get<any>(`${this.baseUrl}/users/me/authorities`);
   }
 }
