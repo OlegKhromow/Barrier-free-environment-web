@@ -1,6 +1,12 @@
 <aside class="sidebar flex flex-col h-full justify-between">
   <div>
     <ng-container *ngIf="location; else empty">
+      <p class="text-gray-600 mb-4">
+        {{ getAccessibilityLevel(location.overallAccessibilityScore) }}
+        <span *ngIf="location.overallAccessibilityScore != null" class="text-sm text-gray-400">
+    ({{ location.overallAccessibilityScore }}%)
+  </span>
+      </p>
       <h2 class="text-xl font-bold mb-2 text-green-700">{{ location.name }}</h2>
       <p class="text-gray-600 mb-4">{{ location.address }}</p>
 
@@ -20,7 +26,8 @@
       <!-- Контакти -->
       <div class="mb-4">
         <h3 class="font-semibold text-gray-800">Контакти</h3>
-        <ng-container *ngIf="location.contacts && (location.contacts.phone || location.contacts.email || location.contacts.website); else noContacts">
+        <ng-container
+          *ngIf="location.contacts && (location.contacts.phone || location.contacts.email || location.contacts.website); else noContacts">
           <ul class="text-sm text-gray-700">
             <li *ngIf="location.contacts.phone">📞 {{ location.contacts.phone }}</li>
             <li *ngIf="location.contacts.email">✉️ {{ location.contacts.email }}</li>
@@ -89,7 +96,8 @@
                   <div class="text-gray-600 text-xs mb-1">{{ c.description }}</div>
 
                   <!-- Новий блок перевірок -->
-                  <div *ngIf="c.barrierlessCriteriaChecks?.length > 0; else noChecks" class="ml-4 text-xs text-gray-700 mt-2">
+                  <div *ngIf="c.barrierlessCriteriaChecks?.length > 0; else noChecks"
+                       class="ml-4 text-xs text-gray-700 mt-2">
                     <!-- Баланс думок -->
                     <div class="mt-2">
                       <div class="flex justify-between text-xs mb-1">
@@ -98,7 +106,8 @@
                       </div>
 
                       <!-- Контейнер повзунка -->
-                      <div class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
+                      <div
+                        class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
                         <!-- Повзунок -->
                         <div
                           class="absolute top-1/2 -translate-y-1/2 w-2 h-4 bg-gray-800 rounded-full shadow-md transition-all duration-300"

@@ -95,6 +95,15 @@ export class LocationSidebarComponent implements OnChanges{
     return (hasIssue / total) * 100;
   }
 
+  getAccessibilityLevel(score: number | null | undefined): string {
+    if (score == null) return 'Немає даних';
+    if (score === 100) return 'Повна безбар’єрність';
+    if (score >= 70) return 'Висока безбар’єрність';
+    if (score >= 50) return 'Середня безбар’єрність';
+    if (score >= 30) return 'Низька безбар’єрність';
+    return 'Недоступна';
+  }
+
 
   ngOnChanges() {
     if (this.location?.id) {
