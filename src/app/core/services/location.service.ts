@@ -57,6 +57,9 @@ export class LocationService {
     return this.http.get<Location>(`${this.baseUrl}locations/${id}/`);
   }
 
+  getUserPendingLocations(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}locations/me/pending-locations/`);
+  }
 
 
   getLocations(): Observable<Location[]> {
