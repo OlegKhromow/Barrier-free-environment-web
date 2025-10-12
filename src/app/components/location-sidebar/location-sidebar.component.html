@@ -178,7 +178,17 @@
 
     <p *ngIf="!duplicateMode">
       Хочете оновити дані локації?
-      <a href="#" class="text-blue-600 underline hover:text-blue-800">Перейти до внесення нових даних</a>
+      <a href="#" (click)="openPendingCopyForm($event)" class="text-blue-600 underline hover:text-blue-800">
+        Перейти до внесення нових даних
+      </a>
     </p>
+
+    <app-location-pending-copy-form
+      *ngIf="showPendingCopyForm"
+      [locationId]="location.id"
+      (close)="showPendingCopyForm = false"
+      (saved)="onPendingCopySaved($event)">
+    </app-location-pending-copy-form>
+
   </div>
 </aside>

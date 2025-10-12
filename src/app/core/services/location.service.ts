@@ -47,9 +47,14 @@ export class LocationService {
     return this.http.get<any>(`${this.baseUrl}locations/${locationId}/criteria-tree`);
   }
 
+  createPendingCopy(locationId: string, dto: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}locations/to_pending/${locationId}/`, dto);
+  }
 
-  getLocationById(id: string) {
-    return this.http.get(`${this.baseUrl}locations/${id}/`);
+
+
+  getLocationById(id: string) :Observable<Location> {
+    return this.http.get<Location>(`${this.baseUrl}locations/${id}/`);
   }
 
 

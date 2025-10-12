@@ -3,11 +3,14 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Location } from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
 import {RouterLink} from '@angular/router';
+import {
+  LocationPendingCopyFormComponent
+} from '../../pages/location-pending-copy-form/location-pending-copy-form.component';
 
 @Component({
   selector: 'app-location-sidebar',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage, RouterLink],
+  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationPendingCopyFormComponent],
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })
@@ -31,6 +34,19 @@ export class LocationSidebarComponent implements OnChanges{
     { key: 'saturday', label: 'Субота' },
     { key: 'sunday', label: 'Неділя' }
   ];
+
+  showPendingCopyForm = false;
+
+  openPendingCopyForm(event: Event) {
+    event.preventDefault();
+    this.showPendingCopyForm = true;
+  }
+
+  onPendingCopySaved(res: any) {
+    this.showPendingCopyForm = false;
+    console.log('✅ Pending copy saved:', res);
+  }
+
 
   /** ✅ Перевіряє, чи весь розклад порожній */
   hasNoSchedule(workingHours: any): boolean {
