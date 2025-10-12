@@ -98,7 +98,6 @@ export class LocationCreateFormComponent implements OnInit {
       ...this.form.value,
       coordinates: {lat: this.lat, lng: this.lng},
       createdBy: this.currentUserId,
-      lastVerifiedAt: new Date().toISOString(),
       status: LocationStatusEnum.PENDING
     };
 

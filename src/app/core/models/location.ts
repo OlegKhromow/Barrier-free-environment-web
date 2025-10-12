@@ -23,6 +23,8 @@ export class Location {
     public createdAt: string,   // ISO date string
     public updatedAt: string,   // ISO date string
     public lastVerifiedAt: string, // ISO date string
+    public lastVerifiedBy: string,
+    public updatedBy: string,
     public rejectionReason: string | null
   ) {}
 

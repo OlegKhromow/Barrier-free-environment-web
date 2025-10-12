@@ -85,7 +85,9 @@ export class LocationService {
             dto.createdAt,
             dto.updatedAt,
             dto.lastVerifiedAt,
-            dto.rejectionReason
+            dto.rejectionReason,
+            dto.updatedBy,
+            dto.lastVerifiedBy
           );
         })
       )
