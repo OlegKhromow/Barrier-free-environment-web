@@ -42,6 +42,13 @@ export class LocationSidebarComponent implements OnChanges{
     this.showPendingCopyForm = true;
   }
 
+  @Input() locationPendingMap: Map<Location, any> | null = null;
+
+  currentView: 'location' | 'pending' = 'location';
+  pendingVersion: any | null = null;
+
+
+
   onPendingCopySaved(res: any) {
     this.showPendingCopyForm = false;
     console.log('✅ Pending copy saved:', res);
@@ -120,13 +127,39 @@ export class LocationSidebarComponent implements OnChanges{
     return 'Недоступна';
   }
 
+  get displayData(): any {
+    return this.currentView === 'location' ? this.location : this.pendingVersion;
+  }
+
+
 
   ngOnChanges() {
     if (this.location?.id) {
       this.locationService.getCriteriaTreeByTypeId(this.location.id)
         .subscribe(tree => this.criteriaTree = tree);
+
+      // шукаємо pending версію для цієї локації
+      this.pendingVersion = null;
+      if (this.locationPendingMap) {
+        for (const [loc, pending] of this.locationPendingMap.entries()) {
+          if (loc.id === this.location.id) {
+            this.pendingVersion = pending;
+            break;
+          }
+        }
+      }
+
+      // якщо pendingVersion є — залишаємо поточний вид location
+      this.currentView = 'location';
     }
   }
+
+  toggleView() {
+    if (this.pendingVersion) {
+      this.currentView = this.currentView === 'location' ? 'pending' : 'location';
+    }
+  }
+
 
   showCommentsMap = new Map<any, boolean>();
 

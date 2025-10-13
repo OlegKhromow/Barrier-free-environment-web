@@ -1,19 +1,28 @@
 <aside class="sidebar flex flex-col h-full justify-between">
   <div>
     <ng-container *ngIf="location; else empty">
+      <!-- Кнопка перемикання між Location та Pending -->
+      <div *ngIf="pendingVersion" class="mb-3">
+        <button
+          (click)="toggleView()"
+          class="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">
+          {{ currentView === 'location' ? '🔁 Показати оновлену версію' : '↩ Повернутись до оригіналу' }}
+        </button>
+      </div>
+
       <p class="text-gray-600 mb-4">
         {{ getAccessibilityLevel(location.overallAccessibilityScore) }}
         <span *ngIf="location.overallAccessibilityScore != null" class="text-sm text-gray-400">
     ({{ location.overallAccessibilityScore }}%)
   </span>
       </p>
-      <h2 class="text-xl font-bold mb-2 text-green-700">{{ location.name }}</h2>
-      <p class="text-gray-600 mb-4">{{ location.address }}</p>
+      <h2 class="text-xl font-bold mb-2 text-green-700">{{ displayData.name }}</h2>
+      <p class="text-gray-600 mb-4">{{ displayData.address }}</p>
 
       <!-- Опис -->
       <div class="mb-4">
         <h3 class="font-semibold text-gray-800">Опис</h3>
-        <p class="text-sm text-gray-700">{{ location.description || 'Немає опису' }}</p>
+        <p class="text-sm text-gray-700">{{ displayData.description || 'Немає опису' }}</p>
       </div>
 
       <!-- Категорія -->
@@ -27,13 +36,13 @@
       <div class="mb-4">
         <h3 class="font-semibold text-gray-800">Контакти</h3>
         <ng-container
-          *ngIf="location.contacts && (location.contacts.phone || location.contacts.email || location.contacts.website); else noContacts">
+          *ngIf="displayData.contacts && (displayData.contacts.phone || displayData.contacts.email || displayData.contacts.website); else noContacts">
           <ul class="text-sm text-gray-700">
-            <li *ngIf="location.contacts.phone">📞 {{ location.contacts.phone }}</li>
-            <li *ngIf="location.contacts.email">✉️ {{ location.contacts.email }}</li>
-            <li *ngIf="location.contacts.website">
-              🌍 <a [href]="location.contacts.website" target="_blank" class="text-blue-600 underline">
-              {{ location.contacts.website }}
+            <li *ngIf="displayData.contacts.phone">📞 {{ displayData.contacts.phone }}</li>
+            <li *ngIf="displayData.contacts.email">✉️ {{ displayData.contacts.email }}</li>
+            <li *ngIf="displayData.contacts.website">
+              🌍 <a [href]="displayData.contacts.website" target="_blank" class="text-blue-600 underline">
+              {{ displayData.contacts.website }}
             </a>
             </li>
           </ul>
@@ -46,9 +55,9 @@
       <!-- Розклад -->
       <div class="mb-4">
         <h3 class="font-semibold text-gray-800">Графік роботи</h3>
-        <ng-container *ngIf="location?.workingHours && !hasNoSchedule(location.workingHours); else noSchedule">
+        <ng-container *ngIf="displayData?.workingHours && !hasNoSchedule(displayData.workingHours); else noSchedule">
           <div *ngFor="let d of days">
-            <div>{{ d.label }}: {{ getDaySchedule(d.key, location.workingHours) }}</div>
+            <div>{{ d.label }}: {{ getDaySchedule(d.key, displayData.workingHours) }}</div>
           </div>
         </ng-container>
         <ng-template #noSchedule>
@@ -186,6 +195,7 @@
     <app-location-pending-copy-form
       *ngIf="showPendingCopyForm"
       [locationId]="location.id"
+      [prefillData]="displayData"
       (close)="showPendingCopyForm = false"
       (saved)="onPendingCopySaved($event)">
     </app-location-pending-copy-form>

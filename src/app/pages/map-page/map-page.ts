@@ -9,6 +9,7 @@ import { LocationCreateFormComponent } from '../../components/location-create-fo
 import { MatDialog } from '@angular/material/dialog';
 import { DuplicatesDialogComponent } from '../../components/duplicates-dialog/duplicates-dialog.component';
 import { FormStateService } from '../../core/services/form-state.service';
+import {forkJoin} from 'rxjs';
 
 @Component({
   selector: 'app-map-page',
@@ -32,6 +33,7 @@ export class MapPage implements OnInit, AfterViewInit {
   showCreateForm = false;
   clickedLat: number | null = null;
   clickedLng: number | null = null;
+  locationPendingMap = new Map<Location, any>();
 
   // duplicate режим
   duplicateMode = false;
@@ -78,14 +80,29 @@ export class MapPage implements OnInit, AfterViewInit {
   }
 
   private fetchLocations(): void {
-    this.locationService.getLocations().subscribe({
-      next: value => {
-        this.locations = value;
+    forkJoin({
+      locations: this.locationService.getLocations(),
+      pending: this.locationService.getUserPendingLocations()
+    }).subscribe({
+      next: ({ locations, pending }) => {
+        this.locations = locations;
         this.addMarkers();
+
+        // формуємо Map<Location, PendingLocation>
+        this.locationPendingMap.clear();
+        locations.forEach(loc => {
+          const match = pending.find(p => p.locationId === loc.id);
+          if (match) {
+            this.locationPendingMap.set(loc, match);
+          }
+        });
+
+        console.log('📍 Map Location → PendingLocation:', this.locationPendingMap);
       },
-      error: err => console.error('Error loading locations:', err)
+      error: err => console.error('Error fetching locations or pending:', err)
     });
   }
+
 
   private addMarkers(): void {
     this.locations?.forEach(location => {

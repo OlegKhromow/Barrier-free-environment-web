@@ -17,6 +17,8 @@ export class LocationPendingCopyFormComponent implements OnInit {
   @Input() locationId!: string;
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<any>();
+  @Input() prefillData: any | null = null;
+
 
   private fb = inject(FormBuilder);
   private locationService = inject(LocationService);
@@ -38,22 +40,29 @@ export class LocationPendingCopyFormComponent implements OnInit {
       error: err => console.error('❌ Не вдалося отримати користувача:', err)
     });
 
-    // ✅ підтягуємо дані локації для попереднього заповнення
-    if (this.locationId) {
+    // ✅ якщо передали дані для попереднього заповнення — використовуємо їх
+    if (this.prefillData) {
+      this.applyPrefill(this.prefillData);
+    }
+    else if (this.locationId) {
+      // fallback — якщо не передали prefillData
       this.locationService.getLocationById(this.locationId).subscribe({
-        next: (loc) => {
-          this.form.patchValue({
-            name: loc.name,
-            address: loc.address,
-            description: loc.description,
-            contacts: loc.contacts || {},
-            workingHours: loc.workingHours || {}
-          });
-        },
-        error: (err) => console.error('❌ Не вдалося завантажити локацію', err)
+        next: loc => this.applyPrefill(loc),
+        error: err => console.error('❌ Не вдалося завантажити локацію', err)
       });
     }
   }
+
+  private applyPrefill(data: any) {
+    this.form.patchValue({
+      name: data.name || '',
+      address: data.address || '',
+      description: data.description || '',
+      contacts: data.contacts || {},
+      workingHours: data.workingHours || {}
+    });
+  }
+
 
   private initForm() {
     this.form = this.fb.group({
