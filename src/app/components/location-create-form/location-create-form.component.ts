@@ -35,7 +35,7 @@ export class LocationCreateFormComponent implements OnInit {
   private formState = inject(FormStateService);
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
-  currentUserId: string | null = null;
+  // currentUserId: string | null = null;
 
 
   days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -73,12 +73,12 @@ export class LocationCreateFormComponent implements OnInit {
       this.selectedImages = saved.selectedImages || [];
     }
 
-    this.authService.getByUsername().subscribe({
-      next: (user) => {
-        this.currentUserId = user.id;
-      },
-      error: (err) => console.error('Не вдалося отримати користувача:', err)
-    });
+    // this.authService.getByUsername().subscribe({
+    //   next: (user) => {
+    //     this.currentUserId = user.id;
+    //   },
+    //   error: (err) => console.error('Не вдалося отримати користувача:', err)
+    // });
   }
 
 
@@ -97,7 +97,7 @@ export class LocationCreateFormComponent implements OnInit {
     const dto = {
       ...this.form.value,
       coordinates: {lat: this.lat, lng: this.lng},
-      createdBy: this.currentUserId,
+      // createdBy: this.currentUserId,
       status: LocationStatusEnum.PENDING
     };
 
