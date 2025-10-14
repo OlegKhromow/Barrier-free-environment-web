@@ -33,7 +33,6 @@ export class LocationService {
   }
 
   checkDuplicates(dto: any): Observable<HttpResponse<any>> {
-    console.log(`${this.baseUrl}locations/check-duplicates`)
     return this.http.post<any>(`${this.baseUrl}locations/check-duplicates`, dto, { observe: 'response' });
   }
 

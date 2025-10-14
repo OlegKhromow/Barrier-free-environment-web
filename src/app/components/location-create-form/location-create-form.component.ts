@@ -69,16 +69,34 @@ export class LocationCreateFormComponent implements OnInit {
   ngOnInit() {
     const saved = this.formState.getFormData();
     if (saved) {
+      // Якщо є збережена форма (повернулися після перегляду дубліката) — відновлюємо
       this.form.patchValue(saved.formValue);
       this.selectedImages = saved.selectedImages || [];
+    } else {
+      // Порожня форма, якщо збережено нічого немає
+      this.initForm();
     }
-
-    // this.authService.getByUsername().subscribe({
-    //   next: (user) => {
-    //     this.currentUserId = user.id;
-    //   },
-    //   error: (err) => console.error('Не вдалося отримати користувача:', err)
-    // });
+  }
+  private initForm() {
+    this.form = this.fb.group({
+      name: ['', Validators.required],
+      address: ['', Validators.required],
+      type: ['', Validators.required],
+      description: [''],
+      contacts: this.fb.group({
+        phone: [''],
+        email: ['', Validators.email],
+        website: ['']
+      }),
+      workingHours: this.fb.group(
+        this.days.reduce((acc, day) => {
+          acc[day] = this.fb.group({open: [''], close: ['']});
+          return acc;
+        }, {} as Record<string, FormGroup>),
+        {validators: [workingHoursValidator]}
+      )
+    });
+    this.selectedImages = [];
   }
 
 
@@ -106,13 +124,13 @@ export class LocationCreateFormComponent implements OnInit {
       next: (res) => {
         if (res.status === 409) {
           const similarArr = (res.body?.similar || []).map((it: any) => ({
-            id: it.location?.id,
-            name: it.location?.name,
-            address: it.location?.address,
-            likeness: it.likeness,
-            latitude: it.location?.latitude,
-            longitude: it.location?.longitude
+            id: it.id,
+            name: it.name,
+            address: it.address,
+            latitude: it.latitude,
+            longitude: it.longitude
           }));
+          console.log(similarArr);
           this.openDuplicatesDialog(similarArr, dto);
         } else {
           // ✅ просто віддаємо dto нагору
@@ -122,12 +140,11 @@ export class LocationCreateFormComponent implements OnInit {
       error: (err) => {
         if (err.status === 409) {
           const similarArr = (err.error?.similar || []).map((it: any) => ({
-            id: it.location?.id,
-            name: it.location?.name,
-            address: it.location?.address,
-            likeness: it.likeness,
-            latitude: it.location?.latitude,
-            longitude: it.location?.longitude
+            id: it.id,
+            name: it.name,
+            address: it.address,
+            latitude: it.latitude,
+            longitude: it.longitude
           }));
           this.openDuplicatesDialog(similarArr, dto);
         } else {
@@ -172,8 +189,10 @@ export class LocationCreateFormComponent implements OnInit {
 
   cancel() {
     this.formState.clearFormData();
+    this.initForm(); // очищаємо локально форму
     this.close.emit(null);
   }
+
 }
 
 /** кастомний валідатор для робочих годин */

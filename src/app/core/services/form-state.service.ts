@@ -16,4 +16,8 @@ export class FormStateService {
   clearFormData() {
     localStorage.removeItem(this.formDataKey);
   }
+
+  reset() {
+    this.clearFormData();
+  }
 }
