@@ -178,19 +178,29 @@
 
   <!-- Нижній блок із посиланнями -->
   <div *ngIf="location" class="mt-6 border-t pt-4 text-sm text-gray-700 space-y-2">
-    <p>
+    <p *ngIf="location.status === 'published'">
       Дайте оцінку локації згідно критеріям безбар'єрності:
       <a [routerLink]="['/evaluate', location.id]" class="text-blue-600 underline hover:text-blue-800">
         Перейти до оцінки локації
       </a>
     </p>
 
-    <p *ngIf="!duplicateMode">
+    <p *ngIf="location.status !== 'published'" class="text-gray-500 italic">
+      Оцінювання недоступне для неопублікованих локацій.
+    </p>
+
+
+    <p *ngIf="!duplicateMode && location.status === 'published'">
       Хочете оновити дані локації?
       <a href="#" (click)="openPendingCopyForm($event)" class="text-blue-600 underline hover:text-blue-800">
         Перейти до внесення нових даних
       </a>
     </p>
+
+    <p *ngIf="!duplicateMode && location.status !== 'published'" class="text-gray-500 italic">
+      Редагування недоступне, поки локація не опублікована.
+    </p>
+
 
     <app-location-pending-copy-form
       *ngIf="showPendingCopyForm"
