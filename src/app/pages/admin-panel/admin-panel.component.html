@@ -1,0 +1,77 @@
+<div class="p-6 space-y-6">
+  <h1 class="text-3xl font-semibold">Адмін-панель</h1>
+
+  <div *ngIf="loading" class="p-4 bg-gray-50 rounded shadow">
+    Завантаження даних...
+  </div>
+
+  <div *ngIf="error" class="p-4 bg-red-50 text-red-800 rounded shadow">
+    {{ error }}
+  </div>
+
+  <!-- Статистика по місту -->
+  <section class="bg-white p-4 rounded shadow">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-medium">Статистика безбар'єрності по місту</h2>
+      <a routerLink="/admin/stats" class="text-sm underline">Детальніше</a>
+    </div>
+
+    <div *ngIf="cityStats?.length; else noStats">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div *ngFor="let s of cityStats" class="p-3 border rounded">
+          <div class="flex justify-between items-center mb-2">
+            <div class="font-semibold">{{ s.name }}</div>
+            <div class="text-sm">Доступних: {{ s.accessibleLocations }} / {{ s.totalLocations }}</div>
+          </div>
+
+          <!-- Простий SVG-бар як "діаграма" -->
+          <div class="w-full h-6 bg-gray-100 rounded overflow-hidden">
+            <svg viewBox="0 0 100 10" preserveAspectRatio="none" class="w-full h-full">
+              <rect x="0" y="0" [attr.width]="accessiblePercent(s)" height="10"></rect>
+            </svg>
+          </div>
+
+          <div class="mt-2 text-xs text-gray-600">
+            Доступність: {{ accessiblePercent(s) }}%
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noStats>
+      <div class="text-sm text-gray-500">Статистика відсутня.</div>
+    </ng-template>
+  </section>
+
+  <!-- Блок підтвердження локацій -->
+  <section class="bg-white p-4 rounded shadow flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-medium">Підтвердження</h3>
+      <p class="text-sm text-gray-600">Локації, що очікують підтвердження</p>
+    </div>
+
+    <div class="text-right">
+      <div class="text-2xl font-bold">{{ pendingLocationsCount ?? '-' }}</div>
+      <button (click)="openPendingLocationsList()"
+              class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">
+        Переглянути список
+      </button>
+    </div>
+  </section>
+
+  <!-- Панель керування користувачами -->
+  <section class="bg-white p-4 rounded shadow flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-medium">Керування користувачами</h3>
+      <p class="text-sm text-gray-600">Перегляд і керування обліковими записами</p>
+    </div>
+
+    <div class="text-right">
+      <div class="text-2xl font-bold">{{ usersCount ?? '-' }}</div>
+      <button (click)="openUsersList()"
+              class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">
+        Список користувачів
+      </button>
+    </div>
+  </section>
+</div>

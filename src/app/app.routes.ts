@@ -3,6 +3,9 @@ import { MapPage } from './pages/map-page/map-page';
 import { AddLocationPage } from './pages/add-location-page/add-location-page';
 import { CriteriaEvaluationComponent } from './pages/criteria-evaluation/criteria-evaluation.component';
 import { authGuard } from './core/services/security/auth.guard';
+import {AdminPanelComponent} from './pages/admin-panel/admin-panel.component';
+import {Unauthorized401Component} from './pages/unauthorized-401/unauthorized-401.component';
+import {Unauthorized403Component} from './pages/unauthorized-403/unauthorized-403.component';
 
 export const routes: Routes = [
   {
@@ -21,7 +24,15 @@ export const routes: Routes = [
   },
   { path: 'evaluate/:id', component: CriteriaEvaluationComponent,canActivate: [authGuard]},
   {
+    path: 'admin',
+    component: AdminPanelComponent,
+    canActivate: [authGuard],
+    data: { role: 'ADMIN' }
+  },
+  { path: 'unauthorized-401', component: Unauthorized401Component },
+  { path: 'unauthorized-403', component: Unauthorized403Component },
+  {
     path: '**',
     redirectTo: 'map'
-  }
+  },
 ];

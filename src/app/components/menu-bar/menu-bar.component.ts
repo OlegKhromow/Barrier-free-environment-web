@@ -11,22 +11,41 @@ import {AuthService} from '../../core/services/security/auth.service';
   templateUrl: './menu-bar.component.html',
   styleUrl: './menu-bar.component.css'
 })
-export class MenuBarComponent implements OnInit{
+export class MenuBarComponent implements OnInit {
   router = inject(Router);
   isOpen = false;
   isLogin = false;
+  isAdmin = false;
 
-  authService: AuthService = inject(AuthService)
+  authService: AuthService = inject(AuthService);
 
   ngOnInit() {
-    this.authService.isLoggedIn$.subscribe(value => this.isLogin = value);
+    this.authService.isLoggedIn$.subscribe(isLogged => {
+      this.isLogin = isLogged;
+      if (isLogged) {
+        this.checkAdmin();
+      } else {
+        this.isAdmin = false;
+      }
+    });
+  }
+
+  checkAdmin() {
+    this.authService.getAuthoritiesByUsername().subscribe({
+      next: (roles: string[]) => {
+        this.isAdmin = roles.includes('ADMIN');
+      },
+      error: (err) => {
+        console.error('Помилка при отриманні ролей користувача', err);
+      }
+    });
   }
 
   toggleMenu() {
     this.isOpen = !this.isOpen;
   }
 
-  openLogin(){
+  openLogin() {
     this.authService.openLoginModal();
   }
 
