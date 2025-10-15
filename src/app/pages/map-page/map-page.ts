@@ -86,6 +86,7 @@ export class MapPage implements OnInit, AfterViewInit {
     }).subscribe({
       next: ({ locations, pending }) => {
         this.locations = locations;
+        console.log(this.locations);
         this.addMarkers();
 
         // формуємо Map<Location, PendingLocation>

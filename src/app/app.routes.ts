@@ -6,6 +6,7 @@ import { authGuard } from './core/services/security/auth.guard';
 import {AdminPanelComponent} from './pages/admin-panel/admin-panel.component';
 import {Unauthorized401Component} from './pages/unauthorized-401/unauthorized-401.component';
 import {Unauthorized403Component} from './pages/unauthorized-403/unauthorized-403.component';
+import {LocationsListPage} from './pages/locations-list-page/locations-list-page.component';
 
 export const routes: Routes = [
   {
@@ -26,6 +27,12 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminPanelComponent,
+    canActivate: [authGuard],
+    data: { role: 'ADMIN' }
+  },
+  {
+    path: 'admin/locations',
+    component: LocationsListPage,
     canActivate: [authGuard],
     data: { role: 'ADMIN' }
   },

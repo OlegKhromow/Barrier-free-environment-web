@@ -46,16 +46,9 @@
   <!-- Блок підтвердження локацій -->
   <section class="bg-white p-4 rounded shadow flex items-center justify-between">
     <div>
-      <h3 class="text-lg font-medium">Підтвердження</h3>
-      <p class="text-sm text-gray-600">Локації, що очікують підтвердження</p>
-    </div>
-
-    <div class="text-right">
-      <div class="text-2xl font-bold">{{ pendingLocationsCount ?? '-' }}</div>
-      <button (click)="openPendingLocationsList()"
-              class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">
-        Переглянути список
-      </button>
+      @if (isAdmin) {
+        <a routerLink="/admin/locations" class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">Список Локацій</a>
+      }
     </div>
   </section>
 

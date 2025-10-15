@@ -36,7 +36,7 @@ export class AdminPanelComponent implements OnInit {
     // Перевіряємо чи залогінений і чи адмін
     this.authService.isLoggedIn$.subscribe(isLogged => {
       if (!isLogged) {
-        this.router.navigate(['/']);
+        this.router.navigate(['/unauthorized-401']);
         return;
       }
       this.checkAdminAndLoad();
@@ -54,7 +54,7 @@ export class AdminPanelComponent implements OnInit {
       this.isAdmin = Array.isArray(roles) && roles.includes('ADMIN');
       if (!this.isAdmin) {
         // якщо не адмін — відправляємо назад
-        this.router.navigate(['/']);
+        this.router.navigate(['/unauthorized-403']);
         return;
       }
       // завантажуємо дані для адмінки

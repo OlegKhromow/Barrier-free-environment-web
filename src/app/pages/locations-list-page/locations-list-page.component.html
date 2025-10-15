@@ -1,0 +1,35 @@
+<div class="p-6 space-y-4">
+  <h1 class="text-2xl font-semibold mb-4">Список локацій</h1>
+
+  <div *ngIf="loading" class="p-4 bg-gray-50 rounded shadow">Завантаження...</div>
+  <div *ngIf="error" class="p-4 bg-red-100 text-red-700 rounded shadow">{{ error }}</div>
+
+  <div *ngIf="!loading && !error">
+    <div *ngIf="locations.length; else emptyList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <a *ngFor="let loc of locations"
+         routerLink="/locations/{{ loc.id }}"
+         class="block bg-white border rounded-lg p-4 shadow hover:shadow-md transition hover:bg-gray-50 cursor-pointer">
+
+        <div class="flex justify-between items-center mb-2">
+          <div class="font-semibold text-lg">{{ loc.name }}</div>
+          <span *ngIf="hasPending(loc)"
+                class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
+            Очікує підтвердження
+          </span>
+        </div>
+
+        <div class="text-sm text-gray-600 mb-1">
+          Тип: <span class="font-medium">{{ loc.type?.name || '—' }}</span>
+        </div>
+        <div class="text-sm text-gray-600 mb-1">
+          Статус: <span class="font-medium">{{ loc.status }}</span>
+        </div>
+        <p class="text-sm text-gray-700 mt-2">{{ loc.description}}</p>
+      </a>
+    </div>
+
+    <ng-template #emptyList>
+      <div class="text-gray-500">Немає доступних локацій.</div>
+    </ng-template>
+  </div>
+</div>
