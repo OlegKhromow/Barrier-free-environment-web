@@ -97,7 +97,7 @@ export class LocationService {
   }
 
 
-
-
-
+  getAllPendingLocations(): Observable<any[]> {
+    return this.http.get<any>(`${this.baseUrl}locations/pending-locations`);
+  }
 }

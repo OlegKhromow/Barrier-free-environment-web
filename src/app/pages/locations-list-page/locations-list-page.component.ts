@@ -16,12 +16,11 @@ export class LocationsListPage implements OnInit {
   private locationService = inject(LocationService);
 
   locations: Location[] = [];
-  locationPendingMap = new Map<Location, any>();
+  pendingCounts: Record<string, number> = {}; // locationId (UUID) → кількість pending
   loading = false;
   error: string | null = null;
 
   ngOnInit(): void {
-    // завантажуємо типи локацій перед основними даними
     this.locationService.loadLocationTypes();
     this.loadLocations();
   }
@@ -32,21 +31,20 @@ export class LocationsListPage implements OnInit {
 
     forkJoin({
       locations: this.locationService.getLocations(),
-      pending: this.locationService.getUserPendingLocations()
+      pending: this.locationService.getAllPendingLocations() // ← усі pending, без map
     }).subscribe({
       next: ({ locations, pending }) => {
         this.locations = locations;
 
-        // формуємо мапу зв’язку: Location → PendingLocation
-        this.locationPendingMap.clear();
-        locations.forEach(loc => {
-          const match = pending.find(p => p.locationId === loc.id);
-          if (match) {
-            this.locationPendingMap.set(loc, match);
+        // Рахуємо кількість pending по кожному locationId (UUID)
+        this.pendingCounts = pending.reduce((acc, p) => {
+          if (p.locationId) {
+            acc[p.locationId] = (acc[p.locationId] || 0) + 1;
           }
-        });
+          return acc;
+        }, {} as Record<string, number>);
 
-        console.log('📍 Locations → Pending map:', this.locationPendingMap);
+        console.log('📍 Pending counts:', this.pendingCounts);
         this.loading = false;
       },
       error: (err) => {
@@ -62,7 +60,7 @@ export class LocationsListPage implements OnInit {
     return text.length > length ? text.substring(0, length) + '…' : text;
   }
 
-  hasPending(location: Location): boolean {
-    return this.locationPendingMap.has(location);
+  getPendingCount(locationId: string): number {
+    return this.pendingCounts[locationId] || 0;
   }
 }

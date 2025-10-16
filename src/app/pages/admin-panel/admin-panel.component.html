@@ -27,12 +27,12 @@
           <!-- Простий SVG-бар як "діаграма" -->
           <div class="w-full h-6 bg-gray-100 rounded overflow-hidden">
             <svg viewBox="0 0 100 10" preserveAspectRatio="none" class="w-full h-full">
-              <rect x="0" y="0" [attr.width]="accessiblePercent(s)" height="10"></rect>
+              <rect x="0" y="0" width="2" height="10"></rect>
             </svg>
           </div>
 
           <div class="mt-2 text-xs text-gray-600">
-            Доступність: {{ accessiblePercent(s) }}%
+            Доступність: %
           </div>
         </div>
       </div>
@@ -46,6 +46,7 @@
   <!-- Блок підтвердження локацій -->
   <section class="bg-white p-4 rounded shadow flex items-center justify-between">
     <div>
+      <h3 class="text-lg font-medium">Керування локаціями</h3>
       @if (isAdmin) {
         <a routerLink="/admin/locations" class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">Список Локацій</a>
       }
@@ -61,8 +62,7 @@
 
     <div class="text-right">
       <div class="text-2xl font-bold">{{ usersCount ?? '-' }}</div>
-      <button (click)="openUsersList()"
-              class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">
+      <button class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">
         Список користувачів
       </button>
     </div>
