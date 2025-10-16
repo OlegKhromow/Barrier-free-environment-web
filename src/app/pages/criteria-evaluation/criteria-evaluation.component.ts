@@ -49,7 +49,7 @@ export class CriteriaEvaluationComponent implements OnInit {
       }
 
       // ✅ Запит з userId, щоб прийшли лише його чеки
-      this.locationService.getCriteriaTreeByTypeId(location.id).subscribe(tree => {
+      this.locationService.getCriteriaTreeByUser(location.id).subscribe(tree => {
         this.criteriaTree = tree;
         this.initializeScoresFromTree(tree);
       });

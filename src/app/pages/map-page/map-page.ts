@@ -48,6 +48,17 @@ export class MapPage implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     this.initMap();
     this.fetchLocations();
+    const params = new URLSearchParams(window.location.search);
+    const flyToLat = params.get('flyToLat');
+    const flyToLng = params.get('flyToLng');
+    if (flyToLat && flyToLng) {
+      const lat = parseFloat(flyToLat);
+      const lng = parseFloat(flyToLng);
+      setTimeout(() => {
+        this.map.flyTo([lat, lng], 17, { animate: true, duration: 0.9 });
+      }, 600);
+    }
+
   }
 
   ngOnInit(): void {
