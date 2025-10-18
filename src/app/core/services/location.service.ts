@@ -56,12 +56,47 @@ export class LocationService {
 
 
 
-  getLocationById(id: string) :Observable<Location> {
-    return this.http.get<Location>(`${this.baseUrl}locations/${id}/`);
+  getLocationById(id: string): Observable<Location> {
+    return this.http.get<any>(`${this.baseUrl}locations/${id}/`).pipe(
+      map(dto => {
+        // шукаємо потрібний тип у вже завантажених типах
+        const typeObj = this.locationTypes$.value.find(t => t.id === dto.type)!;
+
+        return new Location(
+          dto.id,
+          dto.name,
+          dto.address,
+          {
+            type: 'Point',
+            // інверсія координат, як в getLocations()
+            coordinates: [dto.coordinates.lng, dto.coordinates.lat]
+          },
+          typeObj,
+          dto.description,
+          dto.contacts,
+          dto.workingHours,
+          dto.createdBy,
+          dto.organizationId,
+          dto.status,
+          dto.overallAccessibilityScore,
+          dto.createdAt,
+          dto.updatedAt,
+          dto.lastVerifiedAt,
+          dto.rejectionReason,
+          dto.updatedBy,
+          dto.lastVerifiedBy
+        );
+      })
+    );
   }
+
 
   getUserPendingLocations(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}locations/me/pending-locations/`);
+  }
+
+  getPendingLocationsByLocationId(locationId: string): Observable<any[]>{
+    return this.http.get<any[]>(`${this.baseUrl}locations/${locationId}/pending-locations/`)
   }
 
 

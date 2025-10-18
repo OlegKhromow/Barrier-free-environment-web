@@ -1,27 +1,30 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LocationService } from '../../core/services/location.service';
 import { Location } from '../../core/models/location';
-import { LocationPendingCopyFormComponent } from '../location-pending-copy-form/location-pending-copy-form.component';
+import * as L from 'leaflet';
+import { LocationCreateFormComponent } from '../../components/location-create-form/location-create-form.component';
+import { LocationSidebarComponent } from '../../components/location-sidebar/location-sidebar.component';
 
 @Component({
   selector: 'app-location-detail-page',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationPendingCopyFormComponent],
+  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationCreateFormComponent, LocationSidebarComponent],
   templateUrl: './location-detail-page.component.html',
   styleUrls: ['./location-detail-page.component.css']
 })
-export class LocationDetailPage implements OnInit {
+export class LocationDetailPage implements OnInit, AfterViewInit {
   location: Location | null = null;
+  locations: Location[] | undefined;
+  pendingLocations: any[] = [];
   criteriaTree: any | null = null;
-  locationPendingMap: Map<Location, any> | null = null;
 
   duplicateMode = false;
-  showPendingCopyForm = false;
 
-  currentView: 'location' | 'pending' = 'location';
-  pendingVersion: any | null = null;
+  // map
+  private map!: L.Map;
+  markers: Array<{ marker: L.Marker, iconUrl: string, baseSize: [number, number], location?: Location }> = [];
 
   days = [
     { key: 'monday', label: 'Понеділок' },
@@ -39,7 +42,8 @@ export class LocationDetailPage implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -47,10 +51,90 @@ export class LocationDetailPage implements OnInit {
     if (id) {
       this.locationService.getLocationById(id).subscribe(loc => {
         this.location = loc;
+        console.log('✅ Location object:', loc);
+
         this.loadCriteriaTree();
-        this.findPendingVersion();
+        this.loadPendingLocations();
       });
     }
+  }
+
+  ngAfterViewInit(): void {
+    const id = String(this.route.snapshot.paramMap.get('id'));
+    if (id) {
+      this.locationService.getLocationById(id).subscribe(loc => {
+        this.location = loc;
+
+        setTimeout(() => {
+          this.initMap();
+          this.addMarker();
+
+          const params = new URLSearchParams(window.location.search);
+          const flyToLat = params.get('flyToLat');
+          const flyToLng = params.get('flyToLng');
+          if (flyToLat && flyToLng) {
+            const lat = parseFloat(flyToLat);
+            const lng = parseFloat(flyToLng);
+            this.map.flyTo([lat, lng], 17, { animate: true, duration: 0.9 });
+          }
+        });
+      });
+    }
+  }
+
+  private initMap(): void {
+    if (!this.location) return;
+
+    this.map = L.map('map', {
+      center: [this.location.latitude, this.location.longitude],
+      zoom: 15,
+      dragging: false,
+      zoomControl: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.map);
+
+    this.map.getContainer().style.cursor = 'pointer';
+    this.map.on('click', () => {
+      if (!this.location) return;
+      this.router.navigate(['/'], {
+        queryParams: {
+          flyToLat: this.location.latitude,
+          flyToLng: this.location.longitude,
+          selectedId: this.location.id
+        }
+      });
+    });
+  }
+
+  private addMarker(): void {
+    if (!this.location || !this.map) return;
+
+    const iconUrl = 'assets/map-markers/1.png';
+    const icon = this.createMarkerIcon(iconUrl, [35, 40]);
+
+    const marker = L.marker(
+      [this.location.latitude, this.location.longitude],
+      {
+        icon,
+        interactive: false
+      }
+    ).addTo(this.map);
+
+    (marker as any).getElement()?.style.setProperty('pointer-events', 'none');
+
+    this.markers = [{ marker, iconUrl, baseSize: [35, 40], location: this.location }];
+    this.map.setView([this.location.latitude, this.location.longitude], 15);
+  }
+
+  private createMarkerIcon(iconUrl: string, size: [number, number]): L.Icon {
+    return new L.Icon({ iconUrl, iconSize: size as any });
   }
 
   loadCriteriaTree() {
@@ -60,34 +144,14 @@ export class LocationDetailPage implements OnInit {
     }
   }
 
-  findPendingVersion() {
-    this.pendingVersion = null;
-    if (this.location && this.locationPendingMap) {
-      for (const [loc, pending] of this.locationPendingMap.entries()) {
-        if (loc.id === this.location.id) {
-          this.pendingVersion = pending;
-          break;
-        }
-      }
+  loadPendingLocations() {
+    if (this.location?.id) {
+      this.locationService.getPendingLocationsByLocationId(this.location.id)
+        .subscribe(data => {
+          this.pendingLocations = data;
+          console.log('🕒 Pending Locations:', data);
+        });
     }
-  }
-
-  openPendingCopyForm(event: Event) {
-    event.preventDefault();
-    this.showPendingCopyForm = true;
-  }
-
-  onPendingCopySaved(res: any) {
-    this.showPendingCopyForm = false;
-    console.log('✅ Pending copy saved:', res);
-  }
-
-  confirmYes() {
-    this.duplicateMode = false;
-  }
-
-  confirmNo() {
-    this.duplicateMode = false;
   }
 
   toggleGroup() {

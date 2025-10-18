@@ -9,7 +9,7 @@ import { LocationCreateFormComponent } from '../../components/location-create-fo
 import { MatDialog } from '@angular/material/dialog';
 import { DuplicatesDialogComponent } from '../../components/duplicates-dialog/duplicates-dialog.component';
 import { FormStateService } from '../../core/services/form-state.service';
-import {forkJoin} from 'rxjs';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-map-page',
@@ -47,18 +47,36 @@ export class MapPage implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initMap();
-    this.fetchLocations();
-    const params = new URLSearchParams(window.location.search);
-    const flyToLat = params.get('flyToLat');
-    const flyToLng = params.get('flyToLng');
-    if (flyToLat && flyToLng) {
-      const lat = parseFloat(flyToLat);
-      const lng = parseFloat(flyToLng);
-      setTimeout(() => {
-        this.map.flyTo([lat, lng], 17, { animate: true, duration: 0.9 });
-      }, 600);
-    }
 
+    // Спочатку завантажуємо локації, а потім обробляємо flyTo + selectedId
+    this.fetchLocations(() => {
+      const params = new URLSearchParams(window.location.search);
+      const flyToLat = params.get('flyToLat');
+      const flyToLng = params.get('flyToLng');
+      const selectedId = params.get('selectedId');
+
+      if (flyToLat && flyToLng) {
+        const lat = parseFloat(flyToLat);
+        const lng = parseFloat(flyToLng);
+
+        setTimeout(() => {
+          this.map.flyTo([lat, lng], 17, { animate: true, duration: 0.9 });
+
+          // якщо є selectedId — відкриваємо сайдбар з цією локацією
+          if (selectedId && this.locations) {
+            const found = this.locations.find(l => l.id === selectedId);
+            if (found) {
+              this.selectedLocation = JSON.parse(JSON.stringify(found));
+
+              const foundMarker = this.markers.find(m => m.location?.id === found.id);
+              if (foundMarker) {
+                foundMarker.marker.setZIndexOffset(1000);
+              }
+            }
+          }
+        }, 600);
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -70,8 +88,6 @@ export class MapPage implements OnInit, AfterViewInit {
       this.formState.clearFormData();
       sessionStorage.setItem('mapPageLoaded', 'true');
     }
-
-    console.log('MapPage init');
   }
 
   toggleAddingMode(): void {
@@ -90,14 +106,13 @@ export class MapPage implements OnInit, AfterViewInit {
     }
   }
 
-  private fetchLocations(): void {
+  private fetchLocations(afterLoad?: () => void): void {
     forkJoin({
       locations: this.locationService.getLocations(),
       pending: this.locationService.getUserPendingLocations()
     }).subscribe({
       next: ({ locations, pending }) => {
         this.locations = locations;
-        console.log(this.locations);
         this.addMarkers();
 
         // формуємо Map<Location, PendingLocation>
@@ -110,11 +125,12 @@ export class MapPage implements OnInit, AfterViewInit {
         });
 
         console.log('📍 Map Location → PendingLocation:', this.locationPendingMap);
+
+        if (afterLoad) afterLoad();
       },
       error: err => console.error('Error fetching locations or pending:', err)
     });
   }
-
 
   private addMarkers(): void {
     this.locations?.forEach(location => {
