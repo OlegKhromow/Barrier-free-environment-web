@@ -46,6 +46,37 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     private router: Router
   ) {}
 
+  selectedPending: any | null = null;
+  showModal = false;
+  modalLocation: any | null = null;
+
+
+  openModal(pending: any) {
+    // створюємо копії, щоб не змінювати реальні об'єкти
+    this.selectedPending = { ...pending };
+    this.modalLocation = { ...this.location }; // 👈 нова властивість
+    this.showModal = true;
+  }
+
+
+  closeModal() {
+    this.showModal = false;
+    this.selectedPending = null;
+    this.modalLocation = null;
+  }
+
+
+  swapField(field: string) {
+    if (!this.modalLocation || !this.selectedPending) return;
+
+    const temp = this.modalLocation[field];
+    this.modalLocation[field] = this.selectedPending[field];
+    this.selectedPending[field] = temp;
+  }
+
+
+
+
   ngOnInit() {
     const id = String(this.route.snapshot.paramMap.get('id'));
     if (id) {

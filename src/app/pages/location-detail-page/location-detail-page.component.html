@@ -152,25 +152,28 @@
 
     <ng-container *ngIf="pendingLocations.length > 0; else noUpdates">
       <ul class="space-y-3">
-        <li *ngFor="let pending of pendingLocations" class="border rounded-lg p-4 bg-gray-50">
+        <li
+          *ngFor="let pending of pendingLocations"
+          class="border rounded-lg p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+          (click)="openModal(pending)"
+        >
           <div class="flex justify-between items-center">
             <div>
               <p class="font-medium text-gray-800">{{ pending.name || 'Без назви' }}</p>
               <p class="text-sm text-gray-600">{{ pending.address }}</p>
             </div>
             <span class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
-            Очікує перевірки
-          </span>
+      Очікує перевірки
+    </span>
           </div>
-
           <div *ngIf="pending.description" class="text-sm text-gray-700 mt-2">
             {{ pending.description }}
           </div>
-
           <div class="text-xs text-gray-500 mt-1">
             Оновлено: {{ pending.updatedAt | date:'medium' }}
           </div>
         </li>
+
       </ul>
     </ng-container>
 
@@ -178,5 +181,83 @@
       <p class="text-sm text-gray-500">Наразі немає оновлень.</p>
     </ng-template>
   </section>
+  <!-- 🪟 Модалка порівняння -->
+  <div
+    *ngIf="showModal && selectedPending"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white w-[90%] md:w-[800px] rounded-xl shadow-lg p-6 relative">
+      <button
+        (click)="closeModal()"
+        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+      >
+        ✕
+      </button>
+
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">
+        Порівняння локації
+      </h2>
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Ліва частина: старі дані -->
+        <div class="border rounded-lg p-3">
+          <h3 class="font-semibold text-gray-700 mb-2">Поточні дані</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-600 w-1/3">Назва:</span>
+              <span class="flex-1">{{ modalLocation?.name }}</span>
+              <button
+                class="ml-2 text-blue-600 hover:text-blue-800"
+                (click)="swapField('name')"
+              >
+                ⮂
+              </button>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-600 w-1/3">Адреса:</span>
+              <span class="flex-1">{{ modalLocation?.address }}</span>
+              <button
+                class="ml-2 text-blue-600 hover:text-blue-800"
+                (click)="swapField('address')"
+              >
+                ⮂
+              </button>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-600 w-1/3">Опис:</span>
+              <span class="flex-1">{{ modalLocation?.description }}</span>
+              <button
+                class="ml-2 text-blue-600 hover:text-blue-800"
+                (click)="swapField('description')"
+              >
+                ⮂
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Права частина: нові дані -->
+        <div class="border rounded-lg p-3 bg-gray-50">
+          <h3 class="font-semibold text-gray-700 mb-2">Запропоновані зміни</h3>
+          <div class="space-y-2 text-sm">
+            <div><span class="font-medium">Назва:</span> {{ selectedPending?.name }}</div>
+            <div><span class="font-medium">Адреса:</span> {{ selectedPending?.address }}</div>
+            <div><span class="font-medium">Опис:</span> {{ selectedPending?.description }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-right mt-4">
+        <button
+          (click)="closeModal()"
+          class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+        >
+          Закрити
+        </button>
+      </div>
+    </div>
+  </div>
 
 </div>

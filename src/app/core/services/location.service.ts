@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, map, Observable} from 'rxjs';
+import {BehaviorSubject, map, Observable, switchMap} from 'rxjs';
 import {Location} from '../models/location';
 import {environment} from '../../../environments/environment';
 import {HttpClient, HttpResponse} from '@angular/common/http';
@@ -58,37 +58,38 @@ export class LocationService {
 
   getLocationById(id: string): Observable<Location> {
     return this.http.get<any>(`${this.baseUrl}locations/${id}/`).pipe(
-      map(dto => {
-        // шукаємо потрібний тип у вже завантажених типах
-        const typeObj = this.locationTypes$.value.find(t => t.id === dto.type)!;
-
-        return new Location(
-          dto.id,
-          dto.name,
-          dto.address,
-          {
-            type: 'Point',
-            // інверсія координат, як в getLocations()
-            coordinates: [dto.coordinates.lng, dto.coordinates.lat]
-          },
-          typeObj,
-          dto.description,
-          dto.contacts,
-          dto.workingHours,
-          dto.createdBy,
-          dto.organizationId,
-          dto.status,
-          dto.overallAccessibilityScore,
-          dto.createdAt,
-          dto.updatedAt,
-          dto.lastVerifiedAt,
-          dto.rejectionReason,
-          dto.updatedBy,
-          dto.lastVerifiedBy
-        );
-      })
+      switchMap(dto =>
+        this.http.get<any>(`${this.baseUrl}locations/${id}/location_type`).pipe(
+          map(typeDto => {
+            return new Location(
+              dto.id,
+              dto.name,
+              dto.address,
+              {
+                type: 'Point',
+                coordinates: [dto.coordinates.lng, dto.coordinates.lat]
+              },
+              typeDto, // 👈 підставляємо отриманий об’єкт типу
+              dto.description,
+              dto.contacts,
+              dto.workingHours,
+              dto.createdBy,
+              dto.organizationId,
+              dto.status,
+              dto.overallAccessibilityScore,
+              dto.createdAt,
+              dto.updatedAt,
+              dto.lastVerifiedAt,
+              dto.rejectionReason,
+              dto.updatedBy,
+              dto.lastVerifiedBy
+            );
+          })
+        )
+      )
     );
   }
+
 
 
   getUserPendingLocations(): Observable<any[]> {
