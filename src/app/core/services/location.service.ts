@@ -96,6 +96,14 @@ export class LocationService {
     return this.http.get<any[]>(`${this.baseUrl}locations/me/pending-locations/`);
   }
 
+  updateLocationFromPending(locationId: string, pendingCopyId: number, data: any) {
+    return this.http.put(
+      `${this.baseUrl}locations/${locationId}/pending_copy/${pendingCopyId}`,
+      data
+    );
+  }
+
+
   getPendingLocationsByLocationId(locationId: string): Observable<any[]>{
     return this.http.get<any[]>(`${this.baseUrl}locations/${locationId}/pending-locations/`)
   }

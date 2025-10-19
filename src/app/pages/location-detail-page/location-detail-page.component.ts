@@ -61,6 +61,39 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     this.showModal = true;
   }
 
+  confirmChanges() {
+    if (!this.modalLocation || !this.selectedPending || !this.location) return;
+
+    const locationId = this.location.id;
+    const pendingCopyId = this.selectedPending.id;
+
+    // 👇 Формуємо DTO для відправки
+    const updatedData = {
+      name: this.modalLocation.name,
+      address: this.modalLocation.address,
+      description: this.modalLocation.description,
+      contacts: this.modalLocation.contacts,
+      workingHours: this.modalLocation.workingHours,
+      type: this.modalLocation.type,
+    };
+
+    this.locationService.updateLocationFromPending(locationId, pendingCopyId, updatedData)
+      .subscribe({
+        next: (res) => {
+          console.log('✅ Локацію оновлено:', res);
+          alert('Зміни підтверджено успішно!');
+          this.closeModal();
+          this.loadPendingLocations(); // оновимо список
+          this.locationService.getLocationById(locationId).subscribe(loc => this.location = loc); // оновити головну локацію
+        },
+        error: (err) => {
+          console.error('❌ Помилка при оновленні:', err);
+          alert('Помилка при підтвердженні змін');
+        }
+      });
+  }
+
+
 
   closeModal() {
     this.showModal = false;

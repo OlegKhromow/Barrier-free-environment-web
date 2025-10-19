@@ -297,14 +297,22 @@
         </div>
       </div>
 
-      <div class="mt-6 text-right">
+      <div class="mt-6 text-right space-x-2">
         <button
           (click)="closeModal()"
           class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
         >
           Закрити
         </button>
+
+        <button
+          (click)="confirmChanges()"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          ✅ Підтвердити зміни
+        </button>
       </div>
+
     </div>
   </div>
 
