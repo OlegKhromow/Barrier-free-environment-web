@@ -107,7 +107,8 @@
                     <span class="text-red-700 font-medium">Проблеми: {{ countChecks(c, true) }}</span>
                   </div>
 
-                  <div class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
+                  <div
+                    class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
                     <div
                       class="absolute top-1/2 -translate-y-1/2 w-2 h-4 bg-gray-800 rounded-full shadow-md transition-all duration-300"
                       [style.left.%]="getBalancePosition(c)">
@@ -183,73 +184,120 @@
   </section>
   <!-- 🪟 Модалка порівняння -->
   <div
-    *ngIf="showModal && selectedPending"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    *ngIf="showModal && selectedPending && modalLocation"
+    class="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center z-50 pt-10 overflow-y-auto"
   >
-    <div class="bg-white w-[90%] md:w-[800px] rounded-xl shadow-lg p-6 relative">
+    <div class="bg-white w-[95%] max-w-6xl rounded-xl shadow-lg p-6 relative">
       <button
         (click)="closeModal()"
-        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl"
       >
         ✕
       </button>
 
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">
-        Порівняння локації
-      </h2>
+      <h2 class="text-2xl font-semibold mb-6 text-center">Порівняння даних локації</h2>
 
-      <div class="grid grid-cols-2 gap-4">
-        <!-- Ліва частина: старі дані -->
-        <div class="border rounded-lg p-3">
-          <h3 class="font-semibold text-gray-700 mb-2">Поточні дані</h3>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between items-center">
-              <span class="font-medium text-gray-600 w-1/3">Назва:</span>
-              <span class="flex-1">{{ modalLocation?.name }}</span>
-              <button
-                class="ml-2 text-blue-600 hover:text-blue-800"
-                (click)="swapField('name')"
-              >
-                ⮂
-              </button>
+      <div class="divide-y">
+        <!-- Назва -->
+        <div class="grid grid-cols-2 gap-6 py-3 items-start">
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Назва</h3>
+            <div class="flex justify-between text-sm">
+              <span>{{ modalLocation?.name }}</span>
+              <button (click)="swapField('name')" class="ml-2 text-blue-600">⮂</button>
             </div>
-
-            <div class="flex justify-between items-center">
-              <span class="font-medium text-gray-600 w-1/3">Адреса:</span>
-              <span class="flex-1">{{ modalLocation?.address }}</span>
-              <button
-                class="ml-2 text-blue-600 hover:text-blue-800"
-                (click)="swapField('address')"
-              >
-                ⮂
-              </button>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="font-medium text-gray-600 w-1/3">Опис:</span>
-              <span class="flex-1">{{ modalLocation?.description }}</span>
-              <button
-                class="ml-2 text-blue-600 hover:text-blue-800"
-                (click)="swapField('description')"
-              >
-                ⮂
-              </button>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Назва</h3>
+            <div class="text-sm flex justify-between">
+              <span>{{ selectedPending?.name }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Права частина: нові дані -->
-        <div class="border rounded-lg p-3 bg-gray-50">
-          <h3 class="font-semibold text-gray-700 mb-2">Запропоновані зміни</h3>
-          <div class="space-y-2 text-sm">
-            <div><span class="font-medium">Назва:</span> {{ selectedPending?.name }}</div>
-            <div><span class="font-medium">Адреса:</span> {{ selectedPending?.address }}</div>
-            <div><span class="font-medium">Опис:</span> {{ selectedPending?.description }}</div>
+        <!-- Адреса -->
+        <div class="grid grid-cols-2 gap-6 py-3 items-start">
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Адреса</h3>
+            <div class="flex justify-between text-sm">
+              <span>{{ modalLocation?.address }}</span>
+              <button (click)="swapField('address')" class="ml-2 text-blue-600">⮂</button>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Адреса</h3>
+            <div class="text-sm flex justify-between">
+              <span>{{ selectedPending?.address }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Опис -->
+        <div class="grid grid-cols-2 gap-6 py-3 items-start">
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Опис</h3>
+            <div class="flex justify-between text-sm">
+              <p class="whitespace-pre-line max-h-48 overflow-auto">{{ modalLocation?.description }}</p>
+              <button (click)="swapField('description')" class="ml-2 text-blue-600 flex-shrink-0">⮂</button>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Опис</h3>
+            <div class="text-sm max-h-48 overflow-auto">
+              {{ selectedPending?.description }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Контакти -->
+        <div class="grid grid-cols-2 gap-6 py-3 items-start">
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Контакти</h3>
+            <div *ngFor="let field of ['phone','email','website']" class="flex justify-between text-sm">
+              <span>{{ field }}: {{ modalLocation?.contacts?.[field] || '—' }}</span>
+              <button (click)="swapContactField(field)" class="ml-2 text-blue-600">⮂</button>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Контакти</h3>
+            <div class="text-sm space-y-1">
+              <div *ngFor="let field of ['phone','email','website']">
+                {{ field }}: {{ selectedPending?.contacts?.[field] || '—' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Розклад -->
+        <div class="grid grid-cols-2 gap-6 py-3 items-start">
+          <div>
+            <div class="flex justify-between items-center">
+              <h3 class="font-semibold text-gray-700 mb-1">Розклад роботи</h3>
+              <button (click)="swapWorkingHours()" class="text-blue-600 text-sm ml-2">⮂</button>
+            </div>
+            <div class="border rounded p-2 text-xs">
+              <div *ngFor="let d of days" class="border-b last:border-0 py-1">
+                <strong>{{ d.label }}:</strong>
+                {{ modalLocation?.workingHours?.[d.key]?.open || '—' }} –
+                {{ modalLocation?.workingHours?.[d.key]?.close || '—' }}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-gray-700 mb-1">Розклад роботи</h3>
+            <div class="border rounded p-2 text-xs">
+              <div *ngFor="let d of days" class="border-b last:border-0 py-1">
+                <strong>{{ d.label }}:</strong>
+                {{ selectedPending?.workingHours?.[d.key]?.open || '—' }} –
+                {{ selectedPending?.workingHours?.[d.key]?.close || '—' }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="text-right mt-4">
+      <div class="mt-6 text-right">
         <button
           (click)="closeModal()"
           class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
@@ -259,5 +307,6 @@
       </div>
     </div>
   </div>
+
 
 </div>

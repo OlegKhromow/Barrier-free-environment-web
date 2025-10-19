@@ -39,6 +39,9 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   showGroup = true;
   openTypes = new Set<any>();
   showCommentsMap = new Map<any, boolean>();
+  swappedFields: Record<string, boolean> = {};
+  originalLeftValues: Record<string, any> = {};
+  originalRightValues: Record<string, any> = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -63,17 +66,75 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     this.showModal = false;
     this.selectedPending = null;
     this.modalLocation = null;
+    this.swappedFields = {};
+    this.originalLeftValues = {};
+    this.originalRightValues = {};
   }
 
 
   swapField(field: string) {
     if (!this.modalLocation || !this.selectedPending) return;
 
-    const temp = this.modalLocation[field];
-    this.modalLocation[field] = this.selectedPending[field];
-    this.selectedPending[field] = temp;
+    if (this.swappedFields[field]) {
+      // 🔄 Повертаємо обидва значення
+      this.modalLocation[field] = this.originalLeftValues[field];
+      this.selectedPending[field] = this.originalRightValues[field];
+      this.swappedFields[field] = false;
+    } else {
+      // 💾 Зберігаємо початкові значення
+      this.originalLeftValues[field] = this.modalLocation[field];
+      this.originalRightValues[field] = this.selectedPending[field];
+
+      // ⮂ Міняємо ліве на значення pending
+      this.modalLocation[field] = this.selectedPending[field];
+      // ❌ У правому — прочерк
+      this.selectedPending[field] = '—';
+      this.swappedFields[field] = true;
+    }
   }
 
+
+
+  swapContactField(field: string) {
+    if (!this.modalLocation?.contacts || !this.selectedPending?.contacts) return;
+
+    const key = 'contact_' + field;
+
+    if (this.swappedFields[key]) {
+      this.modalLocation.contacts[field] = this.originalLeftValues[key];
+      this.selectedPending.contacts[field] = this.originalRightValues[key];
+      this.swappedFields[key] = false;
+    } else {
+      this.originalLeftValues[key] = this.modalLocation.contacts[field];
+      this.originalRightValues[key] = this.selectedPending.contacts[field];
+
+      this.modalLocation.contacts[field] = this.selectedPending.contacts[field];
+      this.selectedPending.contacts[field] = '—';
+      this.swappedFields[key] = true;
+    }
+  }
+
+
+  swapWorkingHours() {
+    if (!this.modalLocation || !this.selectedPending) return;
+    const key = 'workingHours';
+
+    if (this.swappedFields[key]) {
+      this.modalLocation.workingHours = this.originalLeftValues[key];
+      this.selectedPending.workingHours = this.originalRightValues[key];
+      this.swappedFields[key] = false;
+    } else {
+      this.originalLeftValues[key] = JSON.parse(JSON.stringify(this.modalLocation.workingHours));
+      this.originalRightValues[key] = JSON.parse(JSON.stringify(this.selectedPending.workingHours));
+
+      this.modalLocation.workingHours = this.selectedPending.workingHours;
+      this.selectedPending.workingHours = {};
+      for (const d of this.days) {
+        this.selectedPending.workingHours[d.key] = { open: '—', close: '—' };
+      }
+      this.swappedFields[key] = true;
+    }
+  }
 
 
 
