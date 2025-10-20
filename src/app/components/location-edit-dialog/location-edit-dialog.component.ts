@@ -24,15 +24,24 @@ export class LocationEditDialogComponent implements OnInit {
   private locationService = inject(LocationService);
   private authService = inject(AuthService);
 
+  readonly statuses = [
+    { value: LocationStatusEnum.PENDING, label: 'Очікує перевірки' },
+    { value: LocationStatusEnum.PUBLISHED, label: 'Опубліковано' },
+    { value: LocationStatusEnum.REJECTED, label: 'Відхилено' }
+  ];
+
+
   currentUserId: string | null = null;
   form!: FormGroup;
   selectedImages: { file: File, preview: string }[] = [];
-  locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypes();
+  locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
 
   days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   ngOnInit() {
+    this.locationService.loadLocationTypes();
     this.initForm();
+
 
     // ✅ підтягуємо користувача
     this.authService.getByUsername().subscribe({
@@ -59,9 +68,13 @@ export class LocationEditDialogComponent implements OnInit {
       address: data.address || '',
       description: data.description || '',
       contacts: data.contacts || {},
-      workingHours: data.workingHours || {}
+      workingHours: data.workingHours || {},
+      type: data.type?.id || data.type || '',
+      // ✅ додаємо статус
+      status: data.status || LocationStatusEnum.PENDING
     });
   }
+
 
 
   private initForm() {
@@ -69,6 +82,9 @@ export class LocationEditDialogComponent implements OnInit {
       name: ['', Validators.required],
       address: ['', Validators.required],
       description: [''],
+      type: ['', Validators.required],
+      // ✅ додаємо статус
+      status: ['', Validators.required],
       contacts: this.fb.group({
         phone: [''],
         email: ['', Validators.email],

@@ -59,7 +59,7 @@ export class LocationCreateFormComponent implements OnInit {
     )
   });
 
-  locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypes();
+  locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
   selectedImages: { file: File, preview: string }[] = [];
 
   // збережемо останній similar і dto, щоб MapPage / діалог міг ними оперувати

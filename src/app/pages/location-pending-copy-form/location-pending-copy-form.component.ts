@@ -27,7 +27,7 @@ export class LocationPendingCopyFormComponent implements OnInit {
   currentUserId: string | null = null;
   form!: FormGroup;
   selectedImages: { file: File, preview: string }[] = [];
-  locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypes();
+  locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
 
   days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
