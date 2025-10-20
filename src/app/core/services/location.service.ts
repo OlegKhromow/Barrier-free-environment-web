@@ -148,4 +148,8 @@ export class LocationService {
   getAllPendingLocations(): Observable<any[]> {
     return this.http.get<any>(`${this.baseUrl}locations/pending-locations`);
   }
+
+  updateLocation(id: string, data: any) {
+    return this.http.put<Location>(`${this.baseUrl}locations/${id}`, data);
+  }
 }

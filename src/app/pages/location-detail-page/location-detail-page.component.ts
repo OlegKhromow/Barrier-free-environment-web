@@ -6,11 +6,13 @@ import { Location } from '../../core/models/location';
 import * as L from 'leaflet';
 import { LocationCreateFormComponent } from '../../components/location-create-form/location-create-form.component';
 import { LocationSidebarComponent } from '../../components/location-sidebar/location-sidebar.component';
+import {LocationPendingCopyFormComponent} from '../location-pending-copy-form/location-pending-copy-form.component';
+import {LocationEditDialogComponent} from '../../components/location-edit-dialog/location-edit-dialog.component';
 
 @Component({
   selector: 'app-location-detail-page',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationCreateFormComponent, LocationSidebarComponent],
+  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationCreateFormComponent, LocationSidebarComponent, LocationPendingCopyFormComponent, LocationEditDialogComponent],
   templateUrl: './location-detail-page.component.html',
   styleUrls: ['./location-detail-page.component.css']
 })
@@ -42,6 +44,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   swappedFields: Record<string, boolean> = {};
   originalLeftValues: Record<string, any> = {};
   originalRightValues: Record<string, any> = {};
+  showUpdateForm = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -59,6 +62,16 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     this.selectedPending = { ...pending };
     this.modalLocation = { ...this.location }; // 👈 нова властивість
     this.showModal = true;
+  }
+
+  openUpdateForm(event: Event) {
+    event.preventDefault();
+    this.showUpdateForm = true;
+  }
+
+  onUpdateSubmitted(res: any) {
+    this.showUpdateForm = false;
+    console.log('✅ Pending copy saved:', res);
   }
 
   confirmChanges() {

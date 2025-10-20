@@ -1,0 +1,60 @@
+<div class="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-start justify-center pt-20">
+  <div class="bg-white w-full max-w-lg h-[80vh] flex flex-col rounded-lg shadow-lg overflow-hidden">
+    <div class="p-6 flex-1 overflow-y-auto">
+      <h2 class="text-2xl font-semibold mb-4 text-center">Оновлення даних локації</h2>
+
+      <form [formGroup]="form" class="flex flex-col gap-4">
+        <input formControlName="name" placeholder="Назва" class="border rounded px-3 py-2 w-full" />
+        <input formControlName="address" placeholder="Адреса" class="border rounded px-3 py-2 w-full" />
+        <textarea formControlName="description" placeholder="Опис" class="border rounded px-3 py-2 w-full"></textarea>
+
+        <div formGroupName="contacts" class="grid gap-2">
+          <div>
+            <label for="phone">Телефон</label>
+            <input id="phone" formControlName="phone" type="text" class="border rounded px-3 py-2 w-full" />
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input id="email" formControlName="email" type="email" class="border rounded px-3 py-2 w-full" />
+          </div>
+          <div>
+            <label for="website">Веб-сайт</label>
+            <input id="website" formControlName="website" type="text" class="border rounded px-3 py-2 w-full" />
+          </div>
+        </div>
+
+        <div formGroupName="workingHours" class="grid gap-2 mt-2">
+          <div *ngFor="let day of days" [formGroupName]="day" class="grid grid-cols-3 items-center gap-2">
+            <label class="text-right pr-2">{{ day | titlecase }}:</label>
+            <input type="time" formControlName="open" class="border rounded px-2 py-1" />
+            <input type="time" formControlName="close" class="border rounded px-2 py-1" />
+          </div>
+
+          <div *ngIf="form.get('workingHours')?.errors?.['workingHoursIncomplete']" class="text-red-600 text-sm mt-1">
+            Якщо заповнено час відкриття, потрібно вказати час закриття (і навпаки).
+          </div>
+        </div>
+
+        <div class="border-t pt-4 mt-4">
+          <label class="block font-semibold mb-1">Зображення</label>
+          <input type="file" multiple (change)="onImageSelect($event)" accept="image/*"
+                 class="block w-full text-sm text-gray-700 border border-gray-300 rounded cursor-pointer" />
+          <div *ngIf="selectedImages.length > 0" class="mt-2 grid grid-cols-3 gap-2">
+            <div *ngFor="let img of selectedImages" class="relative">
+              <img [src]="img.preview" alt="preview" class="rounded shadow border h-24 w-full object-cover" />
+              <p class="text-xs text-center mt-1 truncate">{{ img.file.name }}</p>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="border-t p-4 flex justify-end gap-2 bg-white sticky bottom-0">
+      <button type="button" (click)="cancel()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Скасувати</button>
+      <button type="button" (click)="save()" [disabled]="form.invalid"
+              class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+        Оновити дані локації
+      </button>
+    </div>
+  </div>
+</div>
