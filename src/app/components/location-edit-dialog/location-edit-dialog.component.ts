@@ -19,7 +19,6 @@ export class LocationEditDialogComponent implements OnInit {
   @Output() saved = new EventEmitter<any>();
   @Input() prefillData: any | null = null;
 
-
   private fb = inject(FormBuilder);
   private locationService = inject(LocationService);
   private authService = inject(AuthService);
@@ -29,7 +28,6 @@ export class LocationEditDialogComponent implements OnInit {
     { value: LocationStatusEnum.PUBLISHED, label: 'Опубліковано' },
     { value: LocationStatusEnum.REJECTED, label: 'Відхилено' }
   ];
-
 
   currentUserId: string | null = null;
   form!: FormGroup;
@@ -42,19 +40,18 @@ export class LocationEditDialogComponent implements OnInit {
     this.locationService.loadLocationTypes();
     this.initForm();
 
-
-    // ✅ підтягуємо користувача
+    // ✅ Підтягуємо користувача
     this.authService.getByUsername().subscribe({
       next: user => this.currentUserId = user.id,
       error: err => console.error('❌ Не вдалося отримати користувача:', err)
     });
 
-    // ✅ якщо передали дані для попереднього заповнення — використовуємо їх
+    // ✅ Якщо передані дані — використовуємо їх
     if (this.prefillData) {
       this.applyPrefill(this.prefillData);
     }
     else if (this.locationId) {
-      // fallback — якщо не передали prefillData
+      // fallback — якщо prefillData не передано
       this.locationService.getLocationById(this.locationId).subscribe({
         next: loc => this.applyPrefill(loc),
         error: err => console.error('❌ Не вдалося завантажити локацію', err)
@@ -62,6 +59,7 @@ export class LocationEditDialogComponent implements OnInit {
     }
   }
 
+  /** Заповнює форму поточними даними */
   private applyPrefill(data: any) {
     this.form.patchValue({
       name: data.name || '',
@@ -70,21 +68,24 @@ export class LocationEditDialogComponent implements OnInit {
       contacts: data.contacts || {},
       workingHours: data.workingHours || {},
       type: data.type?.id || data.type || '',
-      // ✅ додаємо статус
-      status: data.status || LocationStatusEnum.PENDING
+      status: data.status || LocationStatusEnum.PENDING,
+      // ✅ Підтягуємо координати (перевіряємо різні формати)
+      lat: data.lat || data.latitude || data.coordinates?.lat || data.coordinates?.y || '',
+      lng: data.lng || data.longitude || data.coordinates?.lng || data.coordinates?.x || ''
     });
   }
 
-
-
+  /** Ініціалізація форми */
   private initForm() {
     this.form = this.fb.group({
       name: ['', Validators.required],
       address: ['', Validators.required],
       description: [''],
       type: ['', Validators.required],
-      // ✅ додаємо статус
       status: ['', Validators.required],
+      // ✅ Поля для координат
+      lat: ['', [Validators.required, Validators.pattern(/^-?\d+(\.\d+)?$/)]],
+      lng: ['', [Validators.required, Validators.pattern(/^-?\d+(\.\d+)?$/)]],
       contacts: this.fb.group({
         phone: [''],
         email: ['', Validators.email],
@@ -100,6 +101,7 @@ export class LocationEditDialogComponent implements OnInit {
     });
   }
 
+  /** Завантаження зображень */
   onImageSelect(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
@@ -109,6 +111,7 @@ export class LocationEditDialogComponent implements OnInit {
     }));
   }
 
+  /** Збереження оновлених даних */
   save() {
     if (this.form.invalid || !this.locationId) {
       console.warn('❌ Форма невалідна або немає locationId');
@@ -117,6 +120,10 @@ export class LocationEditDialogComponent implements OnInit {
 
     const dto = {
       ...this.form.value,
+      coordinates: {
+        lat: parseFloat(this.form.value.lat),
+        lng: parseFloat(this.form.value.lng)
+      },
       organizationId: null,
       updatedAt: new Date().toISOString()
     };

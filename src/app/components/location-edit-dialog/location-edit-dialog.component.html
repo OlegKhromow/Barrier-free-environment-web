@@ -23,6 +23,37 @@
           </div>
         </div>
 
+        <!-- ✅ Поля для редагування координат -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="lat" class="font-medium">Широта (Lat)</label>
+            <input
+              id="lat"
+              type="text"
+              formControlName="lat"
+              placeholder="Напр. 50.4501"
+              class="border rounded px-3 py-2 w-full"
+            />
+            <div *ngIf="form.get('lat')?.invalid && form.get('lat')?.touched" class="text-red-600 text-sm">
+              Введіть коректну широту
+            </div>
+          </div>
+
+          <div>
+            <label for="lng" class="font-medium">Довгота (Lng)</label>
+            <input
+              id="lng"
+              type="text"
+              formControlName="lng"
+              placeholder="Напр. 30.5234"
+              class="border rounded px-3 py-2 w-full"
+            />
+            <div *ngIf="form.get('lng')?.invalid && form.get('lng')?.touched" class="text-red-600 text-sm">
+              Введіть коректну довготу
+            </div>
+          </div>
+        </div>
+
         <label for="type" class="font-medium">Тип локації</label>
         <select id="type" formControlName="type" class="border rounded px-3 py-2 w-full">
           <option value="" disabled>Оберіть тип</option>
