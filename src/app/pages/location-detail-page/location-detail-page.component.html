@@ -276,6 +276,34 @@
       <p class="text-sm text-gray-500">Наразі немає оновлень.</p>
     </ng-template>
   </section>
+
+<!--  &lt;!&ndash; Якщо локація пендінг &ndash;&gt;-->
+<!--  <div *ngIf="location?.status === 'pending'" class="mt-4">-->
+<!--    <button class="btn btn-outline-primary" (click)="checkDuplicates()">-->
+<!--      🔍 Перевірити дублікатні локації-->
+<!--    </button>-->
+<!--  </div>-->
+
+  <!-- Список схожих -->
+  <div *ngIf="showDuplicates && similarLocations.length" class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Схожі локації поруч:</h3>
+
+    <ul class="divide-y divide-gray-200 border rounded-lg">
+      <li *ngFor="let loc of similarLocations" class="p-3 hover:bg-gray-50 flex justify-between items-center">
+        <div>
+          <div class="font-medium text-gray-800">{{ loc.name }}</div>
+          <div class="text-sm text-gray-500">{{ loc.address }}</div>
+        </div>
+        <button class="text-blue-600 hover:underline"
+                (click)="viewLocation(loc.id)">
+          Переглянути
+        </button>
+
+
+      </li>
+    </ul>
+  </div>
+
   <!-- 🪟 Модалка порівняння -->
   <div
     *ngIf="showModal && selectedPending && modalLocation"

@@ -44,6 +44,10 @@ export class LocationService {
     return this.http.post<any>(`${this.baseUrl}locations/check-duplicates`, dto, { observe: 'response' });
   }
 
+  checkDuplicatesById(locationID: string): Observable<HttpResponse<any>> {
+    return this.http.get<any>(`${this.baseUrl}locations/${locationID}/check-duplicates`, { observe: 'response' });
+  }
+
   // щоб зручно діставати ім’я по id
   getTypeName(id: string): string {
     const type = this.locationTypes$.getValue().find(t => t.id === id);

@@ -53,7 +53,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   constructor(
     private route: ActivatedRoute,
     private locationService: LocationService,
-    private router: Router
+    protected router: Router
   ) {}
 
   selectedPending: any | null = null;
@@ -253,9 +253,22 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
 
         this.loadCriteriaTree();
         this.loadPendingLocations();
+
+        // ✅ Викликати checkDuplicates лише якщо статус pending або rejected
+        if (loc.status === 'pending' || loc.status === 'rejected') {
+          this.checkDuplicates();
+        }
       });
     }
   }
+
+  viewLocation(id: number) {
+    // Повне оновлення сторінки
+    window.location.href = `/locations/${id}`;
+  }
+
+
+
 
   ngAfterViewInit(): void {
     const id = String(this.route.snapshot.paramMap.get('id'));
@@ -355,6 +368,36 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   toggleGroup() {
     this.showGroup = !this.showGroup;
   }
+
+  similarLocations: any[] = [];
+  showDuplicates = false;
+
+  checkDuplicates() {
+    if (!this.location) return;
+
+    this.locationService.checkDuplicatesById(this.location.id).subscribe({
+      next: (res) => {
+        const body = res.body || res;
+        if (body.message === 'No duplicates found') {
+          this.showDuplicates = false;
+        } else if (body.similar?.length) {
+          this.similarLocations = body.similar;
+          this.showDuplicates = true;
+        }
+      },
+      error: (err) => {
+        if (err.error?.similar?.length) {
+          this.similarLocations = err.error.similar;
+          this.showDuplicates = true;
+        } else {
+          console.error('❌ Помилка при перевірці дублікатів:', err);
+          alert('Не вдалося завантажити список дублікатів');
+        }
+      }
+    });
+  }
+
+
 
   toggleType(type: any) {
     if (this.openTypes.has(type)) {
