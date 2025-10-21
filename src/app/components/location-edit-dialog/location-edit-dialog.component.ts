@@ -68,7 +68,6 @@ export class LocationEditDialogComponent implements OnInit {
       contacts: data.contacts || {},
       workingHours: data.workingHours || {},
       type: data.type?.id || data.type || '',
-      status: data.status || LocationStatusEnum.PENDING,
       // ✅ Підтягуємо координати (перевіряємо різні формати)
       lat: data.lat || data.latitude || data.coordinates?.lat || data.coordinates?.y || '',
       lng: data.lng || data.longitude || data.coordinates?.lng || data.coordinates?.x || ''
@@ -82,7 +81,6 @@ export class LocationEditDialogComponent implements OnInit {
       address: ['', Validators.required],
       description: [''],
       type: ['', Validators.required],
-      status: ['', Validators.required],
       // ✅ Поля для координат
       lat: ['', [Validators.required, Validators.pattern(/^-?\d+(\.\d+)?$/)]],
       lng: ['', [Validators.required, Validators.pattern(/^-?\d+(\.\d+)?$/)]],

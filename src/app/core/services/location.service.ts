@@ -16,6 +16,13 @@ export class LocationService {
   constructor(private http: HttpClient) {
   }
 
+  changeStatus(locationId: string, status: string, body?: any) {
+    return this.http.patch(`${this.baseUrl}locations/${locationId}/status/${status}`, body || {});
+  }
+
+  deleteLocation(locationId: string) {
+    return this.http.delete(`${this.baseUrl}locations/${locationId}`);
+  }
 
   createLocation(dto: any) {
     return this.http.post<Location>(`${this.baseUrl}locations`, dto);

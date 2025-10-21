@@ -8,11 +8,12 @@ import { LocationCreateFormComponent } from '../../components/location-create-fo
 import { LocationSidebarComponent } from '../../components/location-sidebar/location-sidebar.component';
 import {LocationPendingCopyFormComponent} from '../location-pending-copy-form/location-pending-copy-form.component';
 import {LocationEditDialogComponent} from '../../components/location-edit-dialog/location-edit-dialog.component';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-location-detail-page',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationCreateFormComponent, LocationSidebarComponent, LocationPendingCopyFormComponent, LocationEditDialogComponent],
+  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationCreateFormComponent, LocationSidebarComponent, LocationPendingCopyFormComponent, LocationEditDialogComponent, FormsModule],
   templateUrl: './location-detail-page.component.html',
   styleUrls: ['./location-detail-page.component.css']
 })
@@ -21,6 +22,9 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   locations: Location[] | undefined;
   pendingLocations: any[] = [];
   criteriaTree: any | null = null;
+  showRejectForm = false;
+  rejectionReason = '';
+
 
   duplicateMode = false;
 
@@ -73,6 +77,45 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     this.showUpdateForm = false;
     console.log('✅ Pending copy saved:', res);
   }
+
+  changeStatus(newStatus: string, rejectionReason?: string) {
+    if (!this.location) return;
+    const id = this.location.id;
+
+    const body = rejectionReason ? { rejectionReason } : {};
+
+    this.locationService.changeStatus(id, newStatus, body).subscribe({
+      next: () => {
+        alert(`Статус змінено на ${newStatus}`);
+        this.locationService.getLocationById(id).subscribe(loc => this.location = loc);
+      },
+      error: err => {
+        console.error('❌ Помилка при зміні статусу:', err);
+        alert('Не вдалося змінити статус');
+      }
+    });
+  }
+
+  openRejectForm() {
+    this.showRejectForm = true;
+  }
+
+  submitRejection() {
+    if (!this.rejectionReason.trim()) {
+      alert('Вкажіть причину відхилення');
+      return;
+    }
+    this.changeStatus('rejected', this.rejectionReason);
+    this.showRejectForm = false;
+    this.rejectionReason = '';
+  }
+
+  cancelRejection() {
+    this.showRejectForm = false;
+    this.rejectionReason = '';
+  }
+
+
 
   confirmChanges() {
     if (!this.modalLocation || !this.selectedPending || !this.location) return;
@@ -158,6 +201,23 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
       this.selectedPending.contacts[field] = '—';
       this.swappedFields[key] = true;
     }
+  }
+
+  // 🔹 Видалення
+  deleteLocation() {
+    if (!this.location) return;
+    const id = this.location.id;
+    if (!confirm('Ви впевнені, що хочете видалити локацію?')) return;
+    this.locationService.deleteLocation(id).subscribe({
+      next: () => {
+        alert('Локацію видалено');
+        // можеш редіректнути, якщо треба
+      },
+      error: err => {
+        console.error('Помилка видалення', err);
+        alert('Не вдалося видалити локацію');
+      }
+    });
   }
 
 

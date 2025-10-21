@@ -62,14 +62,6 @@
           </option>
         </select>
 
-        <label for="status" class="font-medium mt-2">Статус локації</label>
-        <select id="status" formControlName="status" class="border rounded px-3 py-2 w-full">
-          <option value="" disabled>Оберіть статус</option>
-          <option *ngFor="let s of statuses" [value]="s.value">
-            {{ s.label }}
-          </option>
-        </select>
-
 
         <div formGroupName="workingHours" class="grid gap-2 mt-2">
           <div *ngFor="let day of days" [formGroupName]="day" class="grid grid-cols-3 items-center gap-2">
