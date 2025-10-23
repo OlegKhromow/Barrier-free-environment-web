@@ -18,7 +18,7 @@
             (click)="openUpdateForm($event)"
             class="text-sm text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition"
           >
-            ✏️ Редагувати
+            Редагувати
           </button>
         </div>
 
@@ -88,7 +88,7 @@
           </ng-container>
         </section>
       </div>
-      <!-- 🔘 Кнопки керування статусом -->
+      <!-- Кнопки керування статусом -->
       <section class="mb-6">
         <h2 class="font-semibold text-gray-800 text-lg mb-2">Керування статусом</h2>
 
@@ -97,19 +97,19 @@
           <button
             (click)="changeStatus('published')"
             class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg">
-            ✅ Опублікувати
+            Опублікувати
           </button>
 
           <button
             (click)="openRejectForm()"
             class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg">
-            ❌ Відхилити
+            Відхилити
           </button>
 
           <button
             (click)="deleteLocation()"
             class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg">
-            🗑️ Видалити
+            Видалити
           </button>
         </div>
 
@@ -118,13 +118,13 @@
           <button
             (click)="changeStatus('pending')"
             class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
-            ↩️ Зняти з публікації
+            Зняти з публікації
           </button>
 
           <button
             (click)="deleteLocation()"
             class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg">
-            🗑️ Видалити
+            Видалити
           </button>
         </div>
 
@@ -133,13 +133,13 @@
           <button
             (click)="changeStatus('pending')"
             class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
-            ↩️ Відправити на перевірку
+            Відправити на перевірку
           </button>
 
           <button
             (click)="deleteLocation()"
             class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg">
-            🗑️ Видалити
+            Видалити
           </button>
         </div>
       </section>
@@ -277,12 +277,6 @@
     </ng-template>
   </section>
 
-<!--  &lt;!&ndash; Якщо локація пендінг &ndash;&gt;-->
-<!--  <div *ngIf="location?.status === 'pending'" class="mt-4">-->
-<!--    <button class="btn btn-outline-primary" (click)="checkDuplicates()">-->
-<!--      🔍 Перевірити дублікатні локації-->
-<!--    </button>-->
-<!--  </div>-->
 
   <!-- Список схожих -->
   <div *ngIf="showDuplicates && similarLocations.length" class="mt-6">

@@ -3,6 +3,8 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Location } from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
 import {RouterLink} from '@angular/router';
+import { Router } from '@angular/router';
+
 import {
   LocationPendingCopyFormComponent
 } from '../../pages/location-pending-copy-form/location-pending-copy-form.component';
@@ -23,7 +25,7 @@ export class LocationSidebarComponent implements OnChanges{
   // Повідомляємо MapPage про вибір користувача у сайдбарі
   @Output() duplicateAnswer = new EventEmitter<'yes' | 'no'>();
 
-  constructor(private locationService: LocationService) {}
+  constructor(private locationService: LocationService, private router: Router) {}
 
   days = [
     { key: 'monday', label: 'Понеділок' },
@@ -75,7 +77,9 @@ export class LocationSidebarComponent implements OnChanges{
 
   // обробники кнопок дублікатного питання
   confirmYes() {
-    this.duplicateAnswer.emit('yes');
+    if (this.location?.id) {
+      this.router.navigate(['/evaluate', this.location.id]);
+    }
   }
 
   confirmNo() {
