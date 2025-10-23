@@ -115,6 +115,12 @@ export class LocationService {
     );
   }
 
+  updateDuplicateFromLocation(locationId: string,duplicateId: string, data: any) {
+    return this.http.put(
+      `${this.baseUrl}locations/${locationId}/duplicate/${duplicateId}`,
+      data
+    );
+  }
 
   getPendingLocationsByLocationId(locationId: string): Observable<any[]>{
     return this.http.get<any[]>(`${this.baseUrl}locations/${locationId}/pending-locations/`)

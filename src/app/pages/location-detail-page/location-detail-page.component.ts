@@ -46,8 +46,11 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   openTypes = new Set<any>();
   showCommentsMap = new Map<any, boolean>();
   swappedFields: Record<string, boolean> = {};
+  swappedDuplicateFields: Record<string, boolean> = {};
   originalLeftValues: Record<string, any> = {};
+  originalDuplicateLeftValues: Record<string, any> = {};
   originalRightValues: Record<string, any> = {};
+  originalDuplicateRightValues: Record<string, any> = {};
   showUpdateForm = false;
 
   constructor(
@@ -60,12 +63,22 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   showModal = false;
   modalLocation: any | null = null;
 
+  selectedDuplicate: any | null = null;
+  showModalDuplicate = false;
+
 
   openModal(pending: any) {
     // створюємо копії, щоб не змінювати реальні об'єкти
     this.selectedPending = { ...pending };
     this.modalLocation = { ...this.location }; // 👈 нова властивість
     this.showModal = true;
+  }
+
+  openDuplicateModal(duplicate: any) {
+    // створюємо копії, щоб не змінювати реальні об'єкти
+    this.selectedDuplicate = { ...duplicate };
+    this.modalLocation = { ...this.location }; // 👈 нова властивість
+    this.showModalDuplicate = true;
   }
 
   openUpdateForm(event: Event) {
@@ -149,6 +162,42 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
       });
   }
 
+  confirmDuplicateChanges() {
+    if (!this.modalLocation || !this.selectedDuplicate || !this.location) return;
+
+    const locationId = this.location.id;
+    const duplicateId = this.selectedDuplicate.id;
+
+    const updatedData = {
+      name: this.selectedDuplicate.name,
+      address: this.selectedDuplicate.address,
+      description: this.selectedDuplicate.description,
+      contacts: this.selectedDuplicate.contacts,
+      workingHours: this.selectedDuplicate.workingHours,
+      type: this.selectedDuplicate.type,
+    };
+
+    this.locationService.updateDuplicateFromLocation(locationId, duplicateId, updatedData)
+      .subscribe({
+        next: (res) => {
+          console.log('✅ Локацію оновлено:', res);
+          alert('Зміни підтверджено успішно!');
+          this.closeModal();
+
+          // 👇 Після видалення старої локації — переходимо на сторінку дубліката
+          this.router.navigate([`/locations/${duplicateId}`]).then(() => {
+            // 👇 Форсуємо повне перезавантаження компонента/сторінки
+            window.location.reload();
+          });
+        },
+        error: (err) => {
+          console.error('❌ Помилка при оновленні:', err);
+          alert('Помилка при підтвердженні змін');
+        }
+      });
+  }
+
+
 
 
   closeModal() {
@@ -158,6 +207,15 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     this.swappedFields = {};
     this.originalLeftValues = {};
     this.originalRightValues = {};
+  }
+
+  closeModalDuplicate() {
+    this.showModalDuplicate = false;
+    this.selectedDuplicate = null;
+    this.modalLocation = null;
+    this.swappedDuplicateFields = {};
+    this.originalDuplicateLeftValues = {};
+    this.originalDuplicateRightValues = {};
   }
 
 
@@ -182,6 +240,28 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     }
   }
 
+  swapDuplicateField(field: string) {
+    if (!this.modalLocation || !this.selectedDuplicate) return;
+
+    if (this.swappedDuplicateFields[field]) {
+      // 🔄 Повертаємо обидва значення
+      this.selectedDuplicate[field] = this.originalDuplicateLeftValues[field];
+      this.modalLocation[field] = this.originalDuplicateRightValues[field];
+      this.swappedDuplicateFields[field] = false;
+    } else {
+      // 💾 Зберігаємо початкові значення
+      this.originalDuplicateLeftValues[field] = this.selectedDuplicate[field];
+      this.originalDuplicateRightValues[field] = this.modalLocation[field];
+
+      // ⮂ Міняємо ліве (оригінал) на наше значення
+      this.selectedDuplicate[field] = this.modalLocation[field];
+      // ❌ У правому (нашому) — прочерк
+      this.modalLocation[field] = '—';
+      this.swappedDuplicateFields[field] = true;
+    }
+  }
+
+
 
 
   swapContactField(field: string) {
@@ -202,6 +282,26 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
       this.swappedFields[key] = true;
     }
   }
+
+  swapDuplicateContactField(field: string) {
+    if (!this.modalLocation?.contacts || !this.selectedDuplicate?.contacts) return;
+
+    const key = 'contact_' + field;
+
+    if (this.swappedDuplicateFields[key]) {
+      this.selectedDuplicate.contacts[field] = this.originalDuplicateLeftValues[key];
+      this.modalLocation.contacts[field] = this.originalDuplicateRightValues[key];
+      this.swappedDuplicateFields[key] = false;
+    } else {
+      this.originalDuplicateLeftValues[key] = this.selectedDuplicate.contacts[field];
+      this.originalDuplicateRightValues[key] = this.modalLocation.contacts[field];
+
+      this.selectedDuplicate.contacts[field] = this.modalLocation.contacts[field];
+      this.modalLocation.contacts[field] = '—';
+      this.swappedDuplicateFields[key] = true;
+    }
+  }
+
 
   // 🔹 Видалення
   deleteLocation() {
@@ -239,6 +339,27 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
         this.selectedPending.workingHours[d.key] = { open: '—', close: '—' };
       }
       this.swappedFields[key] = true;
+    }
+  }
+
+  swapDuplicateWorkingHours() {
+    if (!this.modalLocation || !this.selectedDuplicate) return;
+    const key = 'workingHours';
+
+    if (this.swappedDuplicateFields[key]) {
+      this.modalLocation.workingHours = this.originalDuplicateRightValues[key];
+      this.selectedDuplicate.workingHours = this.originalDuplicateLeftValues[key];
+      this.swappedDuplicateFields[key] = false;
+    } else {
+      this.originalDuplicateRightValues[key] = JSON.parse(JSON.stringify(this.modalLocation.workingHours));
+      this.originalDuplicateLeftValues[key] = JSON.parse(JSON.stringify(this.selectedDuplicate.workingHours));
+
+      this.selectedDuplicate.workingHours = this.modalLocation.workingHours;
+      this.modalLocation.workingHours = {};
+      for (const d of this.days) {
+        this.modalLocation.workingHours[d.key] = { open: '—', close: '—' };
+      }
+      this.swappedDuplicateFields[key] = true;
     }
   }
 
