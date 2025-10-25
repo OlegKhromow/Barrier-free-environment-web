@@ -41,11 +41,11 @@ export class LocationService {
   }
 
   checkDuplicates(dto: any): Observable<HttpResponse<any>> {
-    return this.http.post<any>(`${this.baseUrl}locations/check-duplicates`, dto, { observe: 'response' });
+    return this.http.post<any>(`${this.baseUrl}locations/check-duplicates`, dto, {observe: 'response'});
   }
 
   checkDuplicatesById(locationID: string): Observable<HttpResponse<any>> {
-    return this.http.get<any>(`${this.baseUrl}locations/${locationID}/check-duplicates`, { observe: 'response' });
+    return this.http.get<any>(`${this.baseUrl}locations/${locationID}/check-duplicates`, {observe: 'response'});
   }
 
   // щоб зручно діставати ім’я по id
@@ -65,7 +65,6 @@ export class LocationService {
   createPendingCopy(locationId: string, dto: any): Observable<any> {
     return this.http.post(`${this.baseUrl}locations/to_pending/${locationId}/`, dto);
   }
-
 
 
   getLocationById(id: string): Observable<Location> {
@@ -103,7 +102,6 @@ export class LocationService {
   }
 
 
-
   getUserPendingLocations(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}locations/me/pending-locations/`);
   }
@@ -115,14 +113,14 @@ export class LocationService {
     );
   }
 
-  updateDuplicateFromLocation(locationId: string,duplicateId: string, data: any) {
+  updateDuplicateFromLocation(locationId: string, duplicateId: string, data: any) {
     return this.http.put(
       `${this.baseUrl}locations/${locationId}/duplicate/${duplicateId}`,
       data
     );
   }
 
-  getPendingLocationsByLocationId(locationId: string): Observable<any[]>{
+  getPendingLocationsByLocationId(locationId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}locations/${locationId}/pending-locations/`)
   }
 
@@ -170,4 +168,44 @@ export class LocationService {
   updateLocation(id: string, data: any) {
     return this.http.put<Location>(`${this.baseUrl}locations/${id}`, data);
   }
+
+  getUserModifiedLocations() {
+    return this.http.get<any>(`${this.baseUrl}locations/me/`).pipe(
+      map(res =>
+        res.map((dto: any) => {
+          // шукаємо потрібний тип у вже вигруженому масиві
+          const typeObj = this.locationTypes$.value.find(t => t.id === dto.type)!;
+
+          return new Location(
+            dto.id,
+            dto.name,
+            dto.address,
+            {
+              type: 'Point',
+              coordinates: [dto.coordinates.lng, dto.coordinates.lat]
+            },
+            typeObj, // завжди буде LocationType
+            dto.description,
+            dto.contacts,
+            dto.workingHours,
+            dto.createdBy,
+            dto.organizationId,
+            dto.status,
+            dto.overallAccessibilityScore,
+            dto.createdAt,
+            dto.updatedAt,
+            dto.lastVerifiedAt,
+            dto.rejectionReason,
+            dto.updatedBy,
+            dto.lastVerifiedBy
+          );
+        })
+      )
+    );
+  }
+
+  getUserPendingCopyByLocationId(locationId: string) {
+    return this.http.get(`${this.baseUrl}locations/me/${locationId}/pending`);
+  }
+
 }
