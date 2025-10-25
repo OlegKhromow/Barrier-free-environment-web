@@ -1,1 +1,208 @@
-<p>user-location-page works!</p>
+<div class="container mx-auto p-6 max-w-6xl">
+  <ng-container *ngIf="location; else empty">
+    <!-- Дві колонки: інформація + карта -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- ЛІВА КОЛОНКА — ІНФОРМАЦІЯ -->
+      <div>
+        <p class="text-gray-600 mb-4">
+          {{ getAccessibilityLevel(location.overallAccessibilityScore) }}
+          <span *ngIf="location.overallAccessibilityScore != null" class="text-sm text-gray-400">
+            ({{ location.overallAccessibilityScore }}%)
+          </span>
+        </p>
+
+        <div class="flex items-center justify-between mb-2">
+          <h1 class="text-3xl font-bold text-green-700">{{ location.name }}</h1>
+        </div>
+
+        <p class="text-gray-600 mb-6">{{ location.address }}</p>
+
+        <!-- Опис -->
+        <section class="mb-6">
+          <h2 class="font-semibold text-gray-800 text-lg mb-1">Опис</h2>
+          <p class="text-sm text-gray-700">{{ location.description || 'Немає опису' }}</p>
+        </section>
+
+        <!-- Категорія -->
+        <section class="mb-6">
+          <h2 class="font-semibold text-gray-800 text-lg mb-1">Категорія</h2>
+          <p class="text-sm text-gray-700">{{ location.type?.name }}</p>
+          <p class="text-sm text-gray-700">{{ location.type?.description }}</p>
+        </section>
+
+        <!-- Контакти -->
+        <section class="mb-6">
+          <h2 class="font-semibold text-gray-800 text-lg mb-1">Контакти</h2>
+          <ng-container
+            *ngIf="location.contacts && (location.contacts.phone || location.contacts.email || location.contacts.website); else noContacts">
+            <ul class="text-sm text-gray-700 space-y-1">
+              <li *ngIf="location.contacts.phone">📞 {{ location.contacts.phone }}</li>
+              <li *ngIf="location.contacts.email">✉️ {{ location.contacts.email }}</li>
+              <li *ngIf="location.contacts.website">
+                🌍 <a [href]="location.contacts.website" target="_blank"
+                     class="text-blue-600 underline">{{ location.contacts.website }}</a>
+              </li>
+            </ul>
+          </ng-container>
+          <ng-template #noContacts>
+            <p class="text-sm text-gray-500">Немає контактів</p>
+          </ng-template>
+        </section>
+
+        <!-- Розклад -->
+        <section class="mb-6">
+          <h2 class="font-semibold text-gray-800 text-lg mb-1">Графік роботи</h2>
+          <ng-container *ngIf="location?.workingHours && !hasNoSchedule(location.workingHours); else noSchedule">
+            <div *ngFor="let d of days" class="text-sm text-gray-700">
+              {{ d.label }}: {{ getDaySchedule(d.key, location.workingHours) }}
+            </div>
+          </ng-container>
+          <ng-template #noSchedule>
+            <p class="text-sm text-gray-500">Немає розкладу</p>
+          </ng-template>
+        </section>
+
+        <!-- Статус -->
+        <section class="mb-6">
+          <h2 class="font-semibold text-gray-800 text-lg mb-1">Стан</h2>
+          <ng-container [ngSwitch]="location.status">
+            <p *ngSwitchCase="'published'" class="text-sm font-medium text-green-600">Опубліковано</p>
+            <p *ngSwitchCase="'pending'" class="text-sm font-medium text-yellow-600">Очікує перевірки</p>
+            <p *ngSwitchCase="'rejected'" class="text-sm font-medium text-red-600">Відхилено</p>
+            <p *ngSwitchDefault class="text-sm font-medium text-gray-500">Невідомий статус</p>
+          </ng-container>
+        </section>
+      </div>
+
+
+
+      <!-- ПРАВА КОЛОНКА — КАРТА -->
+      <div class="relative">
+        <div id="map" class="w-full h-[400px] rounded-xl shadow-md border"></div>
+      </div>
+    </div>
+
+    <!-- Критерії нижче під картою -->
+    <section *ngIf="criteriaTree" class="mt-10 border-t pt-6">
+      <div class="ml-1">
+        <div class="cursor-pointer font-semibold text-gray-800 flex items-center" (click)="toggleGroup()">
+          <span [class.rotate-90]="showGroup" class="mr-1 transition-transform duration-200">▶</span>
+          {{ criteriaTree.group.name }}
+        </div>
+
+        <div *ngIf="showGroup" class="ml-4 mt-2 transition-all duration-200">
+          <div *ngFor="let type of criteriaTree.group.types" class="mb-3">
+            <div class="cursor-pointer flex items-center text-gray-700" (click)="toggleType(type)">
+              <span [class.rotate-90]="isTypeOpen(type)" class="mr-1 transition-transform duration-200">▶</span>
+              <strong>{{ type.name }}</strong>
+            </div>
+
+            <ul *ngIf="isTypeOpen(type)" class="ml-6 list-disc text-sm text-gray-700 mt-1 space-y-2">
+              <li *ngFor="let c of type.criterias">
+                <div class="font-medium text-gray-800">
+                  {{ c.name }} <small class="text-gray-500">({{ c.rank }})</small>
+                </div>
+                <div class="text-gray-600 text-xs mb-1">{{ c.description }}</div>
+
+                <div *ngIf="c.barrierlessCriteriaChecks?.length > 0; else noChecks"
+                     class="ml-4 text-xs text-gray-700 mt-2">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-green-700 font-medium">Безбар’єрно: {{ countChecks(c, false) }}</span>
+                    <span class="text-red-700 font-medium">Проблеми: {{ countChecks(c, true) }}</span>
+                  </div>
+
+                  <div
+                    class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
+                    <div
+                      class="absolute top-1/2 -translate-y-1/2 w-2 h-4 bg-gray-800 rounded-full shadow-md transition-all duration-300"
+                      [style.left.%]="getBalancePosition(c)">
+                    </div>
+                  </div>
+
+                  <div class="text-xs text-gray-500 mt-1 text-center">
+                    {{ 100 - getBalancePosition(c) | number:'1.0-0' }}% безбар’єрно /
+                    {{ getBalancePosition(c) | number:'1.0-0' }}% з проблемами
+                  </div>
+
+                  <div class="cursor-pointer text-blue-600 hover:underline mt-1"
+                       (click)="toggleComments(c)">
+                    💬 Коментарі ({{ getComments(c).length }})
+                  </div>
+
+                  <ul *ngIf="isCommentsOpen(c)" class="ml-4 mt-1 list-disc text-gray-600 text-xs space-y-1">
+                    <li *ngFor="let comment of getComments(c)">"{{ comment }}"</li>
+                  </ul>
+                </div>
+
+                <ng-template #noChecks>
+                  <p class="text-gray-400 text-xs italic ml-2">Немає перевірок</p>
+                </ng-template>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+
+  <ng-template #empty>
+    <div class="flex flex-col items-center justify-center h-96 text-center">
+      <h1 class="font-semibold text-2xl mb-3">Локація не знайдена</h1>
+      <img ngSrc="assets/hand-point.png" alt="hand point" height="128" width="128">
+    </div>
+  </ng-template>
+  <!-- 🆕 СЕКЦІЯ ОНОВЛЕННЯ -->
+  <section class="mt-10 border-t pt-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-3">Оновлення</h2>
+
+    <ng-container *ngIf="pendingLocations.length > 0; else noUpdates">
+      <ul class="space-y-3">
+        <li
+          *ngFor="let pending of pendingLocations"
+          class="border rounded-lg p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+        >
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-medium text-gray-800">{{ pending.name || 'Без назви' }}</p>
+              <p class="text-sm text-gray-600">{{ pending.address }}</p>
+            </div>
+            <span class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
+      Очікує перевірки
+    </span>
+          </div>
+          <div *ngIf="pending.description" class="text-sm text-gray-700 mt-2">
+            {{ pending.description }}
+          </div>
+          <div class="text-xs text-gray-500 mt-1">
+            Оновлено: {{ pending.updatedAt | date:'medium' }}
+          </div>
+        </li>
+
+      </ul>
+    </ng-container>
+
+    <ng-template #noUpdates>
+      <p class="text-sm text-gray-500">Наразі немає оновлень.</p>
+    </ng-template>
+  </section>
+
+
+  <!-- Список схожих -->
+  <div *ngIf="showDuplicates && similarLocations.length" class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Схожі локації поруч:</h3>
+
+    <ul class="divide-y divide-gray-200 border rounded-lg">
+      <li *ngFor="let loc of similarLocations" class="p-3 hover:bg-gray-50 flex justify-between items-center">
+        <div>
+          <div class="font-medium text-gray-800">{{ loc.name }}</div>
+          <div class="text-sm text-gray-500">{{ loc.address }}</div>
+        </div>
+        <button class="text-blue-600 hover:underline"
+                (click)="viewLocation(loc.id)">
+          Переглянути
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>

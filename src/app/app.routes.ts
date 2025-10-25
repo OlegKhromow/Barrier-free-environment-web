@@ -9,6 +9,7 @@ import {Unauthorized403Component} from './pages/unauthorized-403/unauthorized-40
 import {LocationsListPage} from './pages/locations-list-page/locations-list-page.component';
 import {LocationDetailPage} from './pages/location-detail-page/location-detail-page.component';
 import {CabinetPageComponent} from './components/cabinet/cabinet.component';
+import {UserLocationPageComponent} from './components/user-location-page/user-location-page.component';
 
 export const routes: Routes = [
   {
@@ -48,6 +49,7 @@ export const routes: Routes = [
   },
   { path: 'locations/:id', component: LocationDetailPage, canActivate: [authGuard],
     data: { role: 'ADMIN' } },
+  { path: 'user-location/:id', component: UserLocationPageComponent, canActivate: [authGuard]},
   { path: 'unauthorized-401', component: Unauthorized401Component },
   { path: 'unauthorized-403', component: Unauthorized403Component },
   {
