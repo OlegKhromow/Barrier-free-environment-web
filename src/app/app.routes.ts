@@ -8,6 +8,7 @@ import {Unauthorized401Component} from './pages/unauthorized-401/unauthorized-40
 import {Unauthorized403Component} from './pages/unauthorized-403/unauthorized-403.component';
 import {LocationsListPage} from './pages/locations-list-page/locations-list-page.component';
 import {LocationDetailPage} from './pages/location-detail-page/location-detail-page.component';
+import {CabinetPageComponent} from './components/cabinet/cabinet.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,14 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   { path: 'evaluate/:id', component: CriteriaEvaluationComponent,canActivate: [authGuard]},
+
+  {
+    path: 'cabinet',
+    component: CabinetPageComponent,
+    canActivate: [authGuard]
+  },
+
+
   {
     path: 'admin',
     component: AdminPanelComponent,
