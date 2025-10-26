@@ -54,6 +54,13 @@ export class AuthService {
     return this.http.delete<void>(`${this.apiUrl}/users/${username}`);
   }
 
+  registerUser(user: any): Observable<string> {
+    return this.http.post(`${this.apiUrl}/users/`, user, {
+      responseType: 'text' // <-- ключове
+    });
+  }
+
+
   updateUserRole(username: string, newRole: string): Observable<UserDTO> {
     return this.http.patch<UserDTO>(`${this.apiUrl}/users/username/${username}/role`, { role: newRole });
   }
