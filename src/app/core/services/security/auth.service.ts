@@ -41,17 +41,8 @@ export class AuthService {
     return localStorage.getItem('auth_token');
   }
 
-  getUsernameFromToken(): string | null {
-    const token = this.getToken();
-    if (!token) return null;
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub || payload.username || null;
-    } catch (e) {
-      console.error('Помилка декодування токена', e);
-      return null;
-    }
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/users/`);
   }
 
   isLoggedIn(): boolean {

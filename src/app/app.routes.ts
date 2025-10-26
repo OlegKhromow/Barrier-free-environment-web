@@ -10,6 +10,8 @@ import {LocationsListPage} from './pages/locations-list-page/locations-list-page
 import {LocationDetailPage} from './pages/location-detail-page/location-detail-page.component';
 import {CabinetPageComponent} from './components/cabinet/cabinet.component';
 import {UserLocationPageComponent} from './components/user-location-page/user-location-page.component';
+import {UserListPageComponent} from './pages/user-list-page/user-list-page.component';
+import {UserDetailPageComponent} from './pages/user-detail-page/user-detail-page.component';
 
 export const routes: Routes = [
   {
@@ -48,6 +50,10 @@ export const routes: Routes = [
     data: { role: 'ADMIN' }
   },
   { path: 'locations/:id', component: LocationDetailPage, canActivate: [authGuard],
+    data: { role: 'ADMIN' } },
+  { path: 'users', component: UserListPageComponent, canActivate: [authGuard],
+    data: { role: 'ADMIN' } },
+  { path: 'users/:username', component: UserDetailPageComponent, canActivate: [authGuard],
     data: { role: 'ADMIN' } },
   { path: 'user-location/:id', component: UserLocationPageComponent, canActivate: [authGuard]},
   { path: 'unauthorized-401', component: Unauthorized401Component },
