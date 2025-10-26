@@ -15,9 +15,13 @@
     </tr>
     </thead>
     <tbody>
-    <tr *ngFor="let user of users" class="hover:bg-gray-50">
+    <tr
+      *ngFor="let user of users"
+      class="hover:bg-gray-100 cursor-pointer"
+      (click)="openUser(user.username)"
+    >
       <td class="border px-4 py-2">{{ user.id }}</td>
-      <td class="border px-4 py-2">{{ user.username }}</td>
+      <td class="border px-4 py-2 text-blue-600 hover:underline">{{ user.username }}</td>
       <td class="border px-4 py-2">{{ user.email }}</td>
       <td class="border px-4 py-2">{{ user.role }}</td>
     </tr>

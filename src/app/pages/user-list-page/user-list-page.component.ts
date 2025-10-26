@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {AuthService} from '../../core/services/security/auth.service';
-import {UserDTO} from '../../core/dtos/user-dto';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/security/auth.service';
+import { UserDTO } from '../../core/dtos/user-dto';
 
 @Component({
   selector: 'app-user-list-page',
@@ -14,12 +15,16 @@ export class UserListPageComponent implements OnInit {
   users: UserDTO[] = [];
   error: string | null = null;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.authService.getAllUsers().subscribe({
       next: (data) => (this.users = data),
       error: (err) => (this.error = err.error || 'Не вдалося отримати користувачів')
     });
+  }
+
+  openUser(username: string): void {
+    this.router.navigate(['/users', username]);
   }
 }

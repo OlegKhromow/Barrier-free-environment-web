@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../../environments/environment';
 import {BehaviorSubject, Observable, Subject, tap} from 'rxjs';
+import {UserDTO} from '../../dtos/user-dto';
 
 @Injectable({
   providedIn: 'root'
@@ -44,6 +45,19 @@ export class AuthService {
   getAllUsers(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/users/`);
   }
+
+  getUserByUsername(username: string): Observable<UserDTO> {
+    return this.http.get<UserDTO>(`${this.apiUrl}/users/username/${username}`);
+  }
+
+  deleteUser(username: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/users/${username}`);
+  }
+
+  updateUserRole(username: string, newRole: string): Observable<UserDTO> {
+    return this.http.patch<UserDTO>(`${this.apiUrl}/users/username/${username}/role`, { role: newRole });
+  }
+
 
   isLoggedIn(): boolean {
     const isLogged = !!this.getToken();

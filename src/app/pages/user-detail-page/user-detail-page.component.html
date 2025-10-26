@@ -1,1 +1,44 @@
-<p>user-detail-page works!</p>
+<div class="container mx-auto p-6" *ngIf="user; else loading">
+  <h2 class="text-2xl font-semibold mb-4">Деталі користувача</h2>
+
+  <div *ngIf="error" class="text-red-600 mb-4">{{ error }}</div>
+
+  <div class="space-y-2">
+    <p><strong>ID:</strong> {{ user.id }}</p>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+
+    <div class="flex items-center gap-2">
+      <strong>Роль:</strong>
+      <select class="border px-2 py-1 rounded" [(ngModel)]="selectedRole">
+        <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+      </select>
+      <button
+        class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+        (click)="changeRole()"
+      >
+        Змінити роль
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-6 flex gap-4">
+    <button
+      class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+      (click)="deleteUser()"
+    >
+      Видалити користувача
+    </button>
+
+    <button
+      class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+      (click)="router.navigate(['/users'])"
+    >
+      Назад
+    </button>
+  </div>
+</div>
+
+<ng-template #loading>
+  <p class="text-gray-500">Завантаження...</p>
+</ng-template>
