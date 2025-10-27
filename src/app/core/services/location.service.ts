@@ -91,9 +91,10 @@ export class LocationService {
               dto.createdAt,
               dto.updatedAt,
               dto.lastVerifiedAt,
-              dto.rejectionReason,
+              dto.lastVerifiedBy,
               dto.updatedBy,
-              dto.lastVerifiedBy
+              dto.rejectionReason
+
             );
           })
         )
@@ -124,6 +125,10 @@ export class LocationService {
     return this.http.get<any[]>(`${this.baseUrl}locations/${locationId}/pending-locations/`)
   }
 
+  getUserPendingLocationsByLocationId(locationId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}locations/me/${locationId}/pending-locations/`)
+  }
+
 
   getLocations(): Observable<Location[]> {
     console.log('method called')
@@ -152,14 +157,25 @@ export class LocationService {
             dto.createdAt,
             dto.updatedAt,
             dto.lastVerifiedAt,
-            dto.rejectionReason,
+            dto.lastVerifiedBy,
             dto.updatedBy,
-            dto.lastVerifiedBy
+            dto.rejectionReason
           );
         })
       )
     );
   }
+
+  rejectPending(pendingId: number, message: string) {
+    const dto = { rejectionReason: message };
+    return this.http.patch(
+      `${this.baseUrl}locations/pending/${pendingId}/`,
+      dto
+    );
+  }
+
+
+
 
 
   getAllPendingLocations(): Observable<any[]> {

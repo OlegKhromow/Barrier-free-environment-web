@@ -52,6 +52,8 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   originalRightValues: Record<string, any> = {};
   originalDuplicateRightValues: Record<string, any> = {};
   showUpdateForm = false;
+  showRejectedPendingModal = false;
+
 
   constructor(
     private route: ActivatedRoute,
@@ -68,11 +70,34 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
 
 
   openModal(pending: any) {
-    // створюємо копії, щоб не змінювати реальні об'єкти
+    if (pending.status === 'rejected') {
+      this.selectedPending = pending;
+      this.showRejectedPendingModal = true;
+      return;
+    }
+
+    // Якщо pending → стандартна модалка порівняння
     this.selectedPending = { ...pending };
-    this.modalLocation = { ...this.location }; // 👈 нова властивість
+    this.modalLocation = { ...this.location };
     this.showModal = true;
   }
+
+  deletePending(pendingId: number) {
+    if (!confirm('Ви впевнені, що хочете видалити це оновлення?')) return;
+
+    // this.locationService.deletePending(pendingId).subscribe({
+    //   next: () => {
+    //     alert('Оновлення видалено');
+    //     this.showRejectedPendingModal = false;
+    //     this.loadPendingLocations();
+    //   },
+    //   error: err => {
+    //     console.error('Помилка при видаленні оновлення:', err);
+    //     alert('Не вдалося видалити оновлення');
+    //   }
+    // });
+  }
+
 
   openDuplicateModal(duplicate: any) {
     // створюємо копії, щоб не змінювати реальні об'єкти
@@ -341,6 +366,51 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
       this.swappedFields[key] = true;
     }
   }
+
+  showRejectPendingForm = false;
+  rejectionPendingReason = '';
+
+  openRejectPendingForm() {
+    this.showRejectPendingForm = true;
+
+    // використовуємо setTimeout, щоб Angular встиг оновити DOM перед підстановкою
+    setTimeout(() => {
+      if (this.selectedPending?.rejectionReason) {
+        this.rejectionPendingReason = this.selectedPending.rejectionReason;
+      } else {
+        this.rejectionPendingReason = '';
+      }
+    });
+  }
+
+
+  submitPendingRejection() {
+    if (!this.selectedPending || !this.rejectionPendingReason.trim()) {
+      alert('Вкажіть причину відхилення');
+      return;
+    }
+
+    this.locationService.rejectPending(this.selectedPending.id, this.rejectionPendingReason)
+      .subscribe({
+        next: (res) => {
+          alert('Пендінг відхилено');
+          this.showRejectPendingForm = false;
+          this.rejectionPendingReason = '';
+          this.closeModal();
+          this.loadPendingLocations();
+        },
+        error: (err) => {
+          console.error('❌ Помилка при відхиленні пендінгу:', err);
+          alert('Не вдалося відхилити пендінг');
+        }
+      });
+  }
+
+  cancelPendingRejection() {
+    this.showRejectPendingForm = false;
+    this.rejectionPendingReason = '';
+  }
+
 
   swapDuplicateWorkingHours() {
     if (!this.modalLocation || !this.selectedDuplicate) return;

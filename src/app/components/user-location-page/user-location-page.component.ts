@@ -160,7 +160,7 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
 
   loadPendingLocations() {
     if (this.location?.id) {
-      this.locationService.getPendingLocationsByLocationId(this.location.id)
+      this.locationService.getUserPendingLocationsByLocationId(this.location.id)
         .subscribe(data => {
           this.pendingLocations = data;
           console.log('🕒 Pending Locations:', data);

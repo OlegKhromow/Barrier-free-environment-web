@@ -75,6 +75,12 @@
         </section>
       </div>
 
+      <!-- Причина відхилення -->
+      <div *ngIf="location.status === 'rejected' && location.rejectionReason"
+           class="mb-6 p-4 border border-red-300 bg-red-50 rounded-lg text-sm text-red-700">
+        <strong>Причина відхилення:</strong><br>
+        {{ location.rejectionReason }}
+      </div>
 
 
       <!-- ПРАВА КОЛОНКА — КАРТА -->

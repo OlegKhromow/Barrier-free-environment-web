@@ -257,8 +257,11 @@
               <p class="font-medium text-gray-800">{{ pending.name || 'Без назви' }}</p>
               <p class="text-sm text-gray-600">{{ pending.address }}</p>
             </div>
-            <span class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
+            <span *ngIf="pending.status === 'pending'"  class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
       Очікує перевірки
+    </span>
+            <span *ngIf="pending.status === 'rejected'"  class="text-xs text-white bg-red-700 px-2 py-1 rounded">
+      Відмовлено
     </span>
           </div>
           <div *ngIf="pending.description" class="text-sm text-gray-700 mt-2">
@@ -300,6 +303,59 @@
 
       </li>
     </ul>
+  </div>
+  <!-- 🪟 МОДАЛКА ДЛЯ REJECTED ПЕНДІНГУ -->
+  <div *ngIf="showRejectedPendingModal"
+       class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
+
+      <button (click)="showRejectedPendingModal = false"
+              class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">✕</button>
+
+      <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Відхилене оновлення</h2>
+
+      <div class="space-y-2 text-sm text-gray-800">
+        <p><strong>Назва:</strong> {{ selectedPending?.name }}</p>
+        <p><strong>Адреса:</strong> {{ selectedPending?.address }}</p>
+        <p><strong>Опис:</strong> {{ selectedPending?.description || '—' }}</p>
+
+        <div *ngIf="selectedPending?.contacts">
+          <p><strong>Телефон:</strong> {{ selectedPending?.contacts.phone || '—' }}</p>
+          <p><strong>Email:</strong> {{ selectedPending?.contacts.email || '—' }}</p>
+          <p><strong>Сайт:</strong> {{ selectedPending?.contacts.website || '—' }}</p>
+        </div>
+        <section class="mb-6">
+          <h2 class="font-semibold text-gray-800 text-lg mb-1">Графік роботи</h2>
+
+          <ng-container *ngIf="selectedPending?.workingHours && !hasNoSchedule(selectedPending.workingHours); else noSchedulePending">
+            <div *ngFor="let d of days" class="text-sm text-gray-700">
+              {{ d.label }}: {{ getDaySchedule(d.key, selectedPending.workingHours) }}
+            </div>
+          </ng-container>
+
+          <ng-template #noSchedulePending>
+            <p class="text-sm text-gray-500">Немає розкладу</p>
+          </ng-template>
+        </section>
+
+
+        <p *ngIf="selectedPending?.rejectionReason" class="text-red-600 mt-3">
+          <strong>Причина відхилення:</strong> {{ selectedPending.rejectionReason }}
+        </p>
+      </div>
+
+      <div class="flex justify-end mt-6 space-x-2">
+        <button (click)="showRejectedPendingModal = false"
+                class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+          Закрити
+        </button>
+
+        <button (click)="deletePending(selectedPending.id)"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+          Видалити
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- 🪟 Модалка порівняння -->
@@ -417,21 +473,23 @@
         </div>
       </div>
 
-      <div class="mt-6 text-right space-x-2">
-        <button
-          (click)="closeModal()"
-          class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-        >
-          Закрити
-        </button>
-
-        <button
-          (click)="confirmChanges()"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          ✅ Підтвердити зміни
-        </button>
+      <div class="flex justify-end gap-2 mt-4">
+        <button class="btn btn-primary" (click)="confirmChanges()">Підтвердити</button>
+        <button class="btn btn-outline" (click)="closeModal()">Скасувати</button>
+        <button class="btn btn-danger" (click)="openRejectPendingForm()">Відхилити</button>
       </div>
+      <div *ngIf="showRejectPendingForm" class="mt-4 p-3 border rounded bg-gray-50">
+        <label for="reason" class="block font-medium mb-1">Причина відхилення</label>
+        <textarea id="reason" [(ngModel)]="rejectionPendingReason"
+                  class="w-full border p-2 rounded"
+                  rows="3" placeholder="Вкажіть причину..."></textarea>
+
+        <div class="flex justify-end gap-2 mt-2">
+          <button class="btn btn-secondary" (click)="cancelPendingRejection()">Скасувати</button>
+          <button class="btn btn-danger" (click)="submitPendingRejection()">Підтвердити відхилення</button>
+        </div>
+      </div>
+
 
     </div>
   </div>
