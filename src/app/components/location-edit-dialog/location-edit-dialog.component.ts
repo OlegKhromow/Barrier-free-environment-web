@@ -29,7 +29,6 @@ export class LocationEditDialogComponent implements OnInit {
     { value: LocationStatusEnum.REJECTED, label: 'Відхилено' }
   ];
 
-  currentUserId: string | null = null;
   form!: FormGroup;
   selectedImages: { file: File, preview: string }[] = [];
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
@@ -39,12 +38,6 @@ export class LocationEditDialogComponent implements OnInit {
   ngOnInit() {
     this.locationService.loadLocationTypes();
     this.initForm();
-
-    // ✅ Підтягуємо користувача
-    this.authService.getByUsername().subscribe({
-      next: user => this.currentUserId = user.id,
-      error: err => console.error('❌ Не вдалося отримати користувача:', err)
-    });
 
     // ✅ Якщо передані дані — використовуємо їх
     if (this.prefillData) {

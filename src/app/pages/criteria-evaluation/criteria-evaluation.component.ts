@@ -17,42 +17,49 @@ export class CriteriaEvaluationComponent implements OnInit {
   selectedTypes: any[] = [];
   scores: { [criteriaId: string]: any } = {};
   locationId!: string;
-  currentUserId!: string;
+
+  isLoading: boolean = true;
 
   constructor(
     private route: ActivatedRoute,
     private locationService: LocationService,
     private checkService: BarrierlessCriteriaCheckService,
-    private authService: AuthService
   ) {
   }
 
   ngOnInit() {
     this.locationId = this.route.snapshot.paramMap.get('id')!;
-
-    this.authService.getByUsername().subscribe({
-      next: (user) => {
-        this.currentUserId = user.id;
-        // ✅ 3. Коли userId відомий — підтягуємо дерево критеріїв
-        this.loadCriteriaTreeForUser();
-      },
-      error: (err) => console.error('❌ Не вдалося отримати користувача:', err)
-    });
+    this.loadCriteriaTreeForUser();
   }
 
   /** 🔹 Отримує дерево критеріїв і заповнює форму, якщо є старі відгуки */
   loadCriteriaTreeForUser() {
-    this.locationService.getLocationById(this.locationId).subscribe((location: any) => {
-      if (!location?.type) {
-        console.error('❌ Локація не має поля type!');
-        return;
-      }
+    this.isLoading = true;
 
-      // ✅ Запит з userId, щоб прийшли лише його чеки
-      this.locationService.getCriteriaTreeByUser(location.id).subscribe(tree => {
-        this.criteriaTree = tree;
-        this.initializeScoresFromTree(tree);
-      });
+    this.locationService.getLocationById(this.locationId).subscribe({
+      next: (location: any) => {
+        if (!location?.type) {
+          console.error('❌ Локація не має поля type!');
+          this.isLoading = false;
+          return;
+        }
+
+        this.locationService.getCriteriaTreeByUser(location.id).subscribe({
+          next: (tree) => {
+            this.criteriaTree = tree;
+            this.initializeScoresFromTree(tree);
+            this.isLoading = false; // ✅ коли все готово
+          },
+          error: (err) => {
+            console.error('❌ Помилка при завантаженні дерева критеріїв:', err);
+            this.isLoading = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('❌ Помилка при завантаженні локації:', err);
+        this.isLoading = false;
+      }
     });
   }
 
@@ -123,16 +130,10 @@ export class CriteriaEvaluationComponent implements OnInit {
 
   /** 🔥 Відправка на бекенд */
   submitEvaluation() {
-    if (!this.currentUserId) {
-      alert('❌ Користувача не знайдено');
-      return;
-    }
 
     const checkList = Object.entries(this.scores).map(([criteriaId, data]: any) => ({
       locationId: this.locationId,
       barrierlessCriteriaId: criteriaId,
-      userId: this.currentUserId,
-      createdBy: this.currentUserId,
       comment: data.comment || null,
       hasIssue: data.value === 'no',
       barrierFreeRating: null,
