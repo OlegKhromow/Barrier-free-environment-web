@@ -1,15 +1,16 @@
-import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, inject, OnInit } from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {AfterViewInit, Component, inject, OnInit} from '@angular/core';
 import * as L from 'leaflet';
-import { Location } from '../../core/models/location';
-import { LocationService } from '../../core/services/location.service';
-import { LocationSidebarComponent } from '../../components/location-sidebar/location-sidebar.component';
-import { RouterLink } from '@angular/router';
-import { LocationCreateFormComponent } from '../../components/location-create-form/location-create-form.component';
-import { MatDialog } from '@angular/material/dialog';
-import { DuplicatesDialogComponent } from '../../components/duplicates-dialog/duplicates-dialog.component';
-import { FormStateService } from '../../core/services/form-state.service';
-import { forkJoin } from 'rxjs';
+import {Location} from '../../core/models/location';
+import {LocationService} from '../../core/services/location.service';
+import {LocationSidebarComponent} from '../../components/location-sidebar/location-sidebar.component';
+import {RouterLink} from '@angular/router';
+import {LocationCreateFormComponent} from '../../components/location-create-form/location-create-form.component';
+import {MatDialog} from '@angular/material/dialog';
+import {DuplicatesDialogComponent} from '../../components/duplicates-dialog/duplicates-dialog.component';
+import {FormStateService} from '../../core/services/form-state.service';
+import {forkJoin, of} from 'rxjs';
+import {AuthService} from '../../core/services/security/auth.service';
 
 @Component({
   selector: 'app-map-page',
@@ -44,6 +45,7 @@ export class MapPage implements OnInit, AfterViewInit {
   private locationService = inject(LocationService);
   private dialog = inject(MatDialog);
   private formState = inject(FormStateService);
+  private authService = inject(AuthService);
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -60,7 +62,7 @@ export class MapPage implements OnInit, AfterViewInit {
         const lng = parseFloat(flyToLng);
 
         setTimeout(() => {
-          this.map.flyTo([lat, lng], 17, { animate: true, duration: 0.9 });
+          this.map.flyTo([lat, lng], 17, {animate: true, duration: 0.9});
 
           // якщо є selectedId — відкриваємо сайдбар з цією локацією
           if (selectedId && this.locations) {
@@ -107,22 +109,34 @@ export class MapPage implements OnInit, AfterViewInit {
   }
 
   private fetchLocations(afterLoad?: () => void): void {
-    forkJoin({
-      locations: this.locationService.getLocations(),
-      pending: this.locationService.getUserPendingLocations()
-    }).subscribe({
-      next: ({ locations, pending }) => {
+    const isLogged = this.authService.isLoggedIn(); // ✅ перевірка логіну
+
+    const requests = isLogged
+      ? {
+        locations: this.locationService.getLocations(),
+        pending: this.locationService.getUserPendingLocations()
+      }
+      : {
+        locations: this.locationService.getLocations(),
+        pending: of([]) // пустий Observable для анонімних
+      };
+
+    forkJoin(requests).subscribe({
+      next: ({locations, pending}) => {
+        console.log(locations);
         this.locations = locations;
         this.addMarkers();
 
-        // формуємо Map<Location, PendingLocation>
+        // формуємо Map<Location, PendingLocation> тільки якщо є pending
         this.locationPendingMap.clear();
-        locations.forEach(loc => {
-          const match = pending.find(p => p.locationId === loc.id);
-          if (match) {
-            this.locationPendingMap.set(loc, match);
-          }
-        });
+        if (Array.isArray(pending)) {
+          locations.forEach(loc => {
+            const match = pending.find(p => p.locationId === loc.id);
+            if (match) {
+              this.locationPendingMap.set(loc, match);
+            }
+          });
+        }
 
         console.log('📍 Map Location → PendingLocation:', this.locationPendingMap);
 
@@ -136,19 +150,19 @@ export class MapPage implements OnInit, AfterViewInit {
     this.locations?.forEach(location => {
       const iconUrl = 'assets/map-markers/1.png';
       const icon = this.createMarkerIcon(iconUrl, [35, 40]);
-      const marker = L.marker([location.latitude, location.longitude], { icon }).addTo(this.map);
+      const marker = L.marker([location.latitude, location.longitude], {icon}).addTo(this.map);
 
       marker.on('click', () => {
         if (this.duplicateMode) return;
         this.clickOnMarker(location, marker);
       });
 
-      this.markers.push({ marker, iconUrl, baseSize: [35, 40], location });
+      this.markers.push({marker, iconUrl, baseSize: [35, 40], location});
     });
   }
 
   private initMap(): void {
-    this.map = L.map('map', { center: [51.4982, 31.2893], zoom: 13 });
+    this.map = L.map('map', {center: [51.4982, 31.2893], zoom: 13});
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -169,7 +183,7 @@ export class MapPage implements OnInit, AfterViewInit {
       if (this.addingMode && !this.duplicateMode) {
         this.addingMode = false;
         this.map.getContainer().style.cursor = '';
-        const { lat, lng } = e.latlng;
+        const {lat, lng} = e.latlng;
         this.clickedLat = lat;
         this.clickedLng = lng;
         this.showCreateForm = true;
@@ -193,11 +207,11 @@ export class MapPage implements OnInit, AfterViewInit {
     marker.setZIndexOffset(1000);
 
     const zoomLevel = Math.min(this.map.getZoom() + 2, 17);
-    this.map.flyTo(marker.getLatLng(), zoomLevel, { animate: true, duration: 0.8 });
+    this.map.flyTo(marker.getLatLng(), zoomLevel, {animate: true, duration: 0.8});
   }
 
   private createMarkerIcon(iconUrl: string, size: [number, number]): L.Icon {
-    return new L.Icon({ iconUrl, iconSize: size as any });
+    return new L.Icon({iconUrl, iconSize: size as any});
   }
 
   // === DUPLICATES ===
@@ -217,7 +231,7 @@ export class MapPage implements OnInit, AfterViewInit {
     if (found) {
       this.selectedLocation = found.location || null;
       found.marker.setZIndexOffset(1000);
-      this.map.flyTo(found.marker.getLatLng(), 17, { animate: true, duration: 0.9 });
+      this.map.flyTo(found.marker.getLatLng(), 17, {animate: true, duration: 0.9});
     } else {
       console.warn('Не знайдено маркер для дубліката id=', payload.id);
     }
@@ -242,7 +256,7 @@ export class MapPage implements OnInit, AfterViewInit {
     }
 
     const ref = this.dialog.open(DuplicatesDialogComponent, {
-      data: { similar: this.duplicateSimilar },
+      data: {similar: this.duplicateSimilar},
       width: '600px'
     });
 
@@ -270,7 +284,7 @@ export class MapPage implements OnInit, AfterViewInit {
         const found = this.markers.find(m => m.location && m.location.id === result.id);
         if (found) {
           this.selectedLocation = found.location || null;
-          this.map.flyTo(found.marker.getLatLng(), 17, { animate: true, duration: 0.9 });
+          this.map.flyTo(found.marker.getLatLng(), 17, {animate: true, duration: 0.9});
         }
       } else if (result.action === 'cancel') {
         this.resetDuplicateState();

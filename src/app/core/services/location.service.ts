@@ -126,6 +126,7 @@ export class LocationService {
 
 
   getLocations(): Observable<Location[]> {
+    console.log('method called')
     return this.http.get<any>(`${this.baseUrl}locations`).pipe(
       map(res =>
         res.locationReadDTOS.map((dto: any) => {
