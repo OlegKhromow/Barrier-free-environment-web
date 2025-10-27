@@ -102,6 +102,32 @@ export class LocationEditDialogComponent implements OnInit {
     }));
   }
 
+  /** конвертація 12h часу у 24h */
+  private to24Hour(time: string): string {
+    if (!time) return '';
+    // <input type="time"> у більшості браузерів уже дає 24h ("23:11"), але залишимо перевірку
+    const parts = time.split(':');
+    if (parts.length < 2) return time;
+    const hours = parseInt(parts[0], 10);
+    const minutes = parts[1];
+    if (isNaN(hours)) return time;
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  }
+
+  /** Нормалізація робочих годин у формат 24h перед відправкою */
+  private normalizeWorkingHours(hoursGroup: FormGroup): any {
+    const result: any = {};
+    for (const day of this.days) {
+      const open = hoursGroup.get(`${day}.open`)?.value;
+      const close = hoursGroup.get(`${day}.close`)?.value;
+      result[day] = {
+        open: this.to24Hour(open),
+        close: this.to24Hour(close)
+      };
+    }
+    return result;
+  }
+
   /** Збереження оновлених даних */
   save() {
     if (this.form.invalid || !this.locationId) {
@@ -109,8 +135,13 @@ export class LocationEditDialogComponent implements OnInit {
       return;
     }
 
+    const raw = this.form.value;
+    const normalizedWorkingHours = this.normalizeWorkingHours(this.form.get('workingHours') as FormGroup);
+
+
     const dto = {
-      ...this.form.value,
+      ...raw,
+      workingHours: normalizedWorkingHours,
       coordinates: {
         lat: parseFloat(this.form.value.lat),
         lng: parseFloat(this.form.value.lng)

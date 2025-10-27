@@ -27,7 +27,6 @@ export class LocationCreateFormComponent implements OnInit {
   @Input() lat!: number;
   @Input() lng!: number;
   @Output() close = new EventEmitter<any>();
-  // Новий EventEmitter, щоб повідомити MapPage про перегляд дубліката
   @Output() viewDuplicate = new EventEmitter<{ id: string, similar: Array<any>, dto: any }>();
 
   private fb = inject(FormBuilder);
@@ -35,8 +34,6 @@ export class LocationCreateFormComponent implements OnInit {
   private formState = inject(FormStateService);
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
-  // currentUserId: string | null = null;
-
 
   days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -52,31 +49,29 @@ export class LocationCreateFormComponent implements OnInit {
     }),
     workingHours: this.fb.group(
       this.days.reduce((acc, day) => {
-        acc[day] = this.fb.group({open: [''], close: ['']});
+        acc[day] = this.fb.group({ open: [''], close: [''] });
         return acc;
       }, {} as Record<string, FormGroup>),
-      {validators: [workingHoursValidator]}
+      { validators: [workingHoursValidator] }
     )
   });
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
   selectedImages: { file: File, preview: string }[] = [];
 
-  // збережемо останній similar і dto, щоб MapPage / діалог міг ними оперувати
   private _lastSimilar: Array<any> | null = null;
   private _lastDto: any | null = null;
 
   ngOnInit() {
     const saved = this.formState.getFormData();
     if (saved) {
-      // Якщо є збережена форма (повернулися після перегляду дубліката) — відновлюємо
       this.form.patchValue(saved.formValue);
       this.selectedImages = saved.selectedImages || [];
     } else {
-      // Порожня форма, якщо збережено нічого немає
       this.initForm();
     }
   }
+
   private initForm() {
     this.form = this.fb.group({
       name: ['', Validators.required],
@@ -90,20 +85,45 @@ export class LocationCreateFormComponent implements OnInit {
       }),
       workingHours: this.fb.group(
         this.days.reduce((acc, day) => {
-          acc[day] = this.fb.group({open: [''], close: ['']});
+          acc[day] = this.fb.group({ open: [''], close: [''] });
           return acc;
         }, {} as Record<string, FormGroup>),
-        {validators: [workingHoursValidator]}
+        { validators: [workingHoursValidator] }
       )
     });
     this.selectedImages = [];
   }
 
+  /** конвертація 12h часу у 24h */
+  private to24Hour(time: string): string {
+    if (!time) return '';
+    // <input type="time"> у більшості браузерів уже дає 24h ("23:11"), але залишимо перевірку
+    const parts = time.split(':');
+    if (parts.length < 2) return time;
+    const hours = parseInt(parts[0], 10);
+    const minutes = parts[1];
+    if (isNaN(hours)) return time;
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  }
+
+  /** Нормалізація робочих годин у формат 24h перед відправкою */
+  private normalizeWorkingHours(hoursGroup: FormGroup): any {
+    const result: any = {};
+    for (const day of this.days) {
+      const open = hoursGroup.get(`${day}.open`)?.value;
+      const close = hoursGroup.get(`${day}.close`)?.value;
+      result[day] = {
+        open: this.to24Hour(open),
+        close: this.to24Hour(close)
+      };
+    }
+    return result;
+  }
 
   onImageSelect(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
-    this.selectedImages = Array.from(input.files).map(file => ({file, preview: URL.createObjectURL(file)}));
+    this.selectedImages = Array.from(input.files).map(file => ({ file, preview: URL.createObjectURL(file) }));
   }
 
   save() {
@@ -112,14 +132,16 @@ export class LocationCreateFormComponent implements OnInit {
       return;
     }
 
+    const raw = this.form.value;
+    const normalizedWorkingHours = this.normalizeWorkingHours(this.form.get('workingHours') as FormGroup);
+
     const dto = {
-      ...this.form.value,
-      coordinates: {lat: this.lat, lng: this.lng},
-      // createdBy: this.currentUserId,
+      ...raw,
+      workingHours: normalizedWorkingHours,
+      coordinates: { lat: this.lat, lng: this.lng },
       status: LocationStatusEnum.PENDING
     };
 
-    // перевіряємо дублікат
     this.locationService.checkDuplicates(dto).subscribe({
       next: (res) => {
         if (res.status === 409) {
@@ -130,10 +152,8 @@ export class LocationCreateFormComponent implements OnInit {
             latitude: it.latitude,
             longitude: it.longitude
           }));
-          console.log(similarArr);
           this.openDuplicatesDialog(similarArr, dto);
         } else {
-          // ✅ просто віддаємо dto нагору
           this.close.emit(dto);
         }
       },
@@ -163,36 +183,28 @@ export class LocationCreateFormComponent implements OnInit {
     latitude?: number,
     longitude?: number
   }>, dto: any) {
-    // зберігаємо стан форми перед відкриттям
-    this.formState.saveFormData({formValue: this.form.value, selectedImages: this.selectedImages});
-
-    // зберігаємо локально, щоб потім мали доступ при view/no
+    this.formState.saveFormData({ formValue: this.form.value, selectedImages: this.selectedImages });
     this._lastSimilar = similar;
     this._lastDto = dto;
 
-    const ref = this.dialog.open(DuplicatesDialogComponent, {data: {similar}, width: '600px'});
-
+    const ref = this.dialog.open(DuplicatesDialogComponent, { data: { similar }, width: '600px' });
     ref.afterClosed().subscribe(result => {
       if (!result) return;
 
       if (result.action === 'proceed') {
-        // ✅ користувач хоче примусово додати — не створюємо тут, а просто емітимо нагору (як у тебе було)
         this.formState.clearFormData();
-        this.close.emit({...dto, force: true});
+        this.close.emit({ ...dto, force: true });
       } else if (result.action === 'view' && result.id) {
-        // замість відкривати нову сторінку — повідомляємо MapPage щоб він зробив flyTo і зайшов у duplicateMode
-        this.viewDuplicate.emit({id: result.id, similar: similar, dto: dto});
-        // не закриваємо форму — даємо користувачу можливість відповісти в сайдбарі
+        this.viewDuplicate.emit({ id: result.id, similar: similar, dto: dto });
       }
     });
   }
 
   cancel() {
     this.formState.clearFormData();
-    this.initForm(); // очищаємо локально форму
+    this.initForm();
     this.close.emit(null);
   }
-
 }
 
 /** кастомний валідатор для робочих годин */
@@ -203,7 +215,7 @@ function workingHoursValidator(control: AbstractControl): ValidationErrors | nul
     const open = (subGroup as FormGroup).get('open')?.value;
     const close = (subGroup as FormGroup).get('close')?.value;
     if ((open && !close) || (!open && close)) {
-      return {workingHoursIncomplete: true};
+      return { workingHoursIncomplete: true };
     }
   }
   return null;
