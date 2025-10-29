@@ -1,14 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import {PaginationInstance} from 'ngx-pagination';
+import { NgxPaginationModule } from 'ngx-pagination';
 import { forkJoin } from 'rxjs';
 import { LocationService } from '../../core/services/location.service';
 import { Location } from '../../core/models/location';
+import { FormsModule } from '@angular/forms';
+import { ElementsByStringPipe } from '../../filters/location-by-title-pipe';
 
 @Component({
   selector: 'app-locations-list-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink,NgxPaginationModule, FormsModule, ElementsByStringPipe],
   templateUrl: './locations-list-page.component.html',
   styleUrls: ['./locations-list-page.component.css']
 })
@@ -19,6 +23,21 @@ export class LocationsListPage implements OnInit {
   pendingCounts: Record<string, number> = {}; // locationId (UUID) → кількість pending
   loading = false;
   error: string | null = null;
+
+  // Pagination settings
+  currentPage = 1;
+  itemsPerPage = 8;
+  totalItems = 0;
+
+  //filtering
+  filterTitle: string = "";
+  filterDescription: string = "";
+
+  public pagingConfig: PaginationInstance = {
+      itemsPerPage: this.itemsPerPage,
+      currentPage: this.currentPage,
+      totalItems: this.totalItems
+    };
 
   ngOnInit(): void {
     this.locationService.loadLocationTypes();
@@ -35,6 +54,7 @@ export class LocationsListPage implements OnInit {
     }).subscribe({
       next: ({ locations, pending }) => {
         this.locations = locations;
+        this.totalItems = locations.length;
 
         // Рахуємо кількість pending по кожному locationId (UUID)
         this.pendingCounts = pending.reduce((acc, p) => {
@@ -63,4 +83,18 @@ export class LocationsListPage implements OnInit {
   getPendingCount(locationId: string): number {
     return this.pendingCounts[locationId] || 0;
   }
+
+   onTableDataChange(event: any): void {
+        this.pagingConfig.currentPage = event;
+    }
+
+    onTableSizeChange(event: any): void {
+        this.pagingConfig.itemsPerPage = event.target.value;
+        this.pagingConfig.currentPage = 1;
+    }
+
+    clearFiltersInputs(): void {
+      this.filterTitle = "";
+      this.filterDescription = "";
+    }
 }
