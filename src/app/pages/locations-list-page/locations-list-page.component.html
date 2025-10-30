@@ -6,22 +6,48 @@
 
 <div class="mt-3 mb-1 flex items-center md:w-3/5">
     <p class="font-semibold mr-2">Фільтрування:</p>
+
+  <!-- Назва локацій -->
   <input class="flex-1 min-w-0 p-2 text-base border-2 border-black rounded-md"
     type="text" placeholder="Назва локації..." [(ngModel)]="filterTitle">
+
+  <!-- Опис локацій -->
   <input class="flex-1 min-w-0 ml-2 p-2 text-base border-2 border-black rounded-md" 
     type="text" placeholder="Опис локації..." [(ngModel)]="filterDescription">
-  <svg 
+
+  <!-- Типи локацій -->
+  <select [(ngModel)]="selectedTypeId"
+    class="p-2 border-2 border-black rounded-md">
+    <option value="all">Усі типи</option>
+    <option *ngFor="let t of locationTypes" [value]="t.id">{{ t.name }}</option>
+  </select>
+
+  <!-- Статуси -->
+  <select [(ngModel)]="selectedStatus"
+    class="p-2 border-2 border-black rounded-md">
+    <option value="all">Усі статуси</option>
+    <option *ngFor="let s of statuses" [value]="s">{{ s | titlecase }}</option>
+  </select>
+
+    <svg 
     (click)="clearFiltersInputs()"
     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
     class="w-10 h-10 ml-2 cursor-pointer flex-shrink-0">
     <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>   
+    </svg>
+
 </div>
 
   <div *ngIf="!loading && !error">
     <div *ngIf="locations.length; else emptyList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-      <a *ngFor="let loc of locations | elementsByString: ['name', 'description'] : [filterTitle, filterDescription] | paginate: pagingConfig"
+      <a *ngFor="let loc of locations | 
+        elementsByString: 
+          ['name', 'description'] : 
+          [filterTitle, filterDescription]  : 
+          selectedTypeId: 
+          selectedStatus 
+          | paginate: pagingConfig"
          [routerLink]="['/locations', loc.id]"
          class="block bg-white border rounded-lg p-4 shadow hover:shadow-md transition hover:bg-gray-50 cursor-pointer">
 

@@ -8,6 +8,8 @@ import { LocationService } from '../../core/services/location.service';
 import { Location } from '../../core/models/location';
 import { FormsModule } from '@angular/forms';
 import { ElementsByStringPipe } from '../../filters/location-by-title-pipe';
+import { LocationType } from '../../core/models/location-type';
+import { LocationStatusEnum } from '../../core/models/location-status-enum';
 
 @Component({
   selector: 'app-locations-list-page',
@@ -32,6 +34,10 @@ export class LocationsListPage implements OnInit {
   //filtering
   filterTitle: string = "";
   filterDescription: string = "";
+  locationTypes: LocationType[] = [];
+  statuses = Object.values(LocationStatusEnum);
+  selectedTypeId = 'all';
+  selectedStatus: LocationStatusEnum | 'all' = 'all';
 
   public pagingConfig: PaginationInstance = {
       itemsPerPage: this.itemsPerPage,
@@ -41,7 +47,10 @@ export class LocationsListPage implements OnInit {
 
   ngOnInit(): void {
     this.locationService.loadLocationTypes();
+    this.locationService.getLocationTypesObservable().subscribe(types => {
+    this.locationTypes = types;
     this.loadLocations();
+  });
   }
 
   loadLocations(): void {
@@ -93,8 +102,10 @@ export class LocationsListPage implements OnInit {
         this.pagingConfig.currentPage = 1;
     }
 
-    clearFiltersInputs(): void {
-      this.filterTitle = "";
-      this.filterDescription = "";
-    }
+  clearFiltersInputs() {
+    this.filterTitle = '';
+    this.filterDescription = '';
+    this.selectedTypeId = 'all';
+    this.selectedStatus = 'all';
+  }
 }
