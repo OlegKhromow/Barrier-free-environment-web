@@ -229,4 +229,42 @@ export class LocationService {
     return this.http.get(`${this.baseUrl}locations/me/${locationId}/pending`);
   }
 
+  getUserModifiedLocationsByUsername(username: string) {
+    return this.http.get<any>(`${this.baseUrl}locations/modified/user/${username}`).pipe(
+      map(res =>
+        res.map((dto: any) => {
+          // шукаємо потрібний тип у вже вигруженому масиві
+          const typeObj = this.locationTypes$.value.find(t => t.id === dto.type)!;
+
+          return new Location(
+            dto.id,
+            dto.name,
+            dto.address,
+            {
+              type: 'Point',
+              coordinates: [dto.coordinates.lng, dto.coordinates.lat]
+            },
+            typeObj, // завжди буде LocationType
+            dto.description,
+            dto.contacts,
+            dto.workingHours,
+            dto.createdBy,
+            dto.organizationId,
+            dto.status,
+            dto.overallAccessibilityScore,
+            dto.createdAt,
+            dto.updatedAt,
+            dto.lastVerifiedAt,
+            dto.rejectionReason,
+            dto.updatedBy,
+            dto.lastVerifiedBy
+          );
+        })
+      )
+    );
+  }
+
+  getUserPendingLocationsByUsername(username: string) {
+    return this.http.get<any[]>(`${this.baseUrl}locations/user/${username}/pending-locations/`);
+  }
 }
