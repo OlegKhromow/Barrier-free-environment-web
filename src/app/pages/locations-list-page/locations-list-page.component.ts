@@ -10,11 +10,12 @@ import { FormsModule } from '@angular/forms';
 import { ElementsByStringPipe } from '../../filters/location-by-title-pipe';
 import { LocationType } from '../../core/models/location-type';
 import { LocationStatusEnum } from '../../core/models/location-status-enum';
+import { TruncateDescriptionPipePipe } from '../../filters/truncate-description-pipe';
 
 @Component({
   selector: 'app-locations-list-page',
   standalone: true,
-  imports: [CommonModule, RouterLink,NgxPaginationModule, FormsModule, ElementsByStringPipe],
+  imports: [CommonModule, RouterLink,NgxPaginationModule, FormsModule, ElementsByStringPipe, TruncateDescriptionPipePipe],
   templateUrl: './locations-list-page.component.html',
   styleUrls: ['./locations-list-page.component.css']
 })

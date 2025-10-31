@@ -71,7 +71,7 @@
         <div class="text-sm text-gray-600 mb-1">
           Статус: <span class="font-medium">{{ loc.status }}</span>
         </div>
-        <p class="text-sm text-gray-700 mt-2">{{ loc.description }}</p>
+        <p class="text-sm text-gray-700 mt-2">{{ loc.description?.toString() | truncateDescriptionPipe: 50 }}</p>
       </a>
     
     </div>
