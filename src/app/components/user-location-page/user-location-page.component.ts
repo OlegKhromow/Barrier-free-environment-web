@@ -67,7 +67,7 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
 
   viewLocation(id: number) {
     // Повне оновлення сторінки
-    window.location.href = `/locations/${id}`;
+    window.location.href = `/user-location/${id}`;
   }
 
 
@@ -95,6 +95,17 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
       });
     }
   }
+
+  selectedPending: any = null;
+
+  openPendingModal(pending: any) {
+    this.selectedPending = pending;
+  }
+
+  closePendingModal() {
+    this.selectedPending = null;
+  }
+
 
   private initMap(): void {
     if (!this.location) return;

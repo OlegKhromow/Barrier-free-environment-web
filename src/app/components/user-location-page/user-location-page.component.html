@@ -167,15 +167,19 @@
         <li
           *ngFor="let pending of pendingLocations"
           class="border rounded-lg p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+          (click)="openPendingModal(pending)"
         >
           <div class="flex justify-between items-center">
             <div>
               <p class="font-medium text-gray-800">{{ pending.name || 'Без назви' }}</p>
               <p class="text-sm text-gray-600">{{ pending.address }}</p>
             </div>
-            <span class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
-      Очікує перевірки
-    </span>
+            <span *ngIf="pending.status === 'pending'" class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
+            Очікує перевірки
+          </span>
+            <span *ngIf="pending.status === 'rejected'" class="text-xs text-red-700 bg-red-100 px-2 py-1 rounded">
+            Відхилено
+          </span>
           </div>
           <div *ngIf="pending.description" class="text-sm text-gray-700 mt-2">
             {{ pending.description }}
@@ -184,7 +188,6 @@
             Оновлено: {{ pending.updatedAt | date:'medium' }}
           </div>
         </li>
-
       </ul>
     </ng-container>
 
@@ -192,6 +195,77 @@
       <p class="text-sm text-gray-500">Наразі немає оновлень.</p>
     </ng-template>
   </section>
+
+  <!-- 🆕 МОДАЛЬНЕ ВІКНО ДЕТАЛЕЙ ОНОВЛЕННЯ -->
+  <div
+    *ngIf="selectedPending"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg relative">
+      <button
+        class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"
+        (click)="closePendingModal()"
+      >
+        ✖
+      </button>
+
+      <h2 class="text-2xl font-bold text-green-700 mb-4">{{ selectedPending.name }}</h2>
+      <p class="text-gray-600 mb-2">{{ selectedPending.address }}</p>
+
+      <section class="mb-4">
+        <h3 class="font-semibold text-gray-800">Опис</h3>
+        <p class="text-sm text-gray-700">{{ selectedPending.description || 'Немає опису' }}</p>
+      </section>
+
+      <section class="mb-4">
+        <h3 class="font-semibold text-gray-800">Контакти</h3>
+        <ng-container
+          *ngIf="selectedPending.contacts && (selectedPending.contacts.phone || selectedPending.contacts.email || selectedPending.contacts.website); else noContactsModal">
+          <ul class="text-sm text-gray-700 space-y-1">
+            <li *ngIf="selectedPending.contacts.phone">📞 {{ selectedPending.contacts.phone }}</li>
+            <li *ngIf="selectedPending.contacts.email">✉️ {{ selectedPending.contacts.email }}</li>
+            <li *ngIf="selectedPending.contacts.website">
+              🌍 <a [href]="selectedPending.contacts.website" target="_blank" class="text-blue-600 underline">{{ selectedPending.contacts.website }}</a>
+            </li>
+          </ul>
+        </ng-container>
+        <ng-template #noContactsModal>
+          <p class="text-sm text-gray-500">Немає контактів</p>
+        </ng-template>
+      </section>
+
+      <section class="mb-4">
+        <h3 class="font-semibold text-gray-800">Графік роботи</h3>
+        <ng-container *ngIf="selectedPending.workingHours && !hasNoSchedule(selectedPending.workingHours); else noScheduleModal">
+          <div *ngFor="let d of days" class="text-sm text-gray-700">
+            {{ d.label }}: {{ getDaySchedule(d.key, selectedPending.workingHours) }}
+          </div>
+        </ng-container>
+        <ng-template #noScheduleModal>
+          <p class="text-sm text-gray-500">Немає розкладу</p>
+        </ng-template>
+      </section>
+
+      <section class="mb-4">
+        <h3 class="font-semibold text-gray-800">Статус</h3>
+        <p class="text-sm font-medium" [ngClass]="{
+        'text-yellow-600': selectedPending.status === 'pending',
+        'text-red-600': selectedPending.status === 'rejected',
+        'text-green-600': selectedPending.status === 'published'
+      }">
+          {{ selectedPending.status }}
+        </p>
+      </section>
+
+      <div *ngIf="selectedPending.rejectionReason" class="mb-4 p-3 border border-red-300 bg-red-50 rounded-lg text-sm text-red-700">
+        <strong>Причина відхилення:</strong><br>
+        {{ selectedPending.rejectionReason }}
+      </div>
+
+      <p class="text-xs text-gray-500 mt-2">Оновлено: {{ selectedPending.updatedAt | date:'medium' }}</p>
+    </div>
+  </div>
+
 
 
   <!-- Список схожих -->
