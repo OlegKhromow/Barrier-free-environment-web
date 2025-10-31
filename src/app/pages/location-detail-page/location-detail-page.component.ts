@@ -85,17 +85,17 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   deletePending(pendingId: number) {
     if (!confirm('Ви впевнені, що хочете видалити це оновлення?')) return;
 
-    // this.locationService.deletePending(pendingId).subscribe({
-    //   next: () => {
-    //     alert('Оновлення видалено');
-    //     this.showRejectedPendingModal = false;
-    //     this.loadPendingLocations();
-    //   },
-    //   error: err => {
-    //     console.error('Помилка при видаленні оновлення:', err);
-    //     alert('Не вдалося видалити оновлення');
-    //   }
-    // });
+    this.locationService.deletePending(pendingId).subscribe({
+      next: () => {
+        alert('Оновлення видалено');
+        this.showRejectedPendingModal = false;
+        this.loadPendingLocations();
+      },
+      error: err => {
+        console.error('Помилка при видаленні оновлення:', err);
+        alert('Не вдалося видалити оновлення');
+      }
+    });
   }
 
 

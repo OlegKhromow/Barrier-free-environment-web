@@ -24,6 +24,10 @@ export class LocationService {
     return this.http.delete(`${this.baseUrl}locations/${locationId}`);
   }
 
+  deletePending(pendingId: number) {
+    return this.http.delete(`${this.baseUrl}locations/pending_copy/${pendingId}`);
+  }
+
   createLocation(dto: any) {
     return this.http.post<Location>(`${this.baseUrl}locations`, dto);
   }
