@@ -102,6 +102,7 @@ export class MapPage implements OnInit, AfterViewInit {
 
     this.addingMode = !this.addingMode;
     if (this.addingMode) {
+      this.formState.clearFormData(); // 👈 Додай це
       this.map.getContainer().style.cursor = 'crosshair';
     } else {
       this.map.getContainer().style.cursor = '';
@@ -112,6 +113,7 @@ export class MapPage implements OnInit, AfterViewInit {
       this.showCreateForm = false;
     }
   }
+
 
 
   private fetchLocations(afterLoad?: () => void): void {
