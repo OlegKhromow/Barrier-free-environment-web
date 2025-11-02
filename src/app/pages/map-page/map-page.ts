@@ -95,6 +95,11 @@ export class MapPage implements OnInit, AfterViewInit {
   toggleAddingMode(): void {
     if (this.duplicateMode) return;
 
+    if (!this.authService.isLoggedIn()) {
+      this.authService.openLoginModal();
+      return;
+    }
+
     this.addingMode = !this.addingMode;
     if (this.addingMode) {
       this.map.getContainer().style.cursor = 'crosshair';
@@ -107,6 +112,7 @@ export class MapPage implements OnInit, AfterViewInit {
       this.showCreateForm = false;
     }
   }
+
 
   private fetchLocations(afterLoad?: () => void): void {
     const isLogged = this.authService.isLoggedIn(); // ✅ перевірка логіну
