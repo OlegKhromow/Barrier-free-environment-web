@@ -124,8 +124,7 @@ export class LocationPendingCopyFormComponent implements OnInit {
       ...raw,
       workingHours: normalizedWorkingHours,
       organizationId: null,
-      status: LocationStatusEnum.PENDING,
-      updatedAt: new Date().toISOString()
+      status: LocationStatusEnum.PENDING
     };
 
     this.locationService.createPendingCopy(this.locationId, dto).subscribe({

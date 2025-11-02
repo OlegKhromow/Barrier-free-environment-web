@@ -136,9 +136,7 @@ export class CriteriaEvaluationComponent implements OnInit {
       barrierlessCriteriaId: criteriaId,
       comment: data.comment || null,
       hasIssue: data.value === 'no',
-      barrierFreeRating: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      barrierFreeRating: null
     }));
 
     this.checkService.saveAll(checkList).subscribe({

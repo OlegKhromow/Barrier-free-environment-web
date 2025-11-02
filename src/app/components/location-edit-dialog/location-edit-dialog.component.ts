@@ -146,8 +146,7 @@ export class LocationEditDialogComponent implements OnInit {
         lat: parseFloat(this.form.value.lat),
         lng: parseFloat(this.form.value.lng)
       },
-      organizationId: null,
-      updatedAt: new Date().toISOString()
+      organizationId: null
     };
 
     this.locationService.updateLocation(this.locationId, dto).subscribe({
