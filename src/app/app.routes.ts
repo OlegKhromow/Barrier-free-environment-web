@@ -12,6 +12,10 @@ import {CabinetPageComponent} from './components/cabinet/cabinet.component';
 import {UserLocationPageComponent} from './components/user-location-page/user-location-page.component';
 import {UserListPageComponent} from './pages/user-list-page/user-list-page.component';
 import {UserDetailPageComponent} from './pages/user-detail-page/user-detail-page.component';
+import {ProfileComponent} from './components/profile-component/profile-component';
+import { SettingsComponent } from './components/settings-component/settings-component';
+import { LocationCabinetListComponent } from './components/location-cabinet-list-component/location-cabinet-list-component';
+import { CabinetV2 } from './pages/cabinet-v2/cabinet-v2';
 
 export const routes: Routes = [
   {
@@ -30,10 +34,16 @@ export const routes: Routes = [
   },
   { path: 'evaluate/:id', component: CriteriaEvaluationComponent,canActivate: [authGuard]},
 
-  {
+{
     path: 'cabinet',
-    component: CabinetPageComponent,
-    canActivate: [authGuard]
+    component: CabinetV2,
+    canActivate: [authGuard],
+    children: [
+      { path: 'profile', component: ProfileComponent }, // створіть компонент профілю
+      { path: 'locations', component: LocationCabinetListComponent }, // це буде список локацій користувача
+      { path: 'settings', component: SettingsComponent }, // компонент налаштувань
+      { path: '', redirectTo: 'profile', pathMatch: 'full' }
+    ]
   },
 
 
