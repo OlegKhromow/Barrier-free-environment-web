@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../../environments/environment';
-import {BehaviorSubject, Observable, Subject, tap} from 'rxjs';
+import {BehaviorSubject, catchError, map, Observable, of, Subject, switchMap, tap, throwError} from 'rxjs';
 import {UserDTO} from '../../dtos/user-dto';
 
 @Injectable({
@@ -28,6 +28,7 @@ export class AuthService {
       .pipe(
         tap((response) => {
           localStorage.setItem('auth_token', response.accessToken);
+          localStorage.setItem('refresh_token', response.refreshToken);
           this.isLoggedInSubject.next(true);
         })
       );
@@ -35,6 +36,7 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     this.isLoggedInSubject.next(false);
   }
 
@@ -87,4 +89,57 @@ export class AuthService {
   getAuthoritiesByUsername(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/users/me/authorities`);
   }
+
+  isAccessNotExpired(): Observable<boolean> {
+    return this.http.get<boolean>(`${this.baseUrl}/validate/access`);
+  }
+
+  isRefreshNotExpired(): Observable<boolean> {
+    return this.http.get<boolean>(`${this.baseUrl}/validate/refresh`);
+  }
+
+  refreshToken() {
+    return this.http.post<{ refreshToken: string, accessToken: string }>(`${this.apiUrl}/refresh_token`, {})
+      .pipe(
+        tap((response) => {
+          localStorage.setItem('auth_token', response.accessToken);
+          localStorage.setItem('refresh_token', response.refreshToken);
+          this.isLoggedInSubject.next(true);
+        })
+      );
+  }
+
+
+  ensureValidSession(): Observable<void> {
+    // 1️⃣ Якщо користувач не залогінений — нічого не робимо
+    if (!this.isLoggedIn()) {
+      return of(void 0);
+    }
+
+    // 2️⃣ Перевіряємо access токен
+    return this.isAccessNotExpired().pipe(
+      switchMap((accessValid) => {
+        if (accessValid) {
+          // ✅ Access токен ще живий
+          return of(void 0);
+        }
+
+        // ⚠️ Access протух → перевіряємо refresh
+        return this.isRefreshNotExpired().pipe(
+          switchMap((refreshValid) => {
+            if (refreshValid) {
+              // 🔁 Refresh ще живий → оновлюємо токени
+              return this.refreshToken().pipe(map(() => void 0));
+            } else {
+              // ❌ Refresh теж протух → виходимо із системи
+              this.logout();
+              return throwError(() => new Error('Session expired'));
+            }
+          })
+        );
+      })
+    );
+  }
+
+
 }
