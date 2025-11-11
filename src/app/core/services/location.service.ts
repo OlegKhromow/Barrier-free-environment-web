@@ -32,6 +32,27 @@ export class LocationService {
     return this.http.post<Location>(`${this.baseUrl}locations`, dto);
   }
 
+  isValid(dto: any) {
+    return this.http.post<Location>(`${this.baseUrl}locations/isValid`, dto);
+  }
+
+  uploadLocationImage(imageServiceId: string, imageId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `http://localhost:8081/locations/${imageServiceId}/image/${imageId}`;
+    return this.http.post(url, formData);
+  }
+
+  imageIsValid(imageServiceId: string, imageId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `http://localhost:8081/locations/${imageServiceId}/image/${imageId}/isValid`;
+    return this.http.post(url, formData);
+  }
+
+
   // вантажимо типи з бекенду
   loadLocationTypes(): void {
     this.http.get<LocationType[]>(`${this.baseUrl}location-types/`)
@@ -97,8 +118,8 @@ export class LocationService {
               dto.lastVerifiedAt,
               dto.lastVerifiedBy,
               dto.updatedBy,
-              dto.rejectionReason
-
+              dto.rejectionReason,
+              dto.imageServiceId
             );
           })
         )
@@ -163,7 +184,8 @@ export class LocationService {
             dto.lastVerifiedAt,
             dto.lastVerifiedBy,
             dto.updatedBy,
-            dto.rejectionReason
+            dto.rejectionReason,
+            dto.imageServiceId
           );
         })
       )
@@ -218,7 +240,8 @@ export class LocationService {
             dto.lastVerifiedAt,
             dto.rejectionReason,
             dto.updatedBy,
-            dto.lastVerifiedBy
+            dto.lastVerifiedBy,
+            dto.imageServiceId
           );
         })
       )
@@ -257,7 +280,8 @@ export class LocationService {
             dto.lastVerifiedAt,
             dto.rejectionReason,
             dto.updatedBy,
-            dto.lastVerifiedBy
+            dto.lastVerifiedBy,
+            dto.imageServiceId
           );
         })
       )

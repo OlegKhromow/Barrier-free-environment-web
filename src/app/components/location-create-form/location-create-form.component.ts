@@ -58,6 +58,7 @@ export class LocationCreateFormComponent implements OnInit {
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
   selectedImages: { file: File, preview: string }[] = [];
+  isLoading = false;
 
   private _lastSimilar: Array<any> | null = null;
   private _lastDto: any | null = null;
@@ -132,6 +133,9 @@ export class LocationCreateFormComponent implements OnInit {
       return;
     }
 
+    // Блокуємо форму та запускаємо спінер
+    this.setLoadingState(true);
+
     const raw = this.form.value;
     const normalizedWorkingHours = this.normalizeWorkingHours(this.form.get('workingHours') as FormGroup);
 
@@ -139,7 +143,8 @@ export class LocationCreateFormComponent implements OnInit {
       ...raw,
       workingHours: normalizedWorkingHours,
       coordinates: { lat: this.lat, lng: this.lng },
-      status: LocationStatusEnum.PENDING
+      status: LocationStatusEnum.PENDING,
+      selectedImages: this.selectedImages
     };
 
     this.locationService.checkDuplicates(dto).subscribe({
@@ -156,6 +161,7 @@ export class LocationCreateFormComponent implements OnInit {
         } else {
           this.close.emit(dto);
         }
+        this.setLoadingState(false);
       },
       error: (err) => {
         if (err.status === 409) {
@@ -171,8 +177,19 @@ export class LocationCreateFormComponent implements OnInit {
           console.error('Помилка перевірки дублікатів', err);
           this.close.emit(dto);
         }
+        this.setLoadingState(false);
       }
     });
+  }
+
+  private setLoadingState(loading: boolean) {
+    this.isLoading = loading;
+    // Блокуємо/розблоковуємо форму
+    if (loading) {
+      this.form.disable();
+    } else {
+      this.form.enable();
+    }
   }
 
   private openDuplicatesDialog(similar: Array<{

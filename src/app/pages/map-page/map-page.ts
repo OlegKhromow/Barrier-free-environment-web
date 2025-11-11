@@ -11,6 +11,8 @@ import {DuplicatesDialogComponent} from '../../components/duplicates-dialog/dupl
 import {FormStateService} from '../../core/services/form-state.service';
 import {forkJoin, of} from 'rxjs';
 import {AuthService} from '../../core/services/security/auth.service';
+import { v4 as uuidv4 } from 'uuid';
+
 
 @Component({
   selector: 'app-map-page',
@@ -199,15 +201,124 @@ export class MapPage implements OnInit, AfterViewInit {
     });
   }
 
+  isPageLoading = false;
+
   handleFormClose(dto: any | null) {
-    this.showCreateForm = false;
-    if (dto) {
-      this.locationService.createLocation(dto).subscribe({
-        next: () => this.fetchLocations(),
-        error: err => console.error('Помилка при створенні локації:', err)
-      });
+    if (!dto) {
+      this.showCreateForm = false;
+      return;
     }
+
+    dto.imageServiceId = uuidv4();
+
+    // Включаємо завантаження для всієї сторінки
+    this.isPageLoading = true;
+
+    // Step 1: check location validity first
+    this.locationService.isValid(dto).subscribe({
+      next: (validResponse) => {
+        // Step 2: if location valid → check images validity
+        if (dto.selectedImages && dto.selectedImages.length > 0) {
+          this.checkImagesValidity(dto);
+        } else {
+          // Якщо зображень немає - створюємо локацію одразу
+          this.createLocationAndUploadImages(dto);
+        }
+      },
+      error: (err) => {
+        this.isPageLoading = false; // Вимикаємо завантаження при помилці
+        const message =
+          err?.error?.description ||
+          err?.error?.message ||
+          err?.message ||
+          'Сталася помилка при перевірці валідності локації.';
+        alert(`Локація невалідна:\n${message}`);
+      }
+    });
   }
+
+  private checkImagesValidity(dto: any) {
+    const imageServiceId = dto.imageServiceId;
+    let validImagesCount = 0;
+    const totalImages = dto.selectedImages.length;
+
+    dto.selectedImages.forEach((img: { file: File }) => {
+      const imageId = uuidv4();
+
+      this.locationService.imageIsValid(imageServiceId, imageId, img.file).subscribe({
+        next: () => {
+          validImagesCount++;
+
+          // Якщо всі зображення перевірені і валідні
+          if (validImagesCount === totalImages) {
+            this.createLocationAndUploadImages(dto);
+          }
+        },
+        error: (err) => {
+          this.isPageLoading = false; // Вимикаємо завантаження при помилці
+          const message = err?.error?.message || err?.message || 'Сталася помилка при перевірці зображення.';
+          alert(`Зображення невалідне (${img.file.name}):\n${message}`);
+        }
+      });
+    });
+  }
+
+  private createLocationAndUploadImages(dto: any) {
+    // Step 3: create location
+    this.locationService.createLocation(dto).subscribe({
+      next: (createdLocation) => {
+        // Step 4: upload images if they exist
+        if (dto.selectedImages && dto.selectedImages.length > 0) {
+          const imageServiceId = createdLocation.imageServiceId;
+          let uploadsCompleted = 0;
+          const totalUploads = dto.selectedImages.length;
+
+          dto.selectedImages.forEach((img: { file: File }) => {
+            const imageId = uuidv4();
+            this.locationService.uploadLocationImage(imageServiceId, imageId, img.file).subscribe({
+              next: () => {
+                console.log(`🖼️ Завантажено зображення ${img.file.name}`);
+                uploadsCompleted++;
+
+                // Коли всі завантаження завершені
+                if (uploadsCompleted === totalUploads) {
+                  this.isPageLoading = false;
+                  this.showCreateForm = false;
+                  this.fetchLocations();
+                }
+              },
+              error: err => {
+                this.isPageLoading = false;
+                console.error('Помилка завантаження зображення:', err);
+              }
+            });
+          });
+
+          // Якщо немає зображень для завантаження
+          if (totalUploads === 0) {
+            this.isPageLoading = false;
+            this.showCreateForm = false;
+            this.fetchLocations();
+          }
+        } else {
+          // Якщо зображень немає
+          this.isPageLoading = false;
+          this.showCreateForm = false;
+          this.fetchLocations();
+        }
+      },
+      error: (err) => {
+        this.isPageLoading = false;
+        const message =
+          err?.error?.description ||
+          err?.error?.message ||
+          err?.message ||
+          'Сталася невідома помилка при створенні локації.';
+        alert(`Помилка при створенні локації:\n${message}`);
+      }
+    });
+  }
+
 
   clickOnMarker(location: Location, marker: L.Marker) {
     this.selectedLocation = JSON.parse(JSON.stringify(location));

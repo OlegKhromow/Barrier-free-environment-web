@@ -25,7 +25,8 @@ export class Location {
     public lastVerifiedAt: string, // ISO date string
     public lastVerifiedBy: string,
     public updatedBy: string,
-    public rejectionReason: string | null
+    public rejectionReason: string | null,
+    public imageServiceId: string
   ) {}
 
   /** широта (latitude) — другий елемент масиву */
