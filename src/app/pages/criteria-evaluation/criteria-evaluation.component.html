@@ -84,24 +84,49 @@
           </div>
 
           <!-- ✅ Фото -->
-          <div>
-            <label class="text-sm text-gray-600 block mb-1">Додати фотографії:</label>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              (change)="onFileChange($event, c.id)"
-              class="text-sm"
-            />
-            <div *ngIf="scores[c.id]?.photos?.length" class="mt-2 flex flex-wrap gap-2">
-              <img
-                *ngFor="let photo of scores[c.id].photos"
-                [src]="photo"
-                alt="Фото критерію"
-                class="w-24 h-24 object-cover rounded border"
-              />
-            </div>
-          </div>
+<div>
+  <label class="text-sm text-gray-600 block mb-1">Додати фотографії:</label>
+  <input
+    type="file"
+    multiple
+    accept="image/*"
+    (change)="onFileChange($event, c.id)"
+    class="text-sm"
+  />
+
+<div *ngIf="scores[c.id]?.photos?.length"
+     class="mt-3 grid grid-cols-3 gap-3">
+
+  <div *ngFor="let img of scores[c.id].photos; let i = index"
+       class="relative group">
+
+    <!-- Фото -->
+    <img
+      [src]="img.preview"
+      alt="Фото критерію"
+      class="w-full aspect-square object-cover rounded-lg border shadow-sm"
+    />
+
+    <!-- Хрестик -->
+    <button
+      (click)="removePhoto(c.id, i, img)"
+      class="absolute top-1 right-1 bg-black/70 text-white rounded-full w-6 h-6 text-sm
+             hidden group-hover:flex items-center justify-center"
+    >
+      ✕
+    </button>
+
+    <!-- Назва -->
+    <p class="text-xs text-center mt-1 truncate">
+      {{ img.file?.name || 'Завантажено' }}
+    </p>
+  </div>
+</div>
+
+
+
+</div>
+
         </div>
       </div>
 

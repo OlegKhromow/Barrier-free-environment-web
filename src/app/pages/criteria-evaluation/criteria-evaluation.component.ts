@@ -4,6 +4,7 @@ import {ActivatedRoute} from '@angular/router';
 import {LocationService} from '../../core/services/location.service';
 import {BarrierlessCriteriaCheckService} from '../../core/services/barrierless-criteria-check.service';
 import {AuthService} from '../../core/services/security/auth.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-criteria-evaluation',
@@ -39,7 +40,7 @@ export class CriteriaEvaluationComponent implements OnInit {
     this.locationService.getLocationById(this.locationId).subscribe({
       next: (location: any) => {
         if (!location?.type) {
-          console.error('❌ Локація не має поля type!');
+          console.error('Локація не має поля type!');
           this.isLoading = false;
           return;
         }
@@ -48,40 +49,54 @@ export class CriteriaEvaluationComponent implements OnInit {
           next: (tree) => {
             this.criteriaTree = tree;
             this.initializeScoresFromTree(tree);
-            this.isLoading = false; // ✅ коли все готово
+            console.log('Дерево критеріїв завантажено:', tree);
+            this.isLoading = false; // коли все готово
           },
           error: (err) => {
-            console.error('❌ Помилка при завантаженні дерева критеріїв:', err);
+            console.error('Помилка при завантаженні дерева критеріїв:', err);
             this.isLoading = false;
           }
         });
       },
       error: (err) => {
-        console.error('❌ Помилка при завантаженні локації:', err);
+        console.error('Помилка при завантаженні локації:', err);
         this.isLoading = false;
       }
     });
   }
 
   /** 🧩 Заповнює форму попередніми оцінками користувача */
-  initializeScoresFromTree(tree: any) {
-    if (!tree?.group?.types) return;
+initializeScoresFromTree(tree: any) {
+  if (!tree?.group?.types) return;
 
-    tree.group.types.forEach((type: any) => {
-      type.criterias.forEach((criteria: any) => {
-        if (criteria.barrierlessCriteriaChecks?.length > 0) {
-          const userCheck = criteria.barrierlessCriteriaChecks[0]; // бо фільтр уже по userId
-          this.scores[criteria.id] = {
-            value: userCheck.hasIssue ? 'no' : 'yes',
-            comment: userCheck.comment || '',
-            photos: [] // якщо фото будуть у DTO — вставимо пізніше
-          };
-          // Автоматично відкриваємо тип, де є заповнені критерії
-          if (!this.selectedTypes.includes(type)) this.selectedTypes.push(type);
+  tree.group.types.forEach((type: any) => {
+    type.criterias.forEach((criteria: any) => {
+
+      if (criteria.barrierlessCriteriaChecks?.length > 0) {
+        const userCheck = criteria.barrierlessCriteriaChecks[0];
+
+        this.scores[criteria.id] = {
+          value: userCheck.hasIssue ? 'no' : 'yes',
+          comment: userCheck.comment || '',
+          photos: [],  // спочатку порожнє
+          imageServiceId: userCheck.imageServiceId
+        };
+
+        console.log('Завантаження фото для критерію:', userCheck.imageServiceId, "##", userCheck);
+        // Якщо фото існують → завантажуємо їх
+        if (userCheck.imageServiceId) {
+          this.loadCheckImages(criteria.id, userCheck.imageServiceId);
         }
-      });
+
+        // Автоматично відкриваємо тип
+        if (!this.selectedTypes.includes(type)) {
+          this.selectedTypes.push(type);
+        }
+      }
     });
-  }
+  });
+}
+
 
   toggleType(type: any) {
     const index = this.selectedTypes.indexOf(type);
@@ -108,6 +123,7 @@ export class CriteriaEvaluationComponent implements OnInit {
     this.scores[criteriaId].comment = input.value;
   }
 
+  /*
   onFileChange(event: Event, criteriaId: string) {
     const input = event.target as HTMLInputElement;
     const files = input.files;
@@ -127,27 +143,150 @@ export class CriteriaEvaluationComponent implements OnInit {
       this.scores[criteriaId].photos = images;
     });
   }
+*/
+onFileChange(event: any, criteriaId: string) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
 
-  /** 🔥 Відправка на бекенд */
-  submitEvaluation() {
+  if (!this.scores[criteriaId]) {
+    this.scores[criteriaId] = { value: null, comment: '', photos: [] };
+  }
 
-    const checkList = Object.entries(this.scores).map(([criteriaId, data]: any) => ({
+  for (let file of files) {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.scores[criteriaId].photos.push({
+        file,
+        preview: reader.result as string   // <<< ОЦЕ ВАЖЛИВО
+      });
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
+
+  /** Відправка на бекенд */
+  /*
+submitEvaluation() {
+  const formData = new FormData();
+
+  Object.entries(this.scores).forEach(([criteriaId, data]: any) => {
+    const dto = {
       locationId: this.locationId,
       barrierlessCriteriaId: criteriaId,
       comment: data.comment || null,
       hasIssue: data.value === 'no',
       barrierFreeRating: null
-    }));
+    };
 
-    this.checkService.saveAll(checkList).subscribe({
-      next: (res) => {
-        console.log('✅ Відповідь бекенду:', res);
-        alert('Оцінку успішно надіслано!');
+    formData.append('checks', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+
+    if (data.photos) {
+      data.photos.forEach((p: { file: File }) => {
+        formData.append('photos', p.file);
+      });
+    }
+  });
+
+  this.checkService.saveAll(formData).subscribe({
+    next: res => {
+      console.log('Відповідь бекенду:', res);
+      alert('Оцінку успішно надіслано!');
+    },
+    error: err => {
+      console.error('Помилка при відправці:', err);
+      alert('Не вдалося надіслати оцінку.');
+    }
+  });
+}
+*/
+
+submitEvaluation() {
+  const checkList: any[] = [];
+
+  Object.entries(this.scores).forEach(([criteriaId, data]: any) => {
+    const imageId = uuidv4();
+    const dto = {
+      locationId: this.locationId,
+      barrierlessCriteriaId: criteriaId,
+      comment: data.comment || null,
+      hasIssue: data.value === 'no',
+      barrierFreeRating: null,
+      imageServiceId: imageId,
+    };
+
+    checkList.push(dto);
+
+    if (data.photos?.length) {
+      const formData = new FormData();
+      data.photos.forEach((p: { file: File }) => {
+        formData.append('files', p.file); // Тепер масив файлів
+      });
+
+      console.log('Завантаження фото для', imageId);
+      this.checkService.uploadAllCheckImages(this.locationId, imageId, formData).subscribe({
+        next: res => console.log('Фото завантажено для', imageId, res),
+        error: err => console.error('Помилка при завантаженні фото:', err),
+      });
+    }
+  });
+
+  this.checkService.saveAll(checkList).subscribe({
+    next: res => {
+      console.log('Відповідь бекенду:', res);
+      alert('Оцінку успішно надіслано!');
+    },
+    error: err => {
+      console.error('Помилка при відправці чеків:', err);
+      alert('Не вдалося надіслати оцінку.');
+    }
+  });
+}
+
+loadCheckImages(criteriaId: string, imageId: string) {
+  const combinedId = `${this.locationId}_${imageId}`;
+
+  this.checkService.getCheckImages(combinedId).subscribe({
+    next: (res: any) => {
+      console.log("RAW images response:", res);
+
+this.scores[criteriaId].photos = Object.entries(res).map(
+  ([imageId, url]) => ({
+    file: null,
+    preview: url as string,
+    backendId: imageId
+  })
+);
+    },
+    error: err => console.error('Не вдалося отримати фото для', imageId, err)
+  });
+}
+
+
+removePhoto(criteriaId: string, index: number, img: any) {
+  const entry = this.scores[criteriaId];
+
+  // 1. Якщо фото ще НЕ з бекенду → просто видаляємо з масиву
+  if (!img.backendId) {
+    entry.photos.splice(index, 1);
+    return;
+  }
+
+  // 2. Фото вже на бекенді — викликаємо delete API
+  const checkImageId = entry.imageServiceId; // service id який ти зберігаєш
+  const imageId = img.backendId; // id файла
+
+  this.checkService.deleteCheckImage(this.locationId, checkImageId, imageId)
+    .subscribe({
+      next: () => {
+        entry.photos.splice(index, 1);
       },
-      error: (err) => {
-        console.error('❌ Помилка при відправці:', err);
-        alert('Не вдалося надіслати оцінку.');
+      error: err => {
+        console.error('Не вдалося видалити фото:', err);
+        alert("Помилка при видаленні фото");
       }
     });
-  }
+}
+
 }
