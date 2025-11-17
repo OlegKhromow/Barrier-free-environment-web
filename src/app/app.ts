@@ -1,4 +1,4 @@
-import {Component, OnInit, AfterViewInit, signal} from '@angular/core';
+import {Component, OnInit, AfterViewInit} from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 import {MenuBarComponent} from './components/menu-bar/menu-bar.component';
 import {LoginOverlay} from './components/login-overlay/login-overlay';
@@ -13,7 +13,6 @@ import {AuthService} from './core/services/security/auth.service';
   styleUrl: './app.css'
 })
 export class App implements OnInit, AfterViewInit {
-  protected readonly title = signal('Barrier-free-environment-web');
   showLogin: boolean = false;
 
   constructor(private authService: AuthService) {
@@ -34,7 +33,7 @@ export class App implements OnInit, AfterViewInit {
     const menuBar = document.querySelector('app-menu-bar');
     if (menuBar) {
       const menuBarHeight = menuBar.clientHeight; // 🔥 Отримуємо реальну висоту
-      console.log('Menu bar height:', menuBarHeight); // Для дебагу
+      // console.log('Menu bar height:', menuBarHeight); // Для дебагу
 
       document.documentElement.style.setProperty(
         '--menu-bar-height',

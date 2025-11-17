@@ -1,0 +1,3 @@
+.authorization-btn{
+  @apply ml-4 px-4 py-1 rounded-lg bg-[#F0F0F0] text-deep-dark-blue font-semibold hover:bg-deep-dark-blue hover:text-[#F0F0F0] transition
+}

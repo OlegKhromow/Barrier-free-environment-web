@@ -1,0 +1,19 @@
+<div class="flex rounded-lg overflow-hidden border border-gray-400 select-none">
+
+  <button
+    class="px-2 py-1 font-semibold transition-all"
+    [class.active]="current === 'ua'"
+    (click)="switch('ua')"
+  >
+    UA
+  </button>
+
+  <button
+    class="px-2 py-1 font-semibold transition-all"
+    [class.active]="current === 'en'"
+    (click)="switch('en')"
+  >
+    EN
+  </button>
+
+</div>

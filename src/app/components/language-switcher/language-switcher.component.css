@@ -1,0 +1,7 @@
+button {
+  @apply text-deep-dark-blue bg-[#F0F0F0];
+}
+
+button.active {
+  @apply bg-black text-white;
+}

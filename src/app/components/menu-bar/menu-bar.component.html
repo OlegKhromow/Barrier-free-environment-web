@@ -1,39 +1,43 @@
-<nav class="bg-light-olive-green text-deep-jungle-green shadow-md">
+<nav class="bg-deep-dark-blue text-white shadow-md">
   <div class="w-full px-4">
     <div class="flex justify-between items-center h-14">
 
       <div class="flex items-center space-x-2">
-        <span class="text-2xl font-bold">PLM_router</span>
+        <img ngSrc="assets/logo.png" alt="Логотип порталу місто без барʼєрів" height="78" width="98" class="h-[35px] md:h-[50px] w-auto">
+        <span class="text-2xl font-bold">Місто без бар’єрів</span>
       </div>
 
-      <div class="hidden md:flex space-x-6 items-center">
-        <a routerLink="/map" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
-          Карта
-        </a>
-        <a routerLink="/about" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
-          Про проєкт
-        </a>
+      <app-search-bar (search)="onSearch($event)" class="w-1/3"></app-search-bar>
 
-        @if (isAdmin) {
-          <a routerLink="/admin" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
-            Адмін-панель
-          </a>
+      <div class="hidden md:flex space-x-6 items-center">
+
+        @for (item of menuItems; track $index) {
+          @if (item.show()) {
+            <a [routerLink]="item.link"
+               class="hover:underline">
+              {{ item.label }}
+            </a>
+          }
         }
 
         @if (!isLogin) {
-          <button (click)="openLogin()"
-                  class="ml-4 px-4 py-1 rounded-lg bg-deep-jungle-green text-light-olive-green font-semibold hover:bg-light-olive-green hover:text-deep-jungle-green transition">
+          <button (click)="openLogin()" class="authorization-btn">
             Увійти
           </button>
         } @else {
-          <a routerLink="/cabinet" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white">
+          <a routerLink="/cabinet" class="hover:underline">
             Мій кабінет
           </a>
-          <button (click)="logout()"
-                  class="ml-4 px-4 py-1 rounded-lg bg-deep-jungle-green text-light-olive-green font-semibold hover:bg-light-olive-green hover:text-deep-jungle-green transition">
+          <button (click)="logout()" class="authorization-btn">
             Вийти
           </button>
         }
+
+        <app-language-switcher
+          [current]="language"
+          (changeLanguage)="setLanguage($event)"
+          class="ml-4"
+        ></app-language-switcher>
       </div>
 
       <div class="md:hidden">
@@ -43,7 +47,7 @@
             <path stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M4 6h16M4 12h16M4 18h16" />
+                  d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
       </div>
@@ -53,7 +57,8 @@
   @if (isOpen) {
     <div class="md:hidden light-olive-green-background">
       <a routerLink="/map" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Карта</a>
-      <a routerLink="/about" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Про проєкт</a>
+      <a routerLink="/about" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Про
+        проєкт</a>
       @if (isAdmin) {
         <a routerLink="/admin" class="block px-4 py-2 hover:bg-deep-jungle-green hover:text-light-olive-green">Адмін-панель</a>
       }

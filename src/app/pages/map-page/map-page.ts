@@ -4,7 +4,6 @@ import * as L from 'leaflet';
 import {Location} from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
 import {LocationSidebarComponent} from '../../components/location-sidebar/location-sidebar.component';
-import {RouterLink} from '@angular/router';
 import {LocationCreateFormComponent} from '../../components/location-create-form/location-create-form.component';
 import {MatDialog} from '@angular/material/dialog';
 import {DuplicatesDialogComponent} from '../../components/duplicates-dialog/duplicates-dialog.component';
@@ -20,7 +19,6 @@ import { v4 as uuidv4 } from 'uuid';
   imports: [
     CommonModule,
     LocationSidebarComponent,
-    RouterLink,
     LocationCreateFormComponent
   ],
   templateUrl: './map-page.html',

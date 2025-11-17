@@ -1,19 +1,16 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LocationService } from '../../core/services/location.service';
 import { Location } from '../../core/models/location';
 import * as L from 'leaflet';
-import { LocationCreateFormComponent } from '../../components/location-create-form/location-create-form.component';
-import { LocationSidebarComponent } from '../../components/location-sidebar/location-sidebar.component';
-import {LocationPendingCopyFormComponent} from '../location-pending-copy-form/location-pending-copy-form.component';
 import {LocationEditDialogComponent} from '../../components/location-edit-dialog/location-edit-dialog.component';
 import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-location-detail-page',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage, RouterLink, LocationCreateFormComponent, LocationSidebarComponent, LocationPendingCopyFormComponent, LocationEditDialogComponent, FormsModule],
+  imports: [CommonModule, NgOptimizedImage, LocationEditDialogComponent, FormsModule],
   templateUrl: './location-detail-page.component.html',
   styleUrls: ['./location-detail-page.component.css']
 })
