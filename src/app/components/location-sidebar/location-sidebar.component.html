@@ -1,170 +1,54 @@
 <aside class="sidebar flex flex-col h-full justify-between">
-  <div>
-    <ng-container *ngIf="location; else empty">
+  <div class="p-4">
+    @if (location) {
+
       <!-- Кнопка перемикання між Location та Pending -->
-      <div *ngIf="pendingVersion" class="mb-3">
-        <button
-          (click)="toggleView()"
-          class="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">
-          {{ currentView === 'location' ? '🔁 Показати оновлену версію' : '↩ Повернутись до оригіналу' }}
-        </button>
-      </div>
-
-      <p class="text-gray-600 mb-4">
-        {{ getAccessibilityLevel(location.overallAccessibilityScore) }}
-        <span *ngIf="location.overallAccessibilityScore != null" class="text-sm text-gray-400">
-    ({{ location.overallAccessibilityScore }}%)
-  </span>
-      </p>
-      <h2 class="text-xl font-bold mb-2 text-green-700">{{ displayData.name }}</h2>
-      <p class="text-gray-600 mb-4">{{ displayData.address }}</p>
-
-      <!-- Опис -->
-      <div class="mb-4">
-        <h3 class="font-semibold text-gray-800">Опис</h3>
-        <p class="text-sm text-gray-700">{{ displayData.description || 'Немає опису' }}</p>
-      </div>
-
-      <!-- Категорія -->
-      <div class="mb-4">
-        <h3 class="font-semibold text-gray-800">Категорія</h3>
-        <p class="text-sm text-gray-700">{{ location.type.name }}</p>
-        <p class="text-sm text-gray-700">{{ location.type.description }}</p>
-      </div>
-
-      <!-- Контакти -->
-      <div class="mb-4">
-        <h3 class="font-semibold text-gray-800">Контакти</h3>
-        <ng-container
-          *ngIf="displayData.contacts && (displayData.contacts.phone || displayData.contacts.email || displayData.contacts.website); else noContacts">
-          <ul class="text-sm text-gray-700">
-            <li *ngIf="displayData.contacts.phone">📞 {{ displayData.contacts.phone }}</li>
-            <li *ngIf="displayData.contacts.email">✉️ {{ displayData.contacts.email }}</li>
-            <li *ngIf="displayData.contacts.website">
-              🌍 <a [href]="displayData.contacts.website" target="_blank" class="text-blue-600 underline">
-              {{ displayData.contacts.website }}
-            </a>
-            </li>
-          </ul>
-        </ng-container>
-        <ng-template #noContacts>
-          <p class="text-sm text-gray-500">Немає контактів</p>
-        </ng-template>
-      </div>
-
-      <!-- Розклад -->
-      <div class="mb-4">
-        <h3 class="font-semibold text-gray-800">Графік роботи</h3>
-        <ng-container *ngIf="displayData?.workingHours && !hasNoSchedule(displayData.workingHours); else noSchedule">
-          <div *ngFor="let d of days">
-            <div>{{ d.label }}: {{ getDaySchedule(d.key, displayData.workingHours) }}</div>
-          </div>
-        </ng-container>
-        <ng-template #noSchedule>
-          <p class="text-sm text-gray-500">Немає розкладу</p>
-        </ng-template>
-      </div>
-
-      <!-- Статус -->
-      <div class="mb-4">
-        <h3 class="font-semibold text-gray-800">Стан</h3>
-        <ng-container [ngSwitch]="location.status">
-          <p *ngSwitchCase="'published'" class="text-sm font-medium text-green-600">Опубліковано</p>
-          <p *ngSwitchCase="'pending'" class="text-sm font-medium text-yellow-600">Очікує перевірки</p>
-          <p *ngSwitchCase="'rejected'" class="text-sm font-medium text-red-600">Відхилено</p>
-          <p *ngSwitchDefault class="text-sm font-medium text-gray-500">Невідомий статус</p>
-        </ng-container>
-      </div>
-
-      <!-- Критерії -->
-      <div *ngIf="criteriaTree" class="mb-4">
-        <div class="ml-1">
-          <!-- Група -->
-          <div class="cursor-pointer select-none font-semibold text-gray-800 flex items-center"
-               (click)="toggleGroup()">
-            <span [class.rotate-90]="showGroup" class="mr-1 transition-transform duration-200">▶</span>
-            {{ criteriaTree.group.name }}
-          </div>
-
-          <!-- Типи -->
-          <div *ngIf="showGroup" class="ml-4 mt-2 transition-all duration-200">
-            <div *ngFor="let type of criteriaTree.group.types" class="mb-2">
-              <div class="cursor-pointer select-none flex items-center text-gray-700"
-                   (click)="toggleType(type)">
-                <span [class.rotate-90]="isTypeOpen(type)" class="mr-1 transition-transform duration-200">▶</span>
-                <strong>{{ type.name }}</strong>
-              </div>
-
-              <!-- Критерії -->
-              <ul *ngIf="isTypeOpen(type)" class="ml-6 list-disc text-sm text-gray-700 mt-1 space-y-1">
-                <li *ngFor="let c of type.criterias">
-                  <div class="font-medium text-gray-800">
-                    {{ c.name }}
-                    <small class="text-gray-500">({{ c.rank }})</small>
-                  </div>
-                  <div class="text-gray-600 text-xs mb-1">{{ c.description }}</div>
-
-                  <!-- Новий блок перевірок -->
-                  <div *ngIf="c.barrierlessCriteriaChecks?.length > 0; else noChecks"
-                       class="ml-4 text-xs text-gray-700 mt-2">
-                    <!-- Баланс думок -->
-                    <div class="mt-2">
-                      <div class="flex justify-between text-xs mb-1">
-                        <span class="text-green-700 font-medium">Безбар’єрно: {{ countChecks(c, false) }}</span>
-                        <span class="text-red-700 font-medium">Проблеми: {{ countChecks(c, true) }}</span>
-                      </div>
-
-                      <!-- Контейнер повзунка -->
-                      <div
-                        class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
-                        <!-- Повзунок -->
-                        <div
-                          class="absolute top-1/2 -translate-y-1/2 w-2 h-4 bg-gray-800 rounded-full shadow-md transition-all duration-300"
-                          [style.left.%]="getBalancePosition(c)">
-                        </div>
-                      </div>
-
-                      <div class="text-xs text-gray-500 mt-1 text-center">
-                        {{ 100 - getBalancePosition(c) | number:'1.0-0' }}% безбар’єрно /
-                        {{ getBalancePosition(c) | number:'1.0-0' }}% з проблемами
-                      </div>
-                    </div>
-
-
-                    <!-- Кнопка для розкриття коментарів -->
-                    <div class="cursor-pointer text-blue-600 hover:underline select-none"
-                         (click)="toggleComments(c)">
-                      💬 Коментарі ({{ getComments(c).length }})
-                    </div>
-
-                    <!-- Список коментарів -->
-                    <ul *ngIf="isCommentsOpen(c)" class="ml-4 mt-1 list-disc text-gray-600 text-xs space-y-1">
-                      <li *ngFor="let comment of getComments(c)">
-                        "{{ comment }}"
-                      </li>
-                    </ul>
-                  </div>
-
-                  <ng-template #noChecks>
-                    <p class="text-gray-400 text-xs italic ml-2">
-                      Немає перевірок
-                    </p>
-                  </ng-template>
-                </li>
-              </ul>
-            </div>
-          </div>
+      @if (pendingVersion) {
+        <div class="my-3 flex justify-center">
+          <button
+            (click)="toggleView()"
+            class="authorization-btn text-sm">
+            {{ currentView === 'location' ? '🔁 Показати оновлену версію' : '↩ Повернутись до оригіналу' }}
+          </button>
         </div>
-      </div>
-    </ng-container>
+      }
+      <app-location-info [location]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
 
-    <!-- Порожній стан -->
-    <ng-template #empty>
+    } @else {
+      <!-- Порожній стан -->
       <div class="flex flex-col items-center justify-center h-full text-center">
-        <h1 class="font-semibold text-2xl mb-3">Виберіть локацію<br>на карті</h1>
-        <img ngSrc="assets/hand-point.png" alt="hand point" height="128" width="128">
+        <h1 class="font-semibold text-[max(20px,1.7vw)] mb-3 text-deep-dark-blue">Виберіть локацію<br>на карті</h1>
+
+        <svg viewBox="0 0 512 512" class="w-1/3 h-1/3">
+          <g>
+            <path
+              d="M 135 110 A 80 80 90 1 1 274 110"
+              stroke="#000"
+              stroke-width="20"
+              fill="none"/>
+            <path
+              class="hand"
+              d="M395.89,262.14v-5.972c0-24.865-20.229-45.095-45.095-45.095c-10.197,0-19.614,3.402-27.177,9.131
+                  c-6.127-17.638-22.916-30.333-42.613-30.333c-9.111,0-17.598,2.715-24.696,7.379V122.77c0-24.865-20.229-45.095-45.095-45.095
+                  c-24.865,0-45.095,20.229-45.095,45.095v169.522c-24.485-34.331-72.001-43.907-108.003-21.024
+                  c-4.313,2.742-5.932,8.251-3.786,12.89l10.018,21.66c13.446,29.071,30.819,56.153,51.64,80.492l9.543,11.156
+                  c15.476,18.091,32.699,34.868,51.19,49.863c8.025,6.507,12.592,16.165,12.532,26.497l-0.164,27.915
+                  c-0.016,2.715,1.052,5.325,2.966,7.251c1.914,1.926,4.518,3.009,7.233,3.009h223.508c5.633,0,10.199-4.566,10.199-10.199v-34.145
+                  l11.04-32.737c9.675-28.69,14.58-58.59,14.58-88.868v-11.699C458.614,297.603,431.289,267.115,395.89,262.14z M438.216,346.052
+                  c0,28.057-4.546,55.763-13.511,82.349l-11.574,34.322c-0.354,1.049-0.534,2.151-0.534,3.259v25.619h-203.05l0.104-17.657
+                  c0.097-16.555-7.222-32.032-20.081-42.459c-17.533-14.219-33.864-30.125-48.538-47.279l-9.543-11.156
+                  c-19.606-22.919-35.966-48.421-48.627-75.794l-5.997-12.966c11.599-5.171,24.496-6.489,37.118-3.676
+                  c15.536,3.462,28.794,12.767,37.333,26.201l16.395,25.797c2.434,3.829,7.105,5.588,11.457,4.322
+                  c4.355-1.267,7.351-5.258,7.351-9.793V122.77c0-13.618,11.078-24.696,24.696-24.696s24.696,11.078,24.696,24.696v171.827
+                  c0,5.633,4.566,10.199,10.199,10.199s10.199-4.566,10.199-10.199v-59.632c0-13.618,11.078-24.696,24.696-24.696
+                  s24.696,11.078,24.696,24.696v59.632c0,5.633,4.566,10.199,10.199,10.199c5.633,0,10.199-4.566,10.199-10.199v-38.43
+                  c0-13.618,11.078-24.696,24.696-24.696s24.696,11.078,24.696,24.696v54.332h-0.001c0,5.633,4.566,10.199,10.199,10.199
+                  c5.633,0,10.199-4.566,10.199-10.199V282.83c24.097,4.762,42.326,26.05,42.326,51.522V346.052z"/>
+          </g>
+        </svg>
+
       </div>
-    </ng-template>
+    }
   </div>
 
   <!-- Нижній блок (дублікат) -->
@@ -202,13 +86,14 @@
     </p>
 
 
-    <app-location-pending-copy-form
-      *ngIf="showPendingCopyForm"
-      [locationId]="location.id"
-      [prefillData]="displayData"
-      (close)="showPendingCopyForm = false"
-      (saved)="onPendingCopySaved($event)">
-    </app-location-pending-copy-form>
+    @if (showPendingCopyForm) {
+      <app-location-pending-copy-form
+        [locationId]="location.id"
+        [prefillData]="displayData"
+        (close)="showPendingCopyForm = false"
+        (saved)="onPendingCopySaved($event)">
+      </app-location-pending-copy-form>
+    }
 
   </div>
 </aside>

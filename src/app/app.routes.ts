@@ -8,7 +8,7 @@ import {Unauthorized401Component} from './pages/unauthorized-401/unauthorized-40
 import {Unauthorized403Component} from './pages/unauthorized-403/unauthorized-403.component';
 import {LocationsListPage} from './pages/locations-list-page/locations-list-page.component';
 import {LocationDetailPage} from './pages/location-detail-page/location-detail-page.component';
-import {UserLocationPageComponent} from './components/user-location-page/user-location-page.component';
+import {UserLocationPageComponent} from './pages/user-location-page/user-location-page.component';
 import {UserListPageComponent} from './pages/user-list-page/user-list-page.component';
 import {UserDetailPageComponent} from './pages/user-detail-page/user-detail-page.component';
 import {ProfileComponent} from './components/profile-component/profile-component';

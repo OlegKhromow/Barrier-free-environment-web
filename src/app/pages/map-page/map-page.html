@@ -1,17 +1,18 @@
 <div class="flex h-full">
   <!-- Глобальний спінер для всієї сторінки -->
-  <div *ngIf="isPageLoading"
-       class="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 flex flex-col items-center gap-3">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      <p class="text-gray-700 font-medium">Створення локації...</p>
-      <p class="text-sm text-gray-500 text-center">Це може зайняти кілька секунд</p>
+  @if (isPageLoading) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center">
+      <div class="bg-white rounded-lg p-6 flex flex-col items-center gap-3">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <p class="text-gray-700 font-medium">Створення локації...</p>
+        <p class="text-sm text-gray-500 text-center">Це може зайняти кілька секунд</p>
+      </div>
     </div>
-  </div>
+  }
 
   <div class="flex flex-1">
     <app-location-sidebar
-      class="w-1/5 bg-gray-100 border-l border-gray-300"
+      class="w-1/5 bg-[#F0F0F0] border-r-2 border-black"
       [location]="selectedLocation"
       [duplicateMode]="duplicateMode"
       [locationPendingMap]="locationPendingMap"
