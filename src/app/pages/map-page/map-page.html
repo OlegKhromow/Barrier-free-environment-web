@@ -11,13 +11,23 @@
   }
 
   <div class="flex flex-1">
-    <app-location-sidebar
-      class="w-1/5 bg-[#F0F0F0] border-r-2 border-black"
-      [location]="selectedLocation"
-      [duplicateMode]="duplicateMode"
-      [locationPendingMap]="locationPendingMap"
-      (duplicateAnswer)="onDuplicateAnswer($event)">
-    </app-location-sidebar>
+    <div
+      class="bg-[#F0F0F0] relative select-none "
+      [ngStyle]="{ width: sidebarWidth + 'px' }"
+    >
+      <app-location-sidebar
+        [location]="selectedLocation"
+        [duplicateMode]="duplicateMode"
+        [locationPendingMap]="locationPendingMap"
+        (duplicateAnswer)="onDuplicateAnswer($event)">
+      </app-location-sidebar>
+
+      <!-- Хендлер -->
+      <div
+        class="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-black hover:bg-gray-300"
+        (mousedown)="startResizing()"
+      ></div>
+    </div>
 
 
     <div class="flex-1 relative">

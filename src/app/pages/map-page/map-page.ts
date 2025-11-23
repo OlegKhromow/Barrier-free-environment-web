@@ -47,6 +47,12 @@ export class MapPage implements OnInit, AfterViewInit {
   private formState = inject(FormStateService);
   private authService = inject(AuthService);
 
+  // resize fields for location-sidebar
+  sidebarWidth = 300;
+  minSidebarWidth = 250;
+  maxSidebarWidth = 500;
+  isResizing = false;
+
   ngAfterViewInit(): void {
     this.initMap();
 
@@ -79,6 +85,8 @@ export class MapPage implements OnInit, AfterViewInit {
         }, 600);
       }
     });
+
+    this.calculateDynamicSizes();
   }
 
   ngOnInit(): void {
@@ -214,7 +222,7 @@ export class MapPage implements OnInit, AfterViewInit {
 
     // Step 1: check location validity first
     this.locationService.isValid(dto).subscribe({
-      next: (validResponse) => {
+      next: () => {
         // Step 2: if location valid → check images validity
         if (dto.selectedImages && dto.selectedImages.length > 0) {
           this.checkImagesValidity(dto);
@@ -417,4 +425,46 @@ export class MapPage implements OnInit, AfterViewInit {
     this.duplicateTargetId = null;
     this.showCreateForm = true;
   }
+
+  calculateDynamicSizes() {
+    // 50% від ширини вікна
+    this.maxSidebarWidth = window.innerWidth * 0.5;
+
+    // мінімальна ширина по контенту
+    const sidebarEl = document.querySelector("app-location-sidebar");
+    if (sidebarEl) {
+      const rect = sidebarEl.getBoundingClientRect();
+      this.minSidebarWidth = rect.width + 10;    // фактичний мінімум
+    }
+
+    // захист
+    if (this.sidebarWidth < this.minSidebarWidth) {
+      this.sidebarWidth = this.minSidebarWidth;
+    }
+  }
+
+  startResizing() {
+    this.isResizing = true;
+
+    // Слухачі руху та відпускання
+    document.addEventListener('mousemove', this.resizeHandler);
+    document.addEventListener('mouseup', this.stopResizing);
+  }
+
+  resizeHandler = (event: MouseEvent) => {
+    if (!this.isResizing) return;
+
+    const newWidth = event.clientX;
+    this.sidebarWidth = Math.min(
+      this.maxSidebarWidth,
+      Math.max(this.minSidebarWidth, newWidth)
+    );
+  };
+
+  stopResizing = () => {
+    this.isResizing = false;
+    document.removeEventListener('mousemove', this.resizeHandler);
+    document.removeEventListener('mouseup', this.stopResizing);
+  };
+
 }

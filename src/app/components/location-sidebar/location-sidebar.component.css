@@ -1,7 +1,7 @@
 :host {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var()); /* 🔥 Віднімаємо реальну висоту menu-bar */
+  height: calc(100vh - var(--menu-bar-height)); /* 🔥 Віднімаємо реальну висоту menu-bar */
 }
 
 aside {

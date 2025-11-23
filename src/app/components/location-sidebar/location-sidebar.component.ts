@@ -65,7 +65,10 @@ export class LocationSidebarComponent implements OnChanges{
   ngOnChanges() {
     if (this.location?.id) {
       this.locationService.getCriteriaTreeByTypeId(this.location.id)
-        .subscribe(tree => this.criteriaTree = tree);
+        .subscribe(tree => {
+          this.criteriaTree = tree
+          console.log(tree);
+        });
 
       // шукаємо pending версію для цієї локації
       this.pendingVersion = null;
