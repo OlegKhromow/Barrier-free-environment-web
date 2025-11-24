@@ -206,7 +206,10 @@ submitEvaluation() {
   const checkList: any[] = [];
 
   Object.entries(this.scores).forEach(([criteriaId, data]: any) => {
-    const imageId = uuidv4();
+
+    // ❗ Якщо чек уже існує, використовуємо старий imageServiceId
+    const imageId = data.imageServiceId || uuidv4();
+
     const dto = {
       locationId: this.locationId,
       barrierlessCriteriaId: criteriaId,
@@ -218,20 +221,25 @@ submitEvaluation() {
 
     checkList.push(dto);
 
-    if (data.photos?.length) {
+    // ❗ Завантажуємо фото ТІЛЬКИ якщо вони є нові (з file)
+    const newPhotos = data.photos?.filter((p: any) => p.file);
+
+    if (newPhotos?.length) {
       const formData = new FormData();
-      data.photos.forEach((p: { file: File }) => {
-        formData.append('files', p.file); // Тепер масив файлів
+      newPhotos.forEach((p: { file: File }) => {
+        formData.append('files', p.file);
       });
 
       console.log('Завантаження фото для', imageId);
-      this.checkService.uploadAllCheckImages(this.locationId, imageId, formData).subscribe({
-        next: res => console.log('Фото завантажено для', imageId, res),
-        error: err => console.error('Помилка при завантаженні фото:', err),
-      });
+      this.checkService.uploadAllCheckImages(this.locationId, imageId, formData)
+        .subscribe({
+          next: res => console.log('Фото завантажено для', imageId, res),
+          error: err => console.error('Помилка при завантаженні фото:', err),
+        });
     }
   });
 
+  // ❗ Чеки будуть оновлені, а не дубльовані
   this.checkService.saveAll(checkList).subscribe({
     next: res => {
       console.log('Відповідь бекенду:', res);
@@ -243,6 +251,7 @@ submitEvaluation() {
     }
   });
 }
+
 
 loadCheckImages(criteriaId: string, imageId: string) {
   const combinedId = `${this.locationId}_${imageId}`;
