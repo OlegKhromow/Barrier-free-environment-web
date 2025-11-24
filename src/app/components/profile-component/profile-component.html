@@ -29,16 +29,20 @@
           <!-- Статистика -->
           <div class="w-full space-y-3">
             <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-              <div class="text-lg font-bold text-blue-600">12</div>
+              <div class="text-lg font-bold text-blue-600">{{ statistics?.numberAddedLocations || 0 }}</div>
               <div class="text-sm text-gray-600">Локацій</div>
             </div>
             <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-              <div class="text-lg font-bold text-green-600">8</div>
+              <div class="text-lg font-bold text-green-600">{{ statistics?.numberApprovedLocations || 0 }}</div>
               <div class="text-sm text-gray-600">Схвалено</div>
             </div>
             <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-              <div class="text-lg font-bold text-yellow-600">3</div>
+              <div class="text-lg font-bold text-yellow-600">{{ statistics?.numberLocationsInReview || 0 }}</div>
               <div class="text-sm text-gray-600">В очікуванні</div>
+            </div>
+             <div class="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+              <div class="text-lg font-bold text-yellow-600">{{ statistics?.numberAddedChecks || 0 }}</div>
+              <div class="text-sm text-gray-600">Перевірок локацій</div>
             </div>
           </div>
         </div>
