@@ -14,6 +14,8 @@
   }
 </p>
 
+<app-slideshow-component [images]="images"></app-slideshow-component>
+
 <!--Description-->
 <div class="mb-6 p-4 bg-white rounded-xl shadow-sm">
   <h3 class="text-lg font-semibold text-deep-dark-blue mb-2 flex items-center gap-2">📝 Опис</h3>
@@ -53,8 +55,10 @@
       @if (location?.contacts?.website) {
         <li class="flex items-center gap-2">
           <span class="text-blue-600 text-lg">🌐</span>
-          <a [href]="location?.contacts?.website" target="_blank"
-             class="text-blue-600 underline hover:text-blue-700">{{ location?.contacts?.website }}</a>
+          <a
+            [href]="location?.contacts?.website?.startsWith('http') ? location?.contacts?.website : 'https://' + location?.contacts?.website"
+            target="_blank"
+            class="text-blue-600 underline hover:text-blue-700">{{ location?.contacts?.website }}</a>
         </li>
       }
 

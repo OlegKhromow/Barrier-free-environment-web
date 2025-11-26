@@ -1,0 +1,40 @@
+<!-- Галерея зображень -->
+@if (images && images.length > 0) {
+  <div class="mb-4">
+
+    <!-- Превʼю велике -->
+    <div class="mb-6 h-64">
+      <img
+        [src]="selectedImage || images[0]" [alt]="images[0]"
+        class="w-full h-full object-contain transform scale-110 rounded-xl shadow-md cursor-pointer "
+        (click)="fullScreenImage = selectedImage"/>
+    </div>
+
+    <!-- Малі превʼю -->
+    <div class="flex flex-wrap gap-2">
+      @for (img of images; track img) {
+        <img [src]="img" [alt]="img"
+             (click)="onSelect(img)"
+             class="h-20 w-20 object-cover rounded-lg cursor-pointer hover:opacity-80 border border-gray-200"
+        />
+      }
+    </div>
+
+  </div>
+
+  @if (fullScreenImage) {
+    <div
+      class="fixed overflow-auto inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[501]"
+      (click)="closeFullScreen($event)">
+      <img
+        [src]="fullScreenImage"
+        [alt]="selectedImage"
+        (click)="toggleZoom($event)"
+        class="max-w-4xl max-h-[90vh] rounded-xl shadow-lg transition-transform duration-300"
+        [ngClass]="{ 'scale-[2] cursor-zoom-out': isZoomed, 'cursor-zoom-in': !isZoomed }"
+      />
+    </div>
+  }
+} @else {
+  <p class="text-sm text-gray-400 italic mb-6">Немає зображень</p>
+}

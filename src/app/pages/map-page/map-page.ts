@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {AfterViewInit, Component, inject, OnInit} from '@angular/core';
+import {AfterViewInit, Component, HostListener, inject, OnInit} from '@angular/core';
 import * as L from 'leaflet';
 import {Location} from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
@@ -48,8 +48,8 @@ export class MapPage implements OnInit, AfterViewInit {
   private authService = inject(AuthService);
 
   // resize fields for location-sidebar
-  sidebarWidth = 300;
-  minSidebarWidth = 250;
+  sidebarWidth = 370;
+  minSidebarWidth = 350;
   maxSidebarWidth = 500;
   isResizing = false;
 
@@ -427,19 +427,33 @@ export class MapPage implements OnInit, AfterViewInit {
   }
 
   calculateDynamicSizes() {
-    // 50% від ширини вікна
-    this.maxSidebarWidth = window.innerWidth * 0.5;
+    this.recalculateMaxWidth();
 
     // мінімальна ширина по контенту
     const sidebarEl = document.querySelector("app-location-sidebar");
     if (sidebarEl) {
       const rect = sidebarEl.getBoundingClientRect();
-      this.minSidebarWidth = rect.width + 10;    // фактичний мінімум
+      this.minSidebarWidth = rect.width + 20;    // фактичний мінімум
     }
 
     // захист
     if (this.sidebarWidth < this.minSidebarWidth) {
       this.sidebarWidth = this.minSidebarWidth;
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    this.recalculateMaxWidth();
+  }
+
+  recalculateMaxWidth() {
+    // 80% від поточної ширини вікна
+    this.maxSidebarWidth = window.innerWidth * 0.8;
+
+    // Якщо поточна ширина більша за максимум — зменшуємо
+    if (this.sidebarWidth > this.maxSidebarWidth) {
+      this.sidebarWidth = this.maxSidebarWidth;
     }
   }
 

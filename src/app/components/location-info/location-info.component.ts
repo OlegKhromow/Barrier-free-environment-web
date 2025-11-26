@@ -1,21 +1,27 @@
-import {Component, Input} from '@angular/core';
+import {Component, inject, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {DecimalPipe, NgClass} from "@angular/common";
 import {Location} from '../../core/models/location';
+import {LocationService} from '../../core/services/location.service';
+import {SlideshowComponent} from '../slideshow-component/slideshow-component';
 
 @Component({
   selector: 'app-location-info',
   imports: [
     DecimalPipe,
-    NgClass
+    NgClass,
+    SlideshowComponent
   ],
   templateUrl: './location-info.component.html',
   styleUrl: './location-info.component.css',
 })
-export class LocationInfoComponent {
+export class LocationInfoComponent implements OnChanges {
   @Input() location: Location | undefined;
   @Input() criteriaTree: any | null = null;
   openTypes = new Set<any>();
   showCommentsMap = new Map<any, boolean>();
+  images: string[] | null = null;
+
+  private locationService = inject(LocationService);
 
   days = [
     {key: 'monday', label: 'ПН'},
@@ -26,6 +32,17 @@ export class LocationInfoComponent {
     {key: 'saturday', label: 'СБ'},
     {key: 'sunday', label: 'НД'}
   ];
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (this.location) {
+      // upload images for location
+      this.locationService.getLocationImages(this.location.imageServiceId).subscribe({
+        next: res => {
+          this.images = res;
+        }
+      })
+    }
+  }
 
   // Повертає групи днів за однаковим розкладом
   getGroupedSchedule(workingHours: any) {

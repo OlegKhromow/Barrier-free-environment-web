@@ -11,6 +11,7 @@ import {LocationType} from '../models/location-type';
 export class LocationService {
 
   private baseUrl = `${environment.apiEndpoint}/api/`;
+  private imageStorageUrl = `${environment.apiStorageEndpoint}/`;
   private locationTypes$ = new BehaviorSubject<LocationType[]>([]);
 
   constructor(private http: HttpClient) {
@@ -40,15 +41,22 @@ export class LocationService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const url = `http://localhost:8081/locations/${imageServiceId}/image/${imageId}`;
+    const url = `${this.imageStorageUrl}locations/${imageServiceId}/image/${imageId}`;
     return this.http.post(url, formData);
+  }
+
+  getLocationImages(locationId: string): Observable<string[]> {
+    const params = {type: 'LOCATION'};
+
+    return this.http.get<any>(`${this.imageStorageUrl}locations/${locationId}/image/url`, {params})
+      .pipe(map((res: Response) => Object.values(res)));
   }
 
   imageIsValid(imageServiceId: string, imageId: string, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const url = `http://localhost:8081/locations/${imageServiceId}/image/${imageId}/isValid`;
+    const url = `${this.imageStorageUrl}locations/${imageServiceId}/image/${imageId}/isValid`;
     return this.http.post(url, formData);
   }
 
@@ -193,15 +201,12 @@ export class LocationService {
   }
 
   rejectPending(pendingId: number, message: string) {
-    const dto = { rejectionReason: message };
+    const dto = {rejectionReason: message};
     return this.http.patch(
       `${this.baseUrl}locations/pending/${pendingId}/`,
       dto
     );
   }
-
-
-
 
 
   getAllPendingLocations(): Observable<any[]> {
