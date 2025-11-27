@@ -104,7 +104,7 @@ export class MapPage implements OnInit, AfterViewInit {
     if (this.duplicateMode) return;
 
     if (!this.authService.isLoggedIn()) {
-      this.authService.openLoginModal();
+      this.openLoginModal();
       return;
     }
 
@@ -122,7 +122,9 @@ export class MapPage implements OnInit, AfterViewInit {
     }
   }
 
-
+  openLoginModal() {
+    this.authService.openLoginModal();
+  }
 
   private fetchLocations(afterLoad?: () => void): void {
     const isLogged = this.authService.isLoggedIn(); // ✅ перевірка логіну

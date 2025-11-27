@@ -114,7 +114,7 @@
 
 
 <!-- Критерії -->
-<div @if(showGroup) class="mt-2 p-4 transition-all duration-200 bg-white rounded-xl shadow-sm">
+<div class="mt-2 p-4 transition-all duration-200 bg-white rounded-xl shadow-sm">
   @for (type of criteriaTree.group.types; track type) {
     @if (type.criterias.length !== 0) {
       <!-- Заголовок типу критерію -->
@@ -176,16 +176,23 @@
                       <!-- Comments -->
                       <div class="cursor-pointer text-blue-600 hover:underline select-none mt-2 flex items-center gap-1"
                            (click)="toggleComments(c)">
-                        💬 <span>Коментарі ({{ getComments(c).length }})</span>
+                        💬 <span>Коментарі ({{ preparedComments.get(c)?.length || 0 }})</span>
                       </div>
 
                       @if (isCommentsOpen(c)) {
                         <ul class="ml-4 mt-3 space-y-3">
-                          @for (comment of getComments(c); track comment) {
-                            <li
-                              class="border-l-4 border-deep-dark-blue pl-3 py-1 bg-gray-50 shadow-sm rounded-sm text-gray-700 text-xs">
-                              {{ comment }}
-                            </li>
+                          @for (comment of preparedComments.get(c); track comment) {
+                            @if (comment.comment != undefined || commentImages.has(comment.imageServiceId)) {
+                              <li
+                                class="border-l-4 border-deep-dark-blue pl-3 py-1 bg-gray-50 shadow-sm rounded-sm">
+                                <p class="text-sm font-medium text-gray-900 mb-2 italic">
+                                  {{ comment.comment }}
+                                </p>
+                                <app-slideshow-component
+                                  [images]="commentImages.get(comment.imageServiceId) ?? null"
+                                  [compactMode]="true"></app-slideshow-component>
+                              </li>
+                            }
                           }
                         </ul>
                       }

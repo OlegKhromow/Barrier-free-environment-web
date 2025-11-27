@@ -19,7 +19,8 @@
         [location]="selectedLocation"
         [duplicateMode]="duplicateMode"
         [locationPendingMap]="locationPendingMap"
-        (duplicateAnswer)="onDuplicateAnswer($event)">
+        (duplicateAnswer)="onDuplicateAnswer($event)"
+        (requestLogin)="openLoginModal()">
       </app-location-sidebar>
 
       <!-- Хендлер -->

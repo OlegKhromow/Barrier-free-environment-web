@@ -11,6 +11,8 @@ import {NgClass} from '@angular/common';
 })
 export class SlideshowComponent implements OnChanges {
 
+  @Input() compactMode = false;
+
   @Input() images: string[] | null = null;
   selectedImage: string | null = null;
   fullScreenImage: string | null = null;
@@ -24,11 +26,15 @@ export class SlideshowComponent implements OnChanges {
     if (changes['images'] && this.images && this.images.length > 0) {
       this.slideIndex = 0;
       this.selectedImage = this.images[0];
-      this.startSlideshow();
+      if (!this.compactMode) {
+        this.startSlideshow();
+      }
     }
   }
 
   startSlideshow() {
+    if (this.compactMode) return;
+
     if (this.slideInterval) {
       clearInterval(this.slideInterval);
     }
@@ -46,6 +52,10 @@ export class SlideshowComponent implements OnChanges {
     this.selectedImage = img;
     if (this.images)
       this.slideIndex = this.images.indexOf(img); // синхронізуємо індекс
+
+    if (this.compactMode) {
+      this.fullScreenImage = img;
+    }
   }
 
   toggleZoom(event: MouseEvent) {

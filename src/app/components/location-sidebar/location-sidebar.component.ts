@@ -2,45 +2,56 @@ import {Component, Input, Output, EventEmitter, OnChanges} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location } from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
-import {RouterLink} from '@angular/router';
 import { Router } from '@angular/router';
 
 import {
   LocationPendingCopyFormComponent
 } from '../../pages/location-pending-copy-form/location-pending-copy-form.component';
 import {LocationInfoComponent} from '../location-info/location-info.component';
+import {AuthService} from '../../core/services/security/auth.service';
 
 @Component({
   selector: 'app-location-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, LocationPendingCopyFormComponent, LocationInfoComponent],
+  imports: [CommonModule, LocationPendingCopyFormComponent, LocationInfoComponent],
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })
 export class LocationSidebarComponent implements OnChanges{
   @Input() location: Location | null = null;
-  criteriaTree: any | null = null;
-
   // Новий @Input для duplicate режиму
   @Input() duplicateMode: boolean = false;
+  @Input() locationPendingMap: Map<Location, any> | null = null;
+
   // Повідомляємо MapPage про вибір користувача у сайдбарі
   @Output() duplicateAnswer = new EventEmitter<'yes' | 'no'>();
-
-  constructor(private locationService: LocationService, private router: Router) {}
+  @Output() requestLogin = new EventEmitter<void>();
 
   showPendingCopyForm = false;
+  criteriaTree: any | null = null;
+  currentView: 'location' | 'pending' = 'location';
+  pendingVersion: any | null = null;
 
   openPendingCopyForm(event: Event) {
+    if (!this.authService.isLoggedIn()) {
+      this.requestLogin.emit();
+      return;
+    }
     event.preventDefault();
     this.showPendingCopyForm = true;
   }
 
-  @Input() locationPendingMap: Map<Location, any> | null = null;
+  constructor(private locationService: LocationService, private router: Router, private authService: AuthService) {}
 
-  currentView: 'location' | 'pending' = 'location';
-  pendingVersion: any | null = null;
+  goToEvaluation(event: Event, locationId: string) {
+    if (!this.authService.isLoggedIn()) {
+      event.preventDefault();
+      this.requestLogin.emit();
+      return;
+    }
 
-
+    this.router.navigate(['/evaluate', locationId]);
+  }
 
   onPendingCopySaved(res: any) {
     this.showPendingCopyForm = false;

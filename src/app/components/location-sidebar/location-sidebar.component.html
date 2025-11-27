@@ -68,7 +68,7 @@
       @if (location.status === 'published') {
 
         <div class="flex justify-around">
-          <a [routerLink]="['/evaluate', location.id]"
+          <a (click)="goToEvaluation($event, location.id)"
              class="inline-block m-1 px-3 py-1 rounded-md bg-blue-600 text-white text-sm text-center font-medium
                 hover:bg-blue-700 transition shadow">
             ➜ Перейти до оцінки

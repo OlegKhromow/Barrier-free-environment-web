@@ -3,12 +3,14 @@
   <div class="mb-4">
 
     <!-- Превʼю велике -->
-    <div class="mb-6 h-64">
-      <img
-        [src]="selectedImage || images[0]" [alt]="images[0]"
-        class="w-full h-full object-contain transform scale-110 rounded-xl shadow-md cursor-pointer "
-        (click)="fullScreenImage = selectedImage"/>
-    </div>
+    @if (!compactMode) {
+      <div class="mb-6 h-64">
+        <img
+          [src]="selectedImage || images[0]" [alt]="images[0]"
+          class="w-full h-full object-contain transform scale-110 rounded-xl shadow-md cursor-pointer "
+          (click)="fullScreenImage = selectedImage"/>
+      </div>
+    }
 
     <!-- Малі превʼю -->
     <div class="flex flex-wrap gap-2">

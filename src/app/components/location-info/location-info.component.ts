@@ -3,6 +3,7 @@ import {DecimalPipe, NgClass} from "@angular/common";
 import {Location} from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
 import {SlideshowComponent} from '../slideshow-component/slideshow-component';
+import {BarrierlessCriteriaCheckService} from '../../core/services/barrierless-criteria-check.service';
 
 @Component({
   selector: 'app-location-info',
@@ -21,7 +22,11 @@ export class LocationInfoComponent implements OnChanges {
   showCommentsMap = new Map<any, boolean>();
   images: string[] | null = null;
 
+  preparedComments = new Map<any, any[]>();
+  commentImages = new Map<string, string[]>();
+
   private locationService = inject(LocationService);
+  private barrierlessCriteriaCheckService = inject(BarrierlessCriteriaCheckService);
 
   days = [
     {key: 'monday', label: 'ПН'},
@@ -39,6 +44,8 @@ export class LocationInfoComponent implements OnChanges {
       this.locationService.getLocationImages(this.location.imageServiceId).subscribe({
         next: res => {
           this.images = res;
+          this.preparedComments.clear();
+          this.commentImages.clear();
         }
       })
     }
@@ -97,6 +104,14 @@ export class LocationInfoComponent implements OnChanges {
       this.openTypes.delete(type);
     } else {
       this.openTypes.add(type);
+
+      type.criterias.forEach((c: any) => {
+        this.prepareComments(c);
+
+        this.preparedComments.get(c)?.forEach(cm =>
+          this.loadCommentImages(c, cm.imageServiceId)
+        );
+      });
     }
   }
 
@@ -136,10 +151,19 @@ export class LocationInfoComponent implements OnChanges {
     return c.barrierlessCriteriaChecks?.filter((ch: any) => ch.hasIssue === hasIssue).length || 0;
   }
 
-  getComments(c: any): string[] {
-    return c.barrierlessCriteriaChecks
-      ?.map((ch: any) => ch.comment)
-      .filter((comment: string) => !!comment?.trim()) || [];
+  prepareComments(c: any) {
+    if (!this.preparedComments.has(c)) {
+      const comments = c.barrierlessCriteriaChecks.map((ch: any) => ({
+        ...ch,
+        comment: ch.comment?.trim()
+      }))
+        .filter((ch: any) => {
+          const hasText = !!ch.comment; // не null і не порожній
+          const hasImages = !!ch.imageServiceId; // сам ID є → потім будуть завантажені
+          return hasText || hasImages;
+        });
+      this.preparedComments.set(c, comments);
+    }
   }
 
   toggleComments(c: any) {
@@ -150,4 +174,33 @@ export class LocationInfoComponent implements OnChanges {
   isCommentsOpen(c: any): boolean {
     return this.showCommentsMap.get(c) || false;
   }
+
+  loadCommentImages(check: any, imageServiceId: string) {
+    if (!imageServiceId || this.commentImages.has(imageServiceId))
+      return;
+
+    const combinedId = `${this.location?.id}_${imageServiceId}`;
+
+    this.barrierlessCriteriaCheckService.getCheckImages(combinedId).subscribe({
+      next: res => {
+        const result = Object.values(res);
+        if (result.length > 0)
+          this.commentImages.set(imageServiceId, Object.values(res));
+        else {
+          // Якщо зображень немає — видаляємо коментар з preparedComments
+          const comments = this.preparedComments.get(check);
+
+          if (comments) {
+            const filtered = comments.filter(
+              (cm: any) =>
+                cm.imageServiceId !== imageServiceId          // або він має текст
+            );
+
+            this.preparedComments.set(check, filtered);
+          }
+        }
+      }
+    });
+  }
+
 }
