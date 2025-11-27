@@ -25,9 +25,14 @@
 
       <!-- Хендлер -->
       <div
-        class="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-black hover:bg-gray-300"
+        class="absolute top-0 right-0 w-3 h-full cursor-col-resize
+         flex flex-col items-center justify-center gap-1 group hover:bg-gray-300"
         (mousedown)="startResizing()"
-      ></div>
+      >
+        <div class="w-1 h-1 bg-gray-500 rounded-full group-hover:bg-gray-700"></div>
+        <div class="w-1 h-1 bg-gray-500 rounded-full group-hover:bg-gray-700"></div>
+        <div class="w-1 h-1 bg-gray-500 rounded-full group-hover:bg-gray-700"></div>
+      </div>
     </div>
 
 
