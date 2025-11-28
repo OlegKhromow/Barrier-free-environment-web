@@ -1,20 +1,18 @@
-<div class="text-center mb-4">
+<div class="text-center my-4">
   <h2 class="text-2xl font-semibold py-2 w-full bg-white rounded-xl shadow-lg text-deep-dark-blue tracking-wide">
     {{ location?.name }}
   </h2>
   <p class="mt-3 text-gray-500 italic text-sm tracking-wide">
     📍 {{ location?.address }}
   </p>
+
+  <p class="my-4 text-lg font-bold" [ngClass]="getAccessibilityColor(location?.overallAccessibilityScore)">
+    {{ getAccessibilityLevel(location?.overallAccessibilityScore) }}
+    @if (location?.overallAccessibilityScore) {
+      <span class="text-sm text-gray-400">({{ location?.overallAccessibilityScore }}%)</span>
+    }
+  </p>
 </div>
-
-<p class="mb-4" [ngClass]="getAccessibilityColor(location?.overallAccessibilityScore)">
-  {{ getAccessibilityLevel(location?.overallAccessibilityScore) }}
-  @if (location?.overallAccessibilityScore) {
-    <span class="text-sm text-gray-400">({{ location?.overallAccessibilityScore }}%)</span>
-  }
-</p>
-
-<app-slideshow-component [images]="images"></app-slideshow-component>
 
 <!--Description-->
 <div class="mb-6 p-4 bg-white rounded-xl shadow-sm">

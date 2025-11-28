@@ -9,11 +9,12 @@ import {
 } from '../../pages/location-pending-copy-form/location-pending-copy-form.component';
 import {LocationInfoComponent} from '../location-info/location-info.component';
 import {AuthService} from '../../core/services/security/auth.service';
+import {SlideshowComponent} from '../slideshow-component/slideshow-component';
 
 @Component({
   selector: 'app-location-sidebar',
   standalone: true,
-  imports: [CommonModule, LocationPendingCopyFormComponent, LocationInfoComponent],
+  imports: [CommonModule, LocationPendingCopyFormComponent, LocationInfoComponent, SlideshowComponent],
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })
@@ -22,6 +23,7 @@ export class LocationSidebarComponent implements OnChanges{
   // Новий @Input для duplicate режиму
   @Input() duplicateMode: boolean = false;
   @Input() locationPendingMap: Map<Location, any> | null = null;
+  images: string[] | null = null;
 
   // Повідомляємо MapPage про вибір користувача у сайдбарі
   @Output() duplicateAnswer = new EventEmitter<'yes' | 'no'>();
@@ -94,6 +96,12 @@ export class LocationSidebarComponent implements OnChanges{
 
       // якщо pendingVersion є — залишаємо поточний вид location
       this.currentView = 'location';
+
+      this.locationService.getLocationImages(this.location.imageServiceId).subscribe({
+        next: res => {
+          this.images = res;
+        }
+      })
     }
   }
 

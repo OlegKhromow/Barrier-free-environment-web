@@ -1,7 +1,6 @@
 import {Component, inject, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {DecimalPipe, NgClass} from "@angular/common";
 import {Location} from '../../core/models/location';
-import {LocationService} from '../../core/services/location.service';
 import {SlideshowComponent} from '../slideshow-component/slideshow-component';
 import {BarrierlessCriteriaCheckService} from '../../core/services/barrierless-criteria-check.service';
 
@@ -20,12 +19,10 @@ export class LocationInfoComponent implements OnChanges {
   @Input() criteriaTree: any | null = null;
   openTypes = new Set<any>();
   showCommentsMap = new Map<any, boolean>();
-  images: string[] | null = null;
 
   preparedComments = new Map<any, any[]>();
   commentImages = new Map<string, string[]>();
 
-  private locationService = inject(LocationService);
   private barrierlessCriteriaCheckService = inject(BarrierlessCriteriaCheckService);
 
   days = [
@@ -39,16 +36,8 @@ export class LocationInfoComponent implements OnChanges {
   ];
 
   ngOnChanges(changes: SimpleChanges) {
-    if (this.location) {
-      // upload images for location
-      this.locationService.getLocationImages(this.location.imageServiceId).subscribe({
-        next: res => {
-          this.images = res;
-          this.preparedComments.clear();
-          this.commentImages.clear();
-        }
-      })
-    }
+    this.preparedComments.clear();
+    this.commentImages.clear();
   }
 
   // Повертає групи днів за однаковим розкладом

@@ -1,16 +1,59 @@
 <!-- Галерея зображень -->
 @if (images && images.length > 0) {
-  <div class="mb-4">
+  <!-- Превʼю велике -->
+  @if (!compactMode) {
+    <div class="relative h-64 mb-4 group overflow-hidden">
+      <!-- Велике зображення -->
+      <img
+        [src]="selectedImage || images[0]"
+        [alt]="images[0]"
+        class="z-0 w-full h-full object-cover shadow-md cursor-pointer transition-opacity duration-500"
+        (click)="fullScreenImage = selectedImage"
+      />
 
-    <!-- Превʼю велике -->
-    @if (!compactMode) {
-      <div class="mb-6 h-64">
-        <img
-          [src]="selectedImage || images[0]" [alt]="images[0]"
-          class="w-full h-full object-contain transform scale-110 rounded-xl shadow-md cursor-pointer "
-          (click)="fullScreenImage = selectedImage"/>
-      </div>
-    }
+      <!-- Стрілка ЛІВА -->
+      @if (images.length > 1) {
+        <button
+          (click)="prevSlide(); $event.stopPropagation()"
+          class="z-50 absolute left-3 top-1/2 -translate-y-1/2
+           bg-white/80 hover:bg-white text-gray-800
+           w-11 h-11 rounded-full shadow-xl
+           flex items-center justify-center
+           opacity-80 hover:opacity-100
+           transition-all duration-300
+           border border-gray-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+
+        <!-- Стрілка ПРАВА -->
+        <button
+          (click)="nextSlide(); $event.stopPropagation()"
+          class="z-50 absolute right-5 top-1/2 -translate-y-1/2
+           bg-white/80 hover:bg-white text-gray-800
+           w-11 h-11 rounded-full shadow-xl
+           flex items-center justify-center
+           opacity-80 hover:opacity-100
+           transition-all duration-300
+           border border-gray-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+          @for (dot of getVisibleDots(); track dot.index) {
+            <button
+              (click)="goToSlide(dot.index); $event.stopPropagation()"
+              class="transition-all duration-300"
+              [class]="dot.active ? 'bg-white w-3 h-2 rounded-full' : 'bg-white/50 w-2 h-2 rounded-full hover:bg-white/80'"
+            ></button>
+          }
+        </div>
+      }
+    </div>
+  } @else {
 
     <!-- Малі превʼю -->
     <div class="flex flex-wrap gap-2">
@@ -21,8 +64,7 @@
         />
       }
     </div>
-
-  </div>
+  }
 
   @if (fullScreenImage) {
     <div
@@ -37,6 +79,4 @@
       />
     </div>
   }
-} @else if (!compactMode) {
-  <p class="text-sm text-gray-400 italic mb-6">Немає зображень</p>
 }

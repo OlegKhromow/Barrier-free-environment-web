@@ -4,24 +4,6 @@
   height: calc(100vh - var(--menu-bar-height)); /* 🔥 Віднімаємо реальну висоту menu-bar */
 }
 
-aside {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-aside > div:first-child {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  padding-right: 8px;
-}
-
-aside > div:last-child {
-  flex-shrink: 0;
-  background: white;
-}
-
 .btn-yes {
   @apply px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition;
 }
@@ -51,4 +33,8 @@ aside > div:last-child {
   100% {
     transform: translateY(-30px);
   }
+}
+
+.w-101{
+  width: 101%;
 }
