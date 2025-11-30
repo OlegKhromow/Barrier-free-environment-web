@@ -206,7 +206,7 @@ submitEvaluation() {
     const checkList: any[] = [];
 
     Object.entries(this.scores).forEach(([criteriaId, data]: any) => {
-      const imageId = uuidv4();// todo !!!!!
+      const imageId = uuidv4();
       const dto = {
         locationId: this.locationId,
         barrierlessCriteriaId: criteriaId,
@@ -227,7 +227,10 @@ submitEvaluation() {
         console.log('Завантаження фото для', imageId);
         this.checkService.uploadAllCheckImages(this.locationId, imageId, formData).subscribe({
           next: res => console.log('Фото завантажено для', imageId, res),
-          error: err => console.error('Помилка при завантаженні фото:', err),
+          error: err => {
+            alert('УВАГА: ' + err.error.message);
+            console.error('Помилка при завантаженні фото:', err)
+          },
         });
       }
     });
@@ -245,7 +248,7 @@ submitEvaluation() {
   }
 
   loadCheckImages(criteriaId: string, imageId: string) {
-    const combinedId = `${this.locationId}_${imageId}`; // todo from BarrierlessCriteriaCheck
+    const combinedId = `${this.locationId}_${imageId}`; // from BarrierlessCriteriaCheck
 
     this.checkService.getCheckImages(combinedId).subscribe({
       next: (res: any) => {
