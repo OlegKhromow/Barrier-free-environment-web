@@ -11,6 +11,8 @@ import {NgClass} from '@angular/common';
 })
 export class SlideshowComponent implements OnChanges {
 
+  @Input() compactMode = false;
+
   @Input() images: string[] | null = null;
   selectedImage: string | null = null;
   fullScreenImage: string | null = null;
@@ -24,11 +26,15 @@ export class SlideshowComponent implements OnChanges {
     if (changes['images'] && this.images && this.images.length > 0) {
       this.slideIndex = 0;
       this.selectedImage = this.images[0];
-      this.startSlideshow();
+      if (!this.compactMode) {
+        this.startSlideshow();
+      }
     }
   }
 
   startSlideshow() {
+    if (this.compactMode) return;
+
     if (this.slideInterval) {
       clearInterval(this.slideInterval);
     }
@@ -46,6 +52,10 @@ export class SlideshowComponent implements OnChanges {
     this.selectedImage = img;
     if (this.images)
       this.slideIndex = this.images.indexOf(img); // синхронізуємо індекс
+
+    if (this.compactMode) {
+      this.fullScreenImage = img;
+    }
   }
 
   toggleZoom(event: MouseEvent) {
@@ -58,4 +68,48 @@ export class SlideshowComponent implements OnChanges {
     this.fullScreenImage = null;
     this.isZoomed = false;
   }
+
+  nextSlide() {
+    if (!this.images) return;
+    this.slideIndex = (this.slideIndex + 1) % this.images.length;
+    this.selectedImage = this.images[this.slideIndex];
+    this.startSlideshow(); // перезапускаємо таймер
+  }
+
+  prevSlide() {
+    if (!this.images) return;
+    this.slideIndex = (this.slideIndex - 1 + this.images.length) % this.images.length;
+    this.selectedImage = this.images[this.slideIndex];
+    this.startSlideshow(); // перезапускаємо таймер
+  }
+
+  goToSlide(index: number) {
+    this.slideIndex = index;
+    this.selectedImage = this.images![index];
+    this.startSlideshow(); // перезапускаємо таймер
+  }
+
+  // Крапки: максимум 3
+  getVisibleDots(): { index: number; active: boolean }[] {
+    if (!this.images || this.images.length <= 1) return [];
+
+    const total = this.images.length;
+    let dots: { index: number; active: boolean }[] = [];
+
+    if (total <= 8) {
+      for (let i = 0; i < total; i++) {
+        dots.push({ index: i, active: i === this.slideIndex });
+      }
+    } else {
+      let start = Math.max(0, this.slideIndex - 1);
+      let end = Math.min(total, start + 8);
+      if (end - start < 3) start = Math.max(0, end - 8);
+
+      for (let i = start; i < end; i++) {
+        dots.push({ index: i, active: i === this.slideIndex });
+      }
+    }
+    return dots;
+  }
+
 }

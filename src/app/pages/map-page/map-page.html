@@ -25,14 +25,20 @@
         [location]="selectedLocation"
         [duplicateMode]="duplicateMode"
         [locationPendingMap]="locationPendingMap"
-        (duplicateAnswer)="onDuplicateAnswer($event)">
+        (duplicateAnswer)="onDuplicateAnswer($event)"
+        (requestLogin)="openLoginModal()" class="bg-[#F0F0F0]">
       </app-location-sidebar>
 
       <!-- Хендлер -->
       <div
-        class="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-black hover:bg-gray-300"
+        class="group absolute top-0 right-0 w-3 h-full cursor-col-resize
+         flex flex-col items-center justify-center gap-1 bg-gray-300 hover:bg-gray-500"
         (mousedown)="startResizing()"
-      ></div>
+      >
+        <div class="w-1 h-1 bg-gray-500 rounded-full group-hover:bg-white"></div>
+        <div class="w-1 h-1 bg-gray-500 rounded-full group-hover:bg-white"></div>
+        <div class="w-1 h-1 bg-gray-500 rounded-full group-hover:bg-white"></div>
+      </div>
     </div>
 
 
@@ -56,14 +62,17 @@
           📍 Моя локація
         </button>
 
-        <button
-          *ngIf="!duplicateMode"
-          (click)="toggleAddingMode()"
-          [ngClass]="addingMode ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
-          class="text-white px-4 py-2 rounded-full shadow-lg transition"
-        >
-          {{ addingMode ? '✖ Відмінити' : '➕ Додати локацію' }}
-        </button>
+        @if (!duplicateMode) {
+          <button
+            (click)="toggleAddingMode()"
+            [ngClass]="addingMode ? 'bg-red-600 hover:bg-red-700' : 'bg-[#0A1828] hover:bg-[#12233a] shadow-[0_0_10px_rgba(10,24,40,0.5)]'"
+            class="absolute z-[500] bottom-6 right-3
+         text-white px-4 py-2 font-semibold
+         rounded-full transition duration-200 text-xl"
+          >
+            {{ addingMode ? '✖ Відмінити' : '+ Додати локацію' }}
+          </button>
+        }
 
         <div class="route-controls">
           <button class="btn-build" (click)="buildRoute()">Прокласти маршрут</button>
@@ -86,7 +95,20 @@
       </div>
 
 
-      <div id="map" class="absolute inset-0 z-0"></div>
+      <div id="map" class="absolute inset-0 z-0">
+        <!-- Перемикач стилю карти -->
+        <div
+          (click)="toggleMapLayer()"
+          class="absolute bottom-4 left-4 z-[500] bg-[#0A1828]/80 backdrop-blur-sm
+           p-1 rounded-lg shadow-lg cursor-pointer transition hover:bg-[#132540]/80"
+        >
+          <img
+            [src]="isSatellite ? 'assets/map-layers/normal.png' : 'assets/map-layers/satellite.png'"
+            class="w-16 h-16 rounded-md object-cover"
+            [alt]="isSatellite ? 'Normal layer' : 'Satellite layer'"/>
+        </div>
+
+      </div>
 
       <!-- Рендеримо компонент модалки напряму — він сам створює fixed overlay -->
       <app-location-create-form

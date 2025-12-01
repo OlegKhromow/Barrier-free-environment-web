@@ -12,6 +12,7 @@ import {forkJoin, of} from 'rxjs';
 import {AuthService} from '../../core/services/security/auth.service';
 import { v4 as uuidv4 } from 'uuid';
 import {FormsModule} from '@angular/forms';
+import {LayerGroup} from 'leaflet';
 
 
 @Component({
@@ -28,6 +29,11 @@ import {FormsModule} from '@angular/forms';
 })
 export class MapPage implements OnInit, AfterViewInit {
   private map!: L.Map;
+  private normalLayer!: L.TileLayer;
+  private satelliteLayer!: L.TileLayer;
+  private labelsLayer!: LayerGroup;
+  isSatellite = false;
+
   locations: Location[] | undefined;
   selectedLocation: Location | null = null;
   markers: Array<{ marker: L.Marker, iconUrl: string, baseSize: [number, number], location?: Location }> = [];
@@ -168,7 +174,7 @@ export class MapPage implements OnInit, AfterViewInit {
     if (this.duplicateMode) return;
 
     if (!this.authService.isLoggedIn()) {
-      this.authService.openLoginModal();
+      this.openLoginModal();
       return;
     }
 
@@ -184,6 +190,10 @@ export class MapPage implements OnInit, AfterViewInit {
       }
       this.showCreateForm = false;
     }
+  }
+
+  openLoginModal() {
+    this.authService.openLoginModal();
   }
 
   toggleSettingMyLocationMode(): void {
@@ -288,9 +298,44 @@ export class MapPage implements OnInit, AfterViewInit {
   private initMap(): void {
     this.map = L.map('map', {center: [51.4982, 31.2893], zoom: 13});
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(this.map);
+    this.map.createPane('labels');
+    this.map.getPane('labels')!.style.zIndex = '650';
+    this.map.getPane('labels')!.style.pointerEvents = 'none';
+
+    // Стандартна OSM
+    this.normalLayer = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      { attribution: '© OpenStreetMap contributors' }
+    );
+
+    // Супутник ESRI
+    this.satelliteLayer = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Tiles © Esri' }
+    );
+
+    // Підписи доріг + вулиць
+    const transportation = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: '© Esri Roads',
+        pane: 'labels'
+      }
+    );
+
+    // Підписи місць
+    const places = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: '© Esri Places',
+        pane: 'labels'
+      }
+    );
+
+    // комбінований overlay для супутника
+    this.labelsLayer = L.layerGroup([transportation, places]);
+
+    this.normalLayer.addTo(this.map);
 
     this.map.on('zoomend', () => {
       const zoom = this.map.getZoom();
@@ -339,6 +384,21 @@ export class MapPage implements OnInit, AfterViewInit {
       }
     });
   }
+
+  toggleMapLayer() {
+    if (this.isSatellite) {
+      this.map.removeLayer(this.satelliteLayer);
+      this.map.removeLayer(this.labelsLayer);
+      this.map.addLayer(this.normalLayer);
+    } else {
+      this.map.removeLayer(this.normalLayer);
+      this.map.addLayer(this.satelliteLayer);
+      this.labelsLayer.addTo(this.map);
+    }
+
+    this.isSatellite = !this.isSatellite;
+  }
+
 
   isPageLoading = false;
 
