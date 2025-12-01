@@ -11,6 +11,7 @@ import {FormStateService} from '../../core/services/form-state.service';
 import {forkJoin, of} from 'rxjs';
 import {AuthService} from '../../core/services/security/auth.service';
 import { v4 as uuidv4 } from 'uuid';
+import {FormsModule} from '@angular/forms';
 
 
 @Component({
@@ -19,7 +20,8 @@ import { v4 as uuidv4 } from 'uuid';
   imports: [
     CommonModule,
     LocationSidebarComponent,
-    LocationCreateFormComponent
+    LocationCreateFormComponent,
+    FormsModule
   ],
   templateUrl: './map-page.html',
   styleUrls: ['./map-page.css']
@@ -35,12 +37,23 @@ export class MapPage implements OnInit, AfterViewInit {
   clickedLat: number | null = null;
   clickedLng: number | null = null;
   locationPendingMap = new Map<Location, any>();
+  userMarker: L.Marker | null = null;
+  isBuildingRoute = false;
+
+
+  private myLocation: { lat: number, lng: number } | null = null;
+  private currentRoute: L.Polyline | null = null;
+  routeMode: 'feet' | 'wheelchair' = 'feet';
+
+  isChoosingMyLocation = false;
+
 
   // duplicate режим
   duplicateMode = false;
   duplicateTargetId: string | null = null;
   duplicateSimilar: Array<any> | null = null;
   duplicateDto: any | null = null;
+  tempUUID: string | undefined;
 
   private locationService = inject(LocationService);
   private dialog = inject(MatDialog);
@@ -100,6 +113,57 @@ export class MapPage implements OnInit, AfterViewInit {
     }
   }
 
+  locateMe() {
+    if (!navigator.geolocation) {
+      alert("Геолокація не підтримується вашим браузером.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        // const lat = position.coords.latitude;
+        // const lng = position.coords.longitude;
+
+        // Test coords
+        const lat = 51.48603168403953;
+        const lng = 31.278829207454912;
+
+        // 🔥 1) Оновлюємо myLocation
+        this.myLocation = { lat, lng };
+
+        // 🔥 2) Видаляємо старий маркер, якщо він існує
+        if (this.userMarker) {
+          this.map.removeLayer(this.userMarker);
+          this.userMarker = null;
+        }
+        if (this.currentRoute) {
+          this.map.removeLayer(this.currentRoute);
+          this.currentRoute = null;
+        }
+
+        // 🔥 3) Створюємо новий маркер
+        const icon = L.icon({
+          iconUrl: 'assets/map-markers/Round-Stationery-Pin-Emoji.png',
+          iconSize: [60, 35]
+        });
+
+        this.userMarker = L.marker([lat, lng], { icon }).addTo(this.map);
+
+        // 🔥 4) Fly to
+        this.map.flyTo([lat, lng], 16, {
+          animate: true,
+          duration: 1.0
+        });
+      },
+      error => {
+        console.error(error);
+        alert("Не вдалося отримати вашу геолокацію.");
+      }
+    );
+  }
+
+
+
   toggleAddingMode(): void {
     if (this.duplicateMode) return;
 
@@ -122,6 +186,16 @@ export class MapPage implements OnInit, AfterViewInit {
     }
   }
 
+  toggleSettingMyLocationMode(): void {
+    if (this.duplicateMode) return;
+
+    this.isChoosingMyLocation = !this.isChoosingMyLocation;
+    if (this.isChoosingMyLocation) {
+      this.map.getContainer().style.cursor = 'crosshair';
+    } else {
+      this.map.getContainer().style.cursor = '';
+    }
+  }
 
 
   private fetchLocations(afterLoad?: () => void): void {
@@ -177,6 +251,40 @@ export class MapPage implements OnInit, AfterViewInit {
     });
   }
 
+  private loadRoutes(): void {
+    // Якщо є попередній маршрут — видаляємо
+    if (this.currentRoute) {
+      this.map.removeLayer(this.currentRoute);
+      this.currentRoute = null;
+    }
+
+    //TODO instead of ee6adb8c-14a4-4647-ae7c-36273a6d8488" it will be this.tempUUID
+    this.locationService.getRouteByRoute_key(this.tempUUID).subscribe({
+      next: route => {
+        if (route.coordinates && route.coordinates.length > 1) {
+
+          // Створюємо новий polyline і зберігаємо посилання
+          this.currentRoute = L.polyline(route.coordinates, {
+            weight: 5,
+            opacity: 0.9
+          }).addTo(this.map);
+
+          const start = route.coordinates[0];
+          const finish = route.coordinates[route.coordinates.length - 1];
+
+          this.map.fitBounds([start, finish], {
+            padding: [50, 50],
+            animate: true
+          });
+        }
+      },
+      error: err => console.error('Failed to load route', err)
+    });
+  }
+
+
+
+
   private initMap(): void {
     this.map = L.map('map', {center: [51.4982, 31.2893], zoom: 13});
 
@@ -203,6 +311,31 @@ export class MapPage implements OnInit, AfterViewInit {
         this.clickedLat = lat;
         this.clickedLng = lng;
         this.showCreateForm = true;
+      }
+      if (this.isChoosingMyLocation && !this.duplicateMode) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        this.myLocation = { lat, lng };
+
+        if (this.userMarker) {
+          this.map.removeLayer(this.userMarker);
+        }
+        if (this.currentRoute) {
+          this.map.removeLayer(this.currentRoute);
+          this.currentRoute = null;
+        }
+
+        const icon = L.icon({
+          iconUrl: 'assets/map-markers/Round-Stationery-Pin-Emoji.png',
+          iconSize: [60, 35]
+        });
+
+        this.userMarker = L.marker([lat, lng], { icon }).addTo(this.map);
+
+        this.toggleSettingMyLocationMode();
+
+        return;
       }
     });
   }
@@ -480,5 +613,38 @@ export class MapPage implements OnInit, AfterViewInit {
     document.removeEventListener('mousemove', this.resizeHandler);
     document.removeEventListener('mouseup', this.stopResizing);
   };
+
+  buildRoute() {
+    this.tempUUID = uuidv4();
+    console.log(this.tempUUID);
+    if (!this.myLocation) {
+      alert("Спочатку визначте свою локацію");
+      return;
+    }
+
+    const { lat, lng } = this.myLocation;
+    const border_minimum_height = this.routeMode === 'wheelchair' ? 2 : 5;
+
+    this.isBuildingRoute = true;
+
+    // Викликаємо бекенд
+    this.locationService.buildRoute(
+      border_minimum_height,
+      lat,
+      lng,
+      this.tempUUID
+    ).subscribe({
+      next: (res) => {
+        // все добре — будуємо і завантажуємо маршрути
+        this.loadRoutes();
+        this.isBuildingRoute = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.isBuildingRoute = false;
+        alert("Помилка при побудові маршруту");
+      }
+    });
+  }
 
 }

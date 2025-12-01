@@ -296,4 +296,23 @@ export class LocationService {
   getUserPendingLocationsByUsername(username: string) {
     return this.http.get<any[]>(`${this.baseUrl}locations/user/${username}/pending-locations/`);
   }
+
+  getRoutes() {
+    return this.http.get<any[]>(`${this.baseUrl}locations/routes`);
+  }
+
+  getRouteByRoute_key(route_key: any) {
+    return this.http.get<any>(`${this.baseUrl}locations/routes/${route_key}`);
+  }
+
+  buildRoute(height: number, lat: number, lng: number, route_key: string): Observable<any> {
+    const body = {
+      height,
+      lat,
+      lng,
+      route_key: route_key
+    };
+    return this.http.post<any>(`${this.baseUrl}locations/routes`, body);
+  }
+
 }

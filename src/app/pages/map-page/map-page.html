@@ -10,6 +10,12 @@
     </div>
   }
 
+  <div class="route-loading-overlay" *ngIf="isBuildingRoute">
+    <div class="loader"></div>
+    <div class="loading-text">Побудова маршруту...</div>
+  </div>
+
+
   <div class="flex flex-1">
     <div
       class="bg-[#F0F0F0] relative select-none "
@@ -32,14 +38,53 @@
 
     <div class="flex-1 relative">
       <!-- ховаємо кнопку додавання в duplicate режимі -->
-      <button
-        *ngIf="!duplicateMode"
-        (click)="toggleAddingMode()"
-        [ngClass]="addingMode ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
-        class="absolute z-[500] bottom-4 right-4 text-white px-4 py-2 rounded-full shadow-lg transition"
-      >
-        {{ addingMode ? '✖ Відмінити' : '➕ Додати локацію' }}
-      </button>
+      <div class="absolute z-[500] bottom-4 right-4 flex flex-col gap-2">
+        <button
+          *ngIf="!duplicateMode"
+          (click)="toggleSettingMyLocationMode()"
+          [ngClass]="isChoosingMyLocation ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
+          class="text-white px-4 py-2 rounded-full shadow-lg transition"
+        >
+          {{ isChoosingMyLocation ? '✖ Відмінити' : '➕ Обрати мою локацію' }}
+        </button>
+
+
+        <button
+          (click)="locateMe()"
+          class="bg-white text-black px-4 py-2 rounded-full shadow-lg border border-gray-300 hover:bg-gray-100 transition"
+        >
+          📍 Моя локація
+        </button>
+
+        <button
+          *ngIf="!duplicateMode"
+          (click)="toggleAddingMode()"
+          [ngClass]="addingMode ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
+          class="text-white px-4 py-2 rounded-full shadow-lg transition"
+        >
+          {{ addingMode ? '✖ Відмінити' : '➕ Додати локацію' }}
+        </button>
+
+        <div class="route-controls">
+          <button class="btn-build" (click)="buildRoute()">Прокласти маршрут</button>
+
+          <div class="mode-toggle">
+            <label class="toggle-option">
+              <input type="radio" name="routeMode" value="feet" [(ngModel)]="routeMode">
+              <span>Піший</span>
+            </label>
+
+            <label class="toggle-option">
+              <input type="radio" name="routeMode" value="wheelchair" [(ngModel)]="routeMode">
+              <span>Візком</span>
+            </label>
+          </div>
+        </div>
+
+
+
+      </div>
+
 
       <div id="map" class="absolute inset-0 z-0"></div>
 
