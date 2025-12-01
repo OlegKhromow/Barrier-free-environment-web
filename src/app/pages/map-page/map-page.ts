@@ -13,6 +13,8 @@ import {AuthService} from '../../core/services/security/auth.service';
 import { v4 as uuidv4 } from 'uuid';
 import {FormsModule} from '@angular/forms';
 import {LayerGroup} from 'leaflet';
+import { LocateControl } from "leaflet.locatecontrol";
+import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
 
 @Component({
@@ -50,8 +52,6 @@ export class MapPage implements OnInit, AfterViewInit {
   private myLocation: { lat: number, lng: number } | null = null;
   private currentRoute: L.Polyline | null = null;
   routeMode: 'feet' | 'wheelchair' = 'feet';
-
-  isChoosingMyLocation = false;
 
 
   // duplicate режим
@@ -119,55 +119,6 @@ export class MapPage implements OnInit, AfterViewInit {
     }
   }
 
-  locateMe() {
-    if (!navigator.geolocation) {
-      alert("Геолокація не підтримується вашим браузером.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        // const lat = position.coords.latitude;
-        // const lng = position.coords.longitude;
-
-        // Test coords
-        const lat = 51.48603168403953;
-        const lng = 31.278829207454912;
-
-        // 🔥 1) Оновлюємо myLocation
-        this.myLocation = { lat, lng };
-
-        // 🔥 2) Видаляємо старий маркер, якщо він існує
-        if (this.userMarker) {
-          this.map.removeLayer(this.userMarker);
-          this.userMarker = null;
-        }
-        if (this.currentRoute) {
-          this.map.removeLayer(this.currentRoute);
-          this.currentRoute = null;
-        }
-
-        // 🔥 3) Створюємо новий маркер
-        const icon = L.icon({
-          iconUrl: 'assets/map-markers/Round-Stationery-Pin-Emoji.png',
-          iconSize: [60, 35]
-        });
-
-        this.userMarker = L.marker([lat, lng], { icon }).addTo(this.map);
-
-        // 🔥 4) Fly to
-        this.map.flyTo([lat, lng], 16, {
-          animate: true,
-          duration: 1.0
-        });
-      },
-      error => {
-        console.error(error);
-        alert("Не вдалося отримати вашу геолокацію.");
-      }
-    );
-  }
-
 
 
   toggleAddingMode(): void {
@@ -194,17 +145,6 @@ export class MapPage implements OnInit, AfterViewInit {
 
   openLoginModal() {
     this.authService.openLoginModal();
-  }
-
-  toggleSettingMyLocationMode(): void {
-    if (this.duplicateMode) return;
-
-    this.isChoosingMyLocation = !this.isChoosingMyLocation;
-    if (this.isChoosingMyLocation) {
-      this.map.getContainer().style.cursor = 'crosshair';
-    } else {
-      this.map.getContainer().style.cursor = '';
-    }
   }
 
 
@@ -297,6 +237,37 @@ export class MapPage implements OnInit, AfterViewInit {
 
   private initMap(): void {
     this.map = L.map('map', {center: [51.4982, 31.2893], zoom: 13});
+    const lc = new LocateControl({
+      position: "topleft",
+      flyTo: true,
+      drawMarker: true,
+      showCompass: true
+    });
+
+    lc.addTo(this.map);
+
+    this.map.on('locateactivate', () => {
+      if (this.currentRoute) {
+        this.map.removeLayer(this.currentRoute);
+        this.currentRoute = null;
+      }
+    });
+    this.map.on('locatedeactivate', () => {
+      if (this.currentRoute) {
+        this.map.removeLayer(this.currentRoute);
+        this.currentRoute = null;
+      }
+    });
+
+    this.map.on("locationfound", (e: L.LocationEvent) => {
+
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      // Зберігаємо
+      this.myLocation = { lat, lng };
+    });
+
 
     this.map.createPane('labels');
     this.map.getPane('labels')!.style.zIndex = '650';
@@ -356,31 +327,6 @@ export class MapPage implements OnInit, AfterViewInit {
         this.clickedLat = lat;
         this.clickedLng = lng;
         this.showCreateForm = true;
-      }
-      if (this.isChoosingMyLocation && !this.duplicateMode) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-
-        this.myLocation = { lat, lng };
-
-        if (this.userMarker) {
-          this.map.removeLayer(this.userMarker);
-        }
-        if (this.currentRoute) {
-          this.map.removeLayer(this.currentRoute);
-          this.currentRoute = null;
-        }
-
-        const icon = L.icon({
-          iconUrl: 'assets/map-markers/Round-Stationery-Pin-Emoji.png',
-          iconSize: [60, 35]
-        });
-
-        this.userMarker = L.marker([lat, lng], { icon }).addTo(this.map);
-
-        this.toggleSettingMyLocationMode();
-
-        return;
       }
     });
   }
