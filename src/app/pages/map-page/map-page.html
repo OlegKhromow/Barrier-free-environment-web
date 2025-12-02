@@ -72,8 +72,6 @@
           </div>
         </div>
 
-
-
       </div>
 
 
@@ -93,14 +91,15 @@
       </div>
 
       <!-- Рендеримо компонент модалки напряму — він сам створює fixed overlay -->
-      <app-location-create-form
-        *ngIf="showCreateForm && clickedLat && clickedLng"
-        [lat]="clickedLat"
-        [lng]="clickedLng"
-        (close)="handleFormClose($event)"
-        (viewDuplicate)="handleViewDuplicate($event)"
-      >
-      </app-location-create-form>
+
+      @if (showCreateForm && clickedLat && clickedLng) {
+        <app-location-create-form
+          [lat]="clickedLat"
+          [lng]="clickedLng"
+          (close)="handleFormClose($event)"
+          (viewDuplicate)="handleViewDuplicate($event)"
+        ></app-location-create-form>
+      }
     </div>
   </div>
 </div>

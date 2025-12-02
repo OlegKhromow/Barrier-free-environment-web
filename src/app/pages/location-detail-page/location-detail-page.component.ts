@@ -502,7 +502,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     this.map.getContainer().style.cursor = 'pointer';
     this.map.on('click', () => {
       if (!this.location) return;
-      this.router.navigate(['/'], {
+      this.router.navigate(['/map'], {
         queryParams: {
           flyToLat: this.location.latitude,
           flyToLng: this.location.longitude,

@@ -25,7 +25,10 @@ export class LoginOverlay {
     if (this.form.valid) {
       const { username, password } = this.form.value;
       this.auth.login(username!, password!).subscribe({
-        next: () => this.auth.closeLoginModal(),
+        next: () => {
+          this.auth.closeLoginModal();
+          window.location.reload();
+        },
         error: (err) => {
           console.log(err);
           alert('Login failed ');

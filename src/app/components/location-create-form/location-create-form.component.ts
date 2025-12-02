@@ -1,12 +1,14 @@
-import {Component, Input, Output, EventEmitter, inject, OnInit} from '@angular/core';
+import {Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {
+  AbstractControl,
   FormBuilder,
+  FormControl,
   FormGroup,
-  Validators,
+  FormsModule,
   ReactiveFormsModule,
   ValidationErrors,
-  AbstractControl
+  Validators
 } from '@angular/forms';
 import {Observable} from 'rxjs';
 import {LocationType} from '../../core/models/location-type';
@@ -15,13 +17,14 @@ import {LocationService} from '../../core/services/location.service';
 import {FormStateService} from '../../core/services/form-state.service';
 import {MatDialog} from '@angular/material/dialog';
 import {DuplicatesDialogComponent} from '../duplicates-dialog/duplicates-dialog.component';
-import {AuthService} from '../../core/services/security/auth.service';
+import {NgxMaskDirective, provideNgxMask} from 'ngx-mask';
 
 @Component({
   selector: 'app-location-create-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './location-create-form.component.html'
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgxMaskDirective],
+  templateUrl: './location-create-form.component.html',
+  providers: [provideNgxMask()]
 })
 export class LocationCreateFormComponent implements OnInit {
   @Input() lat!: number;
@@ -33,38 +36,19 @@ export class LocationCreateFormComponent implements OnInit {
   private locationService = inject(LocationService);
   private formState = inject(FormStateService);
   private dialog = inject(MatDialog);
-  private authService = inject(AuthService);
-
   days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  selectedDays: { [key: string]: boolean } = {};
 
-  form: FormGroup = this.fb.group({
-    name: ['', Validators.required],
-    address: ['', Validators.required],
-    type: ['', Validators.required],
-    description: [''],
-    contacts: this.fb.group({
-      phone: [''],
-      email: ['', Validators.email],
-      website: ['']
-    }),
-    workingHours: this.fb.group(
-      this.days.reduce((acc, day) => {
-        acc[day] = this.fb.group({ open: [''], close: [''] });
-        return acc;
-      }, {} as Record<string, FormGroup>),
-      { validators: [workingHoursValidator] }
-    )
-  });
+  form: FormGroup = new FormGroup({});
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
   selectedImages: { file: File, preview: string }[] = [];
+  isDragOver = false;
   isLoading = false;
-
-  private _lastSimilar: Array<any> | null = null;
-  private _lastDto: any | null = null;
 
   ngOnInit() {
     const saved = this.formState.getFormData();
+    this.days.forEach(day => this.selectedDays[day] = true); // за замовчуванням всі виділені
     if (saved) {
       this.form.patchValue(saved.formValue);
       this.selectedImages = saved.selectedImages || [];
@@ -73,7 +57,43 @@ export class LocationCreateFormComponent implements OnInit {
     }
   }
 
-  private initForm() {
+  async reverseGeocode(lat: number, lng: number): Promise<string | null> {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+          "User-Agent": "YourAppName"
+        }
+      });
+      const data = await response.json();
+      const addr = data.address;
+
+      if (!addr) return null;
+
+      // Формуємо масив частин, додаємо тільки ті, що існують
+      const parts: string[] = [];
+
+      if (addr.city) parts.push(`м. ${addr.city}`);
+      else if (addr.town) parts.push(`м. ${addr.town}`);
+      else if (addr.village) parts.push(`с. ${addr.village}`);
+
+      if (addr.road) parts.push(addr.road);
+      if (addr.house_number) parts.push(addr.house_number);
+
+      // Якщо нічого немає — повертаємо null
+      if (parts.length === 0) return null;
+
+      return parts.join(', ');
+    } catch (error) {
+      console.error("Reverse geocoding error:", error);
+      return null;
+    }
+  }
+
+
+  private async initForm() {
     this.form = this.fb.group({
       name: ['', Validators.required],
       address: ['', Validators.required],
@@ -86,13 +106,82 @@ export class LocationCreateFormComponent implements OnInit {
       }),
       workingHours: this.fb.group(
         this.days.reduce((acc, day) => {
-          acc[day] = this.fb.group({ open: [''], close: [''] });
+          acc[day] = this.fb.group({open: [''], close: ['']});
           return acc;
         }, {} as Record<string, FormGroup>),
-        { validators: [workingHoursValidator] }
+        {validators: [workingHoursValidator]}
+      ),
+      quickTime: this.fb.group({
+        open: [''],
+        close: ['']
+      }, {validators: [this.quickTimeValidator]}),
+      selectedDays: this.fb.group(
+        this.days.reduce((acc, day) => {
+          acc[day] = [false]; // за замовчуванням всі дні виділені
+          return acc;
+        }, {} as Record<string, any>)
       )
     });
+
     this.selectedImages = [];
+    await this.setAddress();
+  }
+
+  private async setAddress() {
+    const address = await this.reverseGeocode(this.lat, this.lng);
+    if (address) {
+      this.form.patchValue({ address });
+    }
+  }
+
+
+  isFormInvalid(): boolean {
+    // Валідність форми без quickTime
+    const {quickTime, ...rest} = this.form.controls;
+    return Object.values(rest).some(ctrl => ctrl.invalid);
+  }
+
+
+  get workingHoursForm(): FormGroup {
+    return this.form.get('workingHours') as FormGroup;
+  }
+
+  getSelectedDayControl(day: string): FormControl {
+    return this.form.get(`selectedDays.${day}`) as FormControl;
+  }
+
+  // Валідатор для швидкого часу
+  quickTimeValidator(group: FormGroup) {
+    const open = group.get('open')?.value;
+    const close = group.get('close')?.value;
+    if (!open || !close) return {incomplete: true};
+    if (close <= open) return {invalidRange: true};
+    return null;
+  }
+
+// Геттер для швидкого часу
+  get quickTimeForm(): FormGroup {
+    return this.form.get('quickTime') as FormGroup;
+  }
+
+// Перевірка валідності швидкого часу (для кнопки та повідомлення)
+  isQuickTimeInvalid(): boolean {
+    const group = this.quickTimeForm;
+    return group.invalid || !group.value.open || !group.value.close;
+  }
+
+// Застосування часу до обраних днів
+  applyQuickTime() {
+    if (this.isQuickTimeInvalid()) return;
+
+    const quickTime = this.quickTimeForm.value;
+    this.days.forEach(day => {
+      const isSelected = this.form.get(`selectedDays.${day}`)?.value;
+      if (isSelected) {
+        const fg = this.form.get(`workingHours.${day}`) as FormGroup;
+        fg.patchValue({open: quickTime.open, close: quickTime.close});
+      }
+    });
   }
 
   /** конвертація 12h часу у 24h */
@@ -121,14 +210,48 @@ export class LocationCreateFormComponent implements OnInit {
     return result;
   }
 
-  onImageSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files) return;
-    this.selectedImages = Array.from(input.files).map(file => ({ file, preview: URL.createObjectURL(file) }));
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver = true;
   }
 
+  onDragLeave(event: DragEvent) {
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver = false;
+
+    if (event.dataTransfer?.files) {
+      const files = Array.from(event.dataTransfer.files);
+      this.handleFiles(files);
+    }
+  }
+
+  onImageSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      const files = Array.from(input.files);
+      this.handleFiles(files);
+    }
+  }
+
+// Функція для обробки файлів
+  handleFiles(files: File[]) {
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) return; // пропускаємо не картинки
+      this.selectedImages.push({file, preview: URL.createObjectURL(file)})
+    });
+  }
+
+  removeImage(index: number) {
+    this.selectedImages.splice(index, 1);
+  }
+
+
   save() {
-    if (this.form.invalid) {
+    if (this.isFormInvalid()) {
       console.warn('Форма невалідна', this.form.errors, this.form.get('workingHours')?.errors);
       return;
     }
@@ -142,7 +265,7 @@ export class LocationCreateFormComponent implements OnInit {
     const dto = {
       ...raw,
       workingHours: normalizedWorkingHours,
-      coordinates: { lat: this.lat, lng: this.lng },
+      coordinates: {lat: this.lat, lng: this.lng},
       status: LocationStatusEnum.PENDING,
       selectedImages: this.selectedImages
     };
@@ -200,19 +323,17 @@ export class LocationCreateFormComponent implements OnInit {
     latitude?: number,
     longitude?: number
   }>, dto: any) {
-    this.formState.saveFormData({ formValue: this.form.value, selectedImages: this.selectedImages });
-    this._lastSimilar = similar;
-    this._lastDto = dto;
+    this.formState.saveFormData({formValue: this.form.value, selectedImages: this.selectedImages});
 
-    const ref = this.dialog.open(DuplicatesDialogComponent, { data: { similar }, width: '600px' });
+    const ref = this.dialog.open(DuplicatesDialogComponent, {data: {similar}, width: '600px'});
     ref.afterClosed().subscribe(result => {
       if (!result) return;
 
       if (result.action === 'proceed') {
         this.formState.clearFormData();
-        this.close.emit({ ...dto, force: true });
+        this.close.emit({...dto, force: true});
       } else if (result.action === 'view' && result.id) {
-        this.viewDuplicate.emit({ id: result.id, similar: similar, dto: dto });
+        this.viewDuplicate.emit({id: result.id, similar: similar, dto: dto});
       }
     });
   }
@@ -222,17 +343,22 @@ export class LocationCreateFormComponent implements OnInit {
     this.initForm();
     this.close.emit(null);
   }
+
+  closeDialog(event: MouseEvent | null){
+    if (event?.target === event?.currentTarget)
+      this.cancel()
+  }
 }
 
 /** кастомний валідатор для робочих годин */
 function workingHoursValidator(control: AbstractControl): ValidationErrors | null {
   const group = control as FormGroup;
   if (!group.controls) return null;
-  for (const [day, subGroup] of Object.entries(group.controls)) {
-    const open = (subGroup as FormGroup).get('open')?.value;
-    const close = (subGroup as FormGroup).get('close')?.value;
-    if ((open && !close) || (!open && close)) {
-      return { workingHoursIncomplete: true };
+  for (const [, subGroup] of Object.entries(group.controls)) {
+    const open = parseInt((subGroup as FormGroup).get('open')?.value);
+    const close = parseInt((subGroup as FormGroup).get('close')?.value);
+    if ((open && !close) || (!open && close) || open >= close) {
+      return {workingHoursIncomplete: true};
     }
   }
   return null;
