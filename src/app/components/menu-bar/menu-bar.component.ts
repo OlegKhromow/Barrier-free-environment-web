@@ -1,9 +1,10 @@
 import {Component, inject, OnInit} from '@angular/core';
-import {Router, RouterLink} from '@angular/router';
+import {NavigationEnd, Router, RouterLink} from '@angular/router';
 import {AuthService} from '../../core/services/security/auth.service';
 import {NgOptimizedImage} from '@angular/common';
 import {SearchBarComponent} from '../search-bar/search-bar.component';
 import {LanguageSwitcherComponent} from '../language-switcher/language-switcher.component';
+import {filter} from 'rxjs';
 
 @Component({
   selector: 'app-menu-bar',
@@ -18,10 +19,10 @@ import {LanguageSwitcherComponent} from '../language-switcher/language-switcher.
   styleUrl: './menu-bar.component.css'
 })
 export class MenuBarComponent implements OnInit {
-  router = inject(Router);
   isOpen = false;
   isLogin = false;
   isAdmin = false;
+  showSearchBar = false;
   language: 'ua' | 'en' = 'ua';
 
   authService: AuthService = inject(AuthService);
@@ -31,6 +32,14 @@ export class MenuBarComponent implements OnInit {
     {label: 'Про проєкт', link: '/about', show: () => true},
     {label: 'Адмін-панель', link: '/admin', show: () => this.isAdmin},
   ];
+
+  constructor(private router: Router) {
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.showSearchBar = event.url.includes('/map');
+      });
+  }
 
   ngOnInit() {
     this.authService.isLoggedIn$.subscribe(isLogged => {
@@ -64,7 +73,7 @@ export class MenuBarComponent implements OnInit {
 
   logout() {
     this.authService.logout();
-    this.router.navigate(['/']);
+    window.location.reload();
   }
 
   onSearch(query: string) {
