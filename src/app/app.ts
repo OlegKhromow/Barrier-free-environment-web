@@ -3,23 +3,29 @@ import {RouterOutlet} from '@angular/router';
 import {MenuBarComponent} from './components/menu-bar/menu-bar.component';
 import {LoginOverlay} from './components/login-overlay/login-overlay';
 import {AuthService} from './core/services/security/auth.service';
+import {RegisterOverlay} from './components/register-overlay/register-overlay';
+import {AlertService} from './core/services/alert.service';
+import {AlertModalComponent} from './components/alert-modal/alert-modal.component';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
   selector: 'app-root',
   imports: [
-    RouterOutlet, MenuBarComponent, LoginOverlay
+    RouterOutlet, MenuBarComponent, LoginOverlay, RegisterOverlay, AlertModalComponent, AsyncPipe
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App implements OnInit, AfterViewInit {
   showLogin: boolean = false;
+  showRegister: boolean = false;
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, public alert: AlertService) {
   }
 
   ngOnInit() {
     this.authService.loginModal$.subscribe(show => this.showLogin = show);
+    this.authService.registerModal$.subscribe(show => this.showRegister = show);
   }
 
   ngAfterViewInit() {

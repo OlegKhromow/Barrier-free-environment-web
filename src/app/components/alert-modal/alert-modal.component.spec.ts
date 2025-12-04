@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AddLocationPage } from './add-location-page';
+import { AlertModalComponent } from './alert-modal.component';
 
-describe('AddLocationPage', () => {
-  let component: AddLocationPage;
-  let fixture: ComponentFixture<AddLocationPage>;
+describe('AlertModalComponent', () => {
+  let component: AlertModalComponent;
+  let fixture: ComponentFixture<AlertModalComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AddLocationPage]
+      imports: [AlertModalComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(AddLocationPage);
+    fixture = TestBed.createComponent(AlertModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

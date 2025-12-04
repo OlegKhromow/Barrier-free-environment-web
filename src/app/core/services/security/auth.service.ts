@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../../environments/environment';
-import {BehaviorSubject, catchError, map, Observable, of, Subject, switchMap, tap, throwError} from 'rxjs';
+import {BehaviorSubject, map, Observable, of, Subject, switchMap, tap, throwError} from 'rxjs';
 import {UserDTO} from '../../dtos/user-dto';
 
 @Injectable({
@@ -12,11 +12,12 @@ export class AuthService {
   private apiUrl: string = environment.apiEndpoint;
 
   private loginModalSubject = new Subject<boolean>();
+  private registerModalSubject = new Subject<boolean>();
   loginModal$ = this.loginModalSubject.asObservable();
+  registerModal$ = this.registerModalSubject.asObservable();
 
   private isLoggedInSubject = new BehaviorSubject<boolean>(false);
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
-  private baseUrl = `${environment.apiEndpoint}`;
 
   constructor(private http: HttpClient) {
     const hasToken = !!this.getToken();
@@ -64,7 +65,7 @@ export class AuthService {
 
 
   updateUserRole(username: string, newRole: string): Observable<UserDTO> {
-    return this.http.patch<UserDTO>(`${this.apiUrl}/users/username/${username}/role`, { role: newRole });
+    return this.http.patch<UserDTO>(`${this.apiUrl}/users/username/${username}/role`, {role: newRole});
   }
 
 
@@ -82,20 +83,28 @@ export class AuthService {
     this.loginModalSubject.next(false);
   }
 
+  openRegisterModal() {
+    this.registerModalSubject.next(true);
+  }
+
+  closeRegisterModal() {
+    this.registerModalSubject.next(false);
+  }
+
   getByUsername(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/users/me/`);
+    return this.http.get<any>(`${this.apiUrl}/users/me/`);
   }
 
   getAuthoritiesByUsername(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/users/me/authorities`);
+    return this.http.get<any>(`${this.apiUrl}/users/me/authorities`);
   }
 
   isAccessNotExpired(): Observable<boolean> {
-    return this.http.get<boolean>(`${this.baseUrl}/validate/access`);
+    return this.http.get<boolean>(`${this.apiUrl}/validate/access`);
   }
 
   isRefreshNotExpired(): Observable<boolean> {
-    return this.http.get<boolean>(`${this.baseUrl}/validate/refresh`);
+    return this.http.get<boolean>(`${this.apiUrl}/validate/refresh`);
   }
 
   refreshToken() {
@@ -141,5 +150,25 @@ export class AuthService {
     );
   }
 
+
+  checkUsername(username: string) {
+    return this.http.get(`${this.apiUrl}/users/check/${username}`);
+  }
+
+  sendVerificationEmail(email: string){
+    return this.http.post(
+      `${this.apiUrl}/email/verification/send`,
+      { email },
+      { responseType: 'text' as 'json' }
+    );
+  }
+
+  verifyEmailCode(email: string, code: string) {
+    return this.http.post(
+      `${this.apiUrl}/email/verify`,
+      { email, code },
+      { responseType: 'text' as 'json' }
+    );
+  }
 
 }

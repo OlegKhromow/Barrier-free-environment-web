@@ -41,4 +41,13 @@ export class LoginOverlay {
     if (event?.target === event?.currentTarget)
       this.auth.closeLoginModal();
   }
+
+  forgotPassword() {
+
+  }
+
+  openRegister() {
+    this.auth.closeLoginModal();
+    this.auth.openRegisterModal();
+  }
 }

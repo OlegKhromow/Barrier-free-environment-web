@@ -1,0 +1,18 @@
+@if (message) {
+  <div class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[510]
+              animate-fadeIn">
+    <div class="bg-white p-6 rounded-xl shadow-xl w-1/4 min-w-10 text-center border border-deep-dark-blue/20">
+
+      <p class="text-deep-dark-blue text-lg mb-6 font-medium">
+        {{ message }}
+      </p>
+
+      <button (click)="close()"
+              class="px-6 py-2 rounded-2xl bg-deep-dark-blue text-white font-semibold
+                     hover:bg-[#0d2238] active:scale-95 transition-all text-sm">
+        OK
+      </button>
+
+    </div>
+  </div>
+}

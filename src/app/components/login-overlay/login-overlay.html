@@ -1,24 +1,41 @@
 <div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[501]" (click)="close($event)">
-  <div class="bg-white rounded-2xl shadow-xl w-96 p-6 z-50">
-    <h2 class="text-2xl font-bold text-center mb-6">Авторизація</h2>
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <input
-        formControlName="username"
-        type="text"
-        placeholder="Логін"
-        name="username"
-        required
-        class="w-full my-2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+  <div class="bg-white rounded-3xl shadow-xl w-96 p-8 z-50 border border-gray-200">
 
-      <input formControlName="password"
-             type="password"
-             placeholder="Пароль"
-             required
-             class="w-full my-2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <h2 class="text-2xl font-bold text-center mb-6 text-deep-dark-blue">Вхід</h2>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <div class="space-y-3">
+        <input
+          formControlName="username"
+          type="text"
+          placeholder="Логін"
+          class="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-gray-100
+                 focus:ring-2 focus:ring-deep-dark-blue outline-none">
+
+        <input
+          formControlName="password"
+          type="password"
+          placeholder="Пароль"
+          class="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-gray-100
+                 focus:ring-2 focus:ring-deep-dark-blue outline-none">
+      </div>
 
       <button type="submit"
-              class="w-full my-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition-colors"
-      >Увійти</button>
+              class="w-full mt-5 bg-deep-dark-blue text-white py-3 rounded-2xl font-semibold
+               hover:bg-[#15263A] transition">
+        Увійти
+      </button>
+
+      <div class="flex justify-between mt-4 text-base">
+        <button type="button" (click)="forgotPassword()" class="text-deep-dark-blue hover:underline">
+          Забули пароль?
+        </button>
+        <button type="button" (click)="openRegister()" class="text-gray-700 hover:underline">
+          Реєстрація
+        </button>
+      </div>
+
     </form>
   </div>
 </div>

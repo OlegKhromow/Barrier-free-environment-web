@@ -2,9 +2,16 @@
   <app-menu-bar class="sticky top-0 z-40"></app-menu-bar>
   <main class="h-full">
     <router-outlet></router-outlet>
-    @if(showLogin){
+    @if (showLogin) {
       <app-login-overlay></app-login-overlay>
     }
+    @if (showRegister) {
+      <app-register-overlay></app-register-overlay>
+    }
+    <app-alert-modal
+      [message]="(alert.message$ | async)"
+      (closed)="alert.close()">
+    </app-alert-modal>
   </main>
-<!--  <app-footer></app-footer>-->
+  <!--  <app-footer></app-footer>-->
 </div>
