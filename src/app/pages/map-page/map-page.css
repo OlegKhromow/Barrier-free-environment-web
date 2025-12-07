@@ -5,20 +5,6 @@
   padding: 8px 0;
 }
 
-.btn-build {
-  padding: 8px 16px;
-  border: none;
-  background: #1976d2;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-build:hover {
-  background: #1565c0;
-}
-
 .mode-toggle {
   display: flex;
   align-items: center;

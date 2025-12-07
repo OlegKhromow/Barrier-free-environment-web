@@ -1,6 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {AfterViewInit, Component, HostListener, inject, OnInit} from '@angular/core';
 import * as L from 'leaflet';
+import {LayerGroup} from 'leaflet';
 import {Location} from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
 import {LocationSidebarComponent} from '../../components/location-sidebar/location-sidebar.component';
@@ -10,11 +11,11 @@ import {DuplicatesDialogComponent} from '../../components/duplicates-dialog/dupl
 import {FormStateService} from '../../core/services/form-state.service';
 import {forkJoin, of} from 'rxjs';
 import {AuthService} from '../../core/services/security/auth.service';
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import {FormsModule} from '@angular/forms';
-import {LayerGroup} from 'leaflet';
-import { LocateControl } from "leaflet.locatecontrol";
+import {LocateControl} from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+import {AlertService} from '../../core/services/alert.service';
 
 
 @Component({
@@ -65,6 +66,7 @@ export class MapPage implements OnInit, AfterViewInit {
   private dialog = inject(MatDialog);
   private formState = inject(FormStateService);
   private authService = inject(AuthService);
+  private alertService  = inject(AlertService);
 
   // resize fields for location-sidebar
   sidebarWidth = 370;
@@ -118,7 +120,6 @@ export class MapPage implements OnInit, AfterViewInit {
       sessionStorage.setItem('mapPageLoaded', 'true');
     }
   }
-
 
 
   toggleAddingMode(): void {
@@ -187,8 +188,17 @@ export class MapPage implements OnInit, AfterViewInit {
   }
 
   private addMarkers(): void {
-    this.locations?.forEach(location => {
-      const iconUrl = 'assets/map-markers/1.png';
+    this.locations?.forEach(async location => {
+      const typeName = location.type.name;
+      const customUrl = typeName ? `assets/map-markers/light/${typeName}.png` : null;
+      let iconUrl = 'assets/map-markers/default-marker.png';
+
+      // Перевіряємо існування кастомної іконки
+      if (customUrl && await this.checkIconExists(customUrl)) {
+        iconUrl = customUrl;
+      }
+
+
       const icon = this.createMarkerIcon(iconUrl, [35, 40]);
       const marker = L.marker([location.latitude, location.longitude], {icon}).addTo(this.map);
 
@@ -200,6 +210,16 @@ export class MapPage implements OnInit, AfterViewInit {
       this.markers.push({marker, iconUrl, baseSize: [35, 40], location});
     });
   }
+
+  private checkIconExists(url: string): Promise<boolean> {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
+  }
+
 
   private loadRoutes(): void {
     // Якщо є попередній маршрут — видаляємо
@@ -233,8 +253,6 @@ export class MapPage implements OnInit, AfterViewInit {
   }
 
 
-
-
   private initMap(): void {
     this.map = L.map('map', {center: [51.4982, 31.2893], zoom: 13});
     const lc = new LocateControl({
@@ -265,7 +283,7 @@ export class MapPage implements OnInit, AfterViewInit {
       const lng = e.latlng.lng;
 
       // Зберігаємо
-      this.myLocation = { lat, lng };
+      this.myLocation = {lat, lng};
     });
 
 
@@ -276,13 +294,13 @@ export class MapPage implements OnInit, AfterViewInit {
     // Стандартна OSM
     this.normalLayer = L.tileLayer(
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      { attribution: '© OpenStreetMap contributors' }
+      {attribution: '© OpenStreetMap contributors'}
     );
 
     // Супутник ESRI
     this.satelliteLayer = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { attribution: 'Tiles © Esri' }
+      {attribution: 'Tiles © Esri'}
     );
 
     // Підписи доріг + вулиць
@@ -624,11 +642,11 @@ export class MapPage implements OnInit, AfterViewInit {
     this.tempUUID = uuidv4();
     console.log(this.tempUUID);
     if (!this.myLocation) {
-      alert("Спочатку визначте свою локацію");
+      this.alertService.open("Спочатку визначте свою локацію");
       return;
     }
 
-    const { lat, lng } = this.myLocation;
+    const {lat, lng} = this.myLocation;
     const border_minimum_height = this.routeMode === 'wheelchair' ? 2 : 5;
 
     this.isBuildingRoute = true;

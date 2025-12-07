@@ -57,19 +57,31 @@
         }
 
         <div class="route-controls">
-          <button class="btn-build" (click)="buildRoute()">Прокласти маршрут</button>
+          <button
+            class="bg-[#0A1828] hover:bg-[#12233a] shadow-[0_0_10px_rgba(10,24,40,0.5)] text-white px-4 py-2 font-semibold rounded-full transition duration-200"
+            (click)="buildRoute()">Прокласти маршрут
+          </button>
 
-          <div class="mode-toggle">
-            <label class="toggle-option">
-              <input type="radio" name="routeMode" value="feet" [(ngModel)]="routeMode">
-              <span>Піший</span>
+          <div class="flex bg-gray-200 rounded-full p-1 w-fit shadow-inner">
+            <label class="relative cursor-pointer">
+              <input type="radio" name="routeMode" value="feet" [(ngModel)]="routeMode" class="peer sr-only">
+              <span class="px-4 py-2 block rounded-full
+                 peer-checked:bg-deep-dark-blue peer-checked:text-white
+                 text-gray-700 transition">
+                Піший
+              </span>
             </label>
 
-            <label class="toggle-option">
-              <input type="radio" name="routeMode" value="wheelchair" [(ngModel)]="routeMode">
-              <span>Візком</span>
+            <label class="relative cursor-pointer">
+              <input type="radio" name="routeMode" value="wheelchair" [(ngModel)]="routeMode" class="peer sr-only">
+              <span class="px-4 py-2 block rounded-full
+                 peer-checked:bg-deep-dark-blue peer-checked:text-white
+                 text-gray-700 transition">
+                Візком
+              </span>
             </label>
           </div>
+
         </div>
 
       </div>
