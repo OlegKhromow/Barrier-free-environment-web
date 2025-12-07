@@ -50,6 +50,7 @@ export class LocationCreateFormComponent implements OnInit {
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
   selectedImages: { file: File | null, preview: string }[] = [];
+  oldImages: { file: File | null, preview: string }[] = [];
   isDragOver = false;
   isLoading = false;
 
@@ -131,6 +132,7 @@ export class LocationCreateFormComponent implements OnInit {
           file: null,
           preview: value,
         }));
+        this.oldImages = JSON.parse(JSON.stringify(this.selectedImages));
       }
     })
   }
@@ -306,6 +308,10 @@ export class LocationCreateFormComponent implements OnInit {
     this.selectedImages.splice(index, 1);
   }
 
+  private deepEqual(a: any, b: any): boolean {
+    return JSON.stringify(a, Object.keys(a).sort()) ===
+      JSON.stringify(b, Object.keys(b).sort());
+  }
 
   save() {
     if (this.isFormInvalid()) {
@@ -362,6 +368,34 @@ export class LocationCreateFormComponent implements OnInit {
         }
       });
     } else {
+      const dtoNormalized = {
+        name: dto.name,
+        address: dto.address,
+        type: dto.type,
+        description: dto.description,
+        contacts: dto.contacts,
+        workingHours: dto.workingHours
+      };
+
+      const prefillNormalized = {
+        name: this.prefillData.name,
+        address: this.prefillData.address,
+        type: this.prefillData.type.id,
+        description: this.prefillData.description,
+        contacts: this.prefillData.contacts,
+        workingHours: this.prefillData.workingHours
+      };
+
+      const objectsEqual = this.deepEqual(dtoNormalized, prefillNormalized);
+
+      const imagesChanged = !this.deepEqual(this.selectedImages, this.oldImages);
+
+      if (objectsEqual && !imagesChanged) {
+        this.setLoadingState(false);
+        this.alertService.open("Ви не внесли жодних змін.");
+        return;
+      }
+
       this.locationService.createPendingCopy(this.prefillData.id, dto).subscribe({
         next: (res) => {
           console.log('Pending copy created', res);

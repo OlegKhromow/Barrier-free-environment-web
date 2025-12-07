@@ -17,7 +17,7 @@
 
     <div class="p-6 flex-1 overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable]">
       <h2 class="text-3xl font-bold mb-6 text-center text-deep-dark-blue">
-        Створення локації
+        {{mode === 'create' ? 'Створення локації' : 'Оновлення даних локації'}}
       </h2>
 
       <form [formGroup]="form" class="flex flex-col gap-5">
@@ -186,9 +186,14 @@
 
       <button type="button" (click)="save()" [disabled]="isFormInvalid() || isLoading"
               class="px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg">
-        <span *ngIf="isLoading"
-              class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-        {{ isLoading ? 'Обробка...' : 'Зберегти' }}
+        @if (isLoading) {
+          <span class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+        }
+        @if (isLoading) {
+          Обробка...
+        } @else {
+          {{mode === 'create' ? 'Зберегти' : 'Надіслати на перевірку'}}
+        }
       </button>
     </div>
 
