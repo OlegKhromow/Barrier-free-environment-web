@@ -1,8 +1,8 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { LocationService } from '../../core/services/location.service';
-import { Location } from '../../core/models/location';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
+import {ActivatedRoute, Router} from '@angular/router';
+import {LocationService} from '../../core/services/location.service';
+import {Location} from '../../core/models/location';
 import * as L from 'leaflet';
 import {LocationEditDialogComponent} from '../../components/location-edit-dialog/location-edit-dialog.component';
 import {FormsModule} from '@angular/forms';
@@ -30,13 +30,13 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   markers: Array<{ marker: L.Marker, iconUrl: string, baseSize: [number, number], location?: Location }> = [];
 
   days = [
-    { key: 'monday', label: 'Понеділок' },
-    { key: 'tuesday', label: 'Вівторок' },
-    { key: 'wednesday', label: 'Середа' },
-    { key: 'thursday', label: 'Четвер' },
-    { key: 'friday', label: 'П’ятниця' },
-    { key: 'saturday', label: 'Субота' },
-    { key: 'sunday', label: 'Неділя' }
+    {key: 'monday', label: 'Понеділок'},
+    {key: 'tuesday', label: 'Вівторок'},
+    {key: 'wednesday', label: 'Середа'},
+    {key: 'thursday', label: 'Четвер'},
+    {key: 'friday', label: 'П’ятниця'},
+    {key: 'saturday', label: 'Субота'},
+    {key: 'sunday', label: 'Неділя'}
   ];
 
   showGroup = true;
@@ -56,7 +56,8 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private locationService: LocationService,
     protected router: Router
-  ) {}
+  ) {
+  }
 
   selectedPending: any | null = null;
   showModal = false;
@@ -74,8 +75,8 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     }
 
     // Якщо pending → стандартна модалка порівняння
-    this.selectedPending = { ...pending };
-    this.modalLocation = { ...this.location };
+    this.selectedPending = {...pending};
+    this.modalLocation = {...this.location};
     this.showModal = true;
   }
 
@@ -98,8 +99,8 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
 
   openDuplicateModal(duplicate: any) {
     // створюємо копії, щоб не змінювати реальні об'єкти
-    this.selectedDuplicate = { ...duplicate };
-    this.modalLocation = { ...this.location }; // 👈 нова властивість
+    this.selectedDuplicate = {...duplicate};
+    this.modalLocation = {...this.location}; // 👈 нова властивість
     this.showModalDuplicate = true;
   }
 
@@ -117,7 +118,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     if (!this.location) return;
     const id = this.location.id;
 
-    const body = rejectionReason ? { rejectionReason } : {};
+    const body = rejectionReason ? {rejectionReason} : {};
 
     this.locationService.changeStatus(id, newStatus, body).subscribe({
       next: () => {
@@ -149,7 +150,6 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     this.showRejectForm = false;
     this.rejectionReason = '';
   }
-
 
 
   confirmChanges() {
@@ -220,8 +220,6 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   }
 
 
-
-
   closeModal() {
     this.showModal = false;
     this.selectedPending = null;
@@ -282,8 +280,6 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
       this.swappedDuplicateFields[field] = true;
     }
   }
-
-
 
 
   swapContactField(field: string) {
@@ -358,7 +354,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
       this.modalLocation.workingHours = this.selectedPending.workingHours;
       this.selectedPending.workingHours = {};
       for (const d of this.days) {
-        this.selectedPending.workingHours[d.key] = { open: '—', close: '—' };
+        this.selectedPending.workingHours[d.key] = {open: '—', close: '—'};
       }
       this.swappedFields[key] = true;
     }
@@ -389,7 +385,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
 
     this.locationService.rejectPending(this.selectedPending.id, this.rejectionPendingReason)
       .subscribe({
-        next: (res) => {
+        next: () => {
           alert('Пендінг відхилено');
           this.showRejectPendingForm = false;
           this.rejectionPendingReason = '';
@@ -424,12 +420,11 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
       this.selectedDuplicate.workingHours = this.modalLocation.workingHours;
       this.modalLocation.workingHours = {};
       for (const d of this.days) {
-        this.modalLocation.workingHours[d.key] = { open: '—', close: '—' };
+        this.modalLocation.workingHours[d.key] = {open: '—', close: '—'};
       }
       this.swappedDuplicateFields[key] = true;
     }
   }
-
 
 
   ngOnInit() {
@@ -456,8 +451,6 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   }
 
 
-
-
   ngAfterViewInit(): void {
     const id = String(this.route.snapshot.paramMap.get('id'));
     if (id) {
@@ -474,7 +467,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
           if (flyToLat && flyToLng) {
             const lat = parseFloat(flyToLat);
             const lng = parseFloat(flyToLng);
-            this.map.flyTo([lat, lng], 17, { animate: true, duration: 0.9 });
+            this.map.flyTo([lat, lng], 17, {animate: true, duration: 0.9});
           }
         });
       });
@@ -512,10 +505,16 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
     });
   }
 
-  private addMarker(): void {
+  private async addMarker(): Promise<void> {
     if (!this.location || !this.map) return;
+    const typeName = this.location.type.name;
+    const customUrl = typeName ? `assets/map-markers/light/${typeName}.png` : null;
+    let iconUrl = 'assets/map-markers/default-marker.png';
 
-    const iconUrl = 'assets/map-markers/1.png';
+    // Перевіряємо існування кастомної іконки
+    if (customUrl && await this.checkIconExists(customUrl)) {
+      iconUrl = customUrl;
+    }
     const icon = this.createMarkerIcon(iconUrl, [35, 40]);
 
     const marker = L.marker(
@@ -528,12 +527,21 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
 
     (marker as any).getElement()?.style.setProperty('pointer-events', 'none');
 
-    this.markers = [{ marker, iconUrl, baseSize: [35, 40], location: this.location }];
+    this.markers = [{marker, iconUrl, baseSize: [35, 40], location: this.location}];
     this.map.setView([this.location.latitude, this.location.longitude], 15);
   }
 
+  private checkIconExists(url: string): Promise<boolean> {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
+  }
+
   private createMarkerIcon(iconUrl: string, size: [number, number]): L.Icon {
-    return new L.Icon({ iconUrl, iconSize: size as any });
+    return new L.Icon({iconUrl, iconSize: size as any});
   }
 
   loadCriteriaTree() {
@@ -586,7 +594,6 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
   }
 
 
-
   toggleType(type: any) {
     if (this.openTypes.has(type)) {
       this.openTypes.delete(type);
@@ -635,7 +642,7 @@ export class LocationDetailPage implements OnInit, AfterViewInit {
 
   getDaySchedule(day: string, workingHours: any): string {
     if (!workingHours || !workingHours[day]) return 'вихідний';
-    const { open, close } = workingHours[day];
+    const {open, close} = workingHours[day];
     if (!open && !close) return 'вихідний';
     if (open && close) return `${open} – ${close}`;
     return 'вихідний';

@@ -69,7 +69,6 @@ export class LocationService {
 
   // щоб компоненти могли підписатись
   getLocationTypesObservable(): Observable<LocationType[]> {
-    console.log("відбувається вигрузка типів")
     return this.locationTypes$.asObservable();
   }
 

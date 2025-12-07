@@ -15,7 +15,6 @@ import {v4 as uuidv4} from 'uuid';
 import {FormsModule} from '@angular/forms';
 import {LocateControl} from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
-import {AlertService} from '../../core/services/alert.service';
 
 
 @Component({
@@ -67,9 +66,7 @@ export class MapPage implements OnInit, AfterViewInit {
   private dialog = inject(MatDialog);
   private formState = inject(FormStateService);
   private authService = inject(AuthService);
-  private alertService  = inject(AlertService);
-
-  // resize fields for location-sidebar
+// resize fields for location-sidebar
   sidebarWidth = 370;
   minSidebarWidth = 350;
   maxSidebarWidth = 500;
@@ -286,7 +283,7 @@ export class MapPage implements OnInit, AfterViewInit {
       const lng = e.latlng.lng;
 
       // Зберігаємо
-      this.myLocation = {lat, lng};
+      // this.myLocation = {lat, lng};
     });
 
 

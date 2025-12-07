@@ -4,17 +4,15 @@ import { Location } from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
 import { Router } from '@angular/router';
 
-import {
-  LocationPendingCopyFormComponent
-} from '../../pages/location-pending-copy-form/location-pending-copy-form.component';
 import {LocationInfoComponent} from '../location-info/location-info.component';
 import {AuthService} from '../../core/services/security/auth.service';
 import {SlideshowComponent} from '../slideshow-component/slideshow-component';
+import {LocationCreateFormComponent} from '../location-create-form/location-create-form.component';
 
 @Component({
   selector: 'app-location-sidebar',
   standalone: true,
-  imports: [CommonModule, LocationPendingCopyFormComponent, LocationInfoComponent, SlideshowComponent],
+  imports: [CommonModule, LocationInfoComponent, SlideshowComponent, LocationCreateFormComponent],
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })

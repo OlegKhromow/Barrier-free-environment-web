@@ -18,6 +18,7 @@ import {FormStateService} from '../../core/services/form-state.service';
 import {MatDialog} from '@angular/material/dialog';
 import {DuplicatesDialogComponent} from '../duplicates-dialog/duplicates-dialog.component';
 import {NgxMaskDirective, provideNgxMask} from 'ngx-mask';
+import {AlertService} from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-location-create-form',
@@ -32,8 +33,14 @@ export class LocationCreateFormComponent implements OnInit {
   @Output() close = new EventEmitter<any>();
   @Output() viewDuplicate = new EventEmitter<{ id: string, similar: Array<any>, dto: any }>();
 
+  @Input() mode: 'create' | 'pendingCopy' = 'create';
+  @Input() locationId?: string;
+  @Input() prefillData?: any;
+  @Output() saved = new EventEmitter<any>(); // як у pending copy
+
   private fb = inject(FormBuilder);
   private locationService = inject(LocationService);
+  private alertService = inject(AlertService);
   private formState = inject(FormStateService);
   private dialog = inject(MatDialog);
   days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -42,13 +49,30 @@ export class LocationCreateFormComponent implements OnInit {
   form: FormGroup = new FormGroup({});
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
-  selectedImages: { file: File, preview: string }[] = [];
+  selectedImages: { file: File | null, preview: string }[] = [];
   isDragOver = false;
   isLoading = false;
 
   ngOnInit() {
     const saved = this.formState.getFormData();
     this.days.forEach(day => this.selectedDays[day] = true); // за замовчуванням всі виділені
+
+    // Якщо режим pending copy
+    if (this.mode === 'pendingCopy') {
+      this.initForm();
+
+      if (this.prefillData) {
+        this.applyPrefill(this.prefillData);
+      } else if (this.locationId) {
+        this.locationService.getLocationById(this.locationId).subscribe({
+          next: loc => this.applyPrefill(loc),
+          error: err => console.error('Не вдалося завантажити локацію', err)
+        });
+      }
+
+      return;
+    }
+
     if (saved) {
       this.form.patchValue(saved.formValue);
       this.selectedImages = saved.selectedImages || [];
@@ -92,6 +116,25 @@ export class LocationCreateFormComponent implements OnInit {
     }
   }
 
+  private applyPrefill(data: any) {
+    this.form.patchValue({
+      name: data.name || '',
+      address: data.address || '',
+      type: data.type.id || '',
+      description: data.description || '',
+      contacts: data.contacts || {},
+      workingHours: data.workingHours || {}
+    });
+    this.locationService.getLocationImages(data.imageServiceId).subscribe({
+      next: res => {
+        this.selectedImages = res.map(value => ({
+          file: null,
+          preview: value,
+        }));
+      }
+    })
+  }
+
 
   private async initForm() {
     this.form = this.fb.group({
@@ -124,23 +167,37 @@ export class LocationCreateFormComponent implements OnInit {
     });
 
     this.selectedImages = [];
-    await this.setAddress();
+    if (this.mode === 'create')
+      await this.setAddress();
   }
 
   private async setAddress() {
     const address = await this.reverseGeocode(this.lat, this.lng);
     if (address) {
-      this.form.patchValue({ address });
+      this.form.patchValue({address});
     }
   }
 
 
   isFormInvalid(): boolean {
-    // Валідність форми без quickTime
-    const {quickTime, ...rest} = this.form.controls;
-    return Object.values(rest).some(ctrl => ctrl.invalid);
-  }
+    const controls = this.form.controls;
 
+    // Ігноруємо quickTime
+    const excluded = ['quickTime'];
+
+    // Перевірка основних полів (крім quickTime)
+    const mainInvalid = Object.entries(controls)
+      .filter(([key]) => !excluded.includes(key))
+      .some(([_, ctrl]) => ctrl.invalid);
+
+    // Перевірка телефонів — пропускаємо
+    const contacts = this.form.get('contacts') as FormGroup;
+    const contactsInvalid = Object.entries(contacts.controls)
+      .filter(([key]) => key !== 'phone') // ← ігноруємо телефон
+      .some(([_, ctrl]) => ctrl.invalid);
+
+    return mainInvalid || contactsInvalid;
+  }
 
   get workingHoursForm(): FormGroup {
     return this.form.get('workingHours') as FormGroup;
@@ -215,7 +272,7 @@ export class LocationCreateFormComponent implements OnInit {
     this.isDragOver = true;
   }
 
-  onDragLeave(event: DragEvent) {
+  onDragLeave() {
     this.isDragOver = false;
   }
 
@@ -270,39 +327,55 @@ export class LocationCreateFormComponent implements OnInit {
       selectedImages: this.selectedImages
     };
 
-    this.locationService.checkDuplicates(dto).subscribe({
-      next: (res) => {
-        if (res.status === 409) {
-          const similarArr = (res.body?.similar || []).map((it: any) => ({
-            id: it.id,
-            name: it.name,
-            address: it.address,
-            latitude: it.latitude,
-            longitude: it.longitude
-          }));
-          this.openDuplicatesDialog(similarArr, dto);
-        } else {
-          this.close.emit(dto);
+    if (this.mode === 'create'){
+      this.locationService.checkDuplicates(dto).subscribe({
+        next: (res) => {
+          if (res.status === 409) {
+            const similarArr = (res.body?.similar || []).map((it: any) => ({
+              id: it.id,
+              name: it.name,
+              address: it.address,
+              latitude: it.latitude,
+              longitude: it.longitude
+            }));
+            this.openDuplicatesDialog(similarArr, dto);
+          } else {
+            this.close.emit(dto);
+          }
+          this.setLoadingState(false);
+        },
+        error: (err) => {
+          if (err.status === 409) {
+            const similarArr = (err.error?.similar || []).map((it: any) => ({
+              id: it.id,
+              name: it.name,
+              address: it.address,
+              latitude: it.latitude,
+              longitude: it.longitude
+            }));
+            this.openDuplicatesDialog(similarArr, dto);
+          } else {
+            console.error('Помилка перевірки дублікатів', err);
+            this.close.emit(dto);
+          }
+          this.setLoadingState(false);
         }
-        this.setLoadingState(false);
-      },
-      error: (err) => {
-        if (err.status === 409) {
-          const similarArr = (err.error?.similar || []).map((it: any) => ({
-            id: it.id,
-            name: it.name,
-            address: it.address,
-            latitude: it.latitude,
-            longitude: it.longitude
-          }));
-          this.openDuplicatesDialog(similarArr, dto);
-        } else {
-          console.error('Помилка перевірки дублікатів', err);
-          this.close.emit(dto);
+      });
+    } else {
+      this.locationService.createPendingCopy(this.prefillData.id, dto).subscribe({
+        next: (res) => {
+          console.log('Pending copy created', res);
+          this.alertService.open('Дані надіслано на перевірку');
+          this.setLoadingState(false);
+          this.saved.emit(res);
+        },
+        error: (err) => {
+          this.setLoadingState(false);
+          console.error('Помилка при створенні pending копії', err);
+          alert('Не вдалося створити копію локації.');
         }
-        this.setLoadingState(false);
-      }
-    });
+      });
+    }
   }
 
   private setLoadingState(loading: boolean) {
@@ -344,7 +417,7 @@ export class LocationCreateFormComponent implements OnInit {
     this.close.emit(null);
   }
 
-  closeDialog(event: MouseEvent | null){
+  closeDialog(event: MouseEvent | null) {
     if (event?.target === event?.currentTarget)
       this.cancel()
   }
