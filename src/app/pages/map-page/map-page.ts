@@ -47,9 +47,10 @@ export class MapPage implements OnInit, AfterViewInit {
   locationPendingMap = new Map<Location, any>();
   userMarker: L.Marker | null = null;
   isBuildingRoute = false;
+  private lc!: LocateControl;
 
 
-  private myLocation: { lat: number, lng: number } | null = null;
+
   private currentRoute: L.Polyline | null = null;
   routeMode: 'feet' | 'wheelchair' = 'feet';
 
@@ -237,14 +238,15 @@ export class MapPage implements OnInit, AfterViewInit {
 
   private initMap(): void {
     this.map = L.map('map', {center: [51.4982, 31.2893], zoom: 13});
-    const lc = new LocateControl({
+    this.lc = new LocateControl({
       position: "topleft",
       flyTo: true,
       drawMarker: true,
       showCompass: true
     });
 
-    lc.addTo(this.map);
+    this.lc.addTo(this.map);
+
 
     this.map.on('locateactivate', () => {
       if (this.currentRoute) {
@@ -259,14 +261,6 @@ export class MapPage implements OnInit, AfterViewInit {
       }
     });
 
-    this.map.on("locationfound", (e: L.LocationEvent) => {
-
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
-
-      // Зберігаємо
-      this.myLocation = { lat, lng };
-    });
 
 
     this.map.createPane('labels');
@@ -622,35 +616,37 @@ export class MapPage implements OnInit, AfterViewInit {
 
   buildRoute() {
     this.tempUUID = uuidv4();
-    console.log(this.tempUUID);
-    if (!this.myLocation) {
-      alert("Спочатку визначте свою локацію");
+
+    const lastEvent = (this.lc as any)._event;
+    if (!lastEvent || !lastEvent.latlng) {
+      alert("Спочатку увімкніть визначення локації");
       return;
     }
 
-    const { lat, lng } = this.myLocation;
+    const { lat, lng } = lastEvent.latlng;
+    console.log("latlng")
+    console.log(lat)
+    console.log(lng)
     const border_minimum_height = this.routeMode === 'wheelchair' ? 2 : 5;
 
     this.isBuildingRoute = true;
 
-    // Викликаємо бекенд
     this.locationService.buildRoute(
       border_minimum_height,
       lat,
       lng,
       this.tempUUID
     ).subscribe({
-      next: (res) => {
-        // все добре — будуємо і завантажуємо маршрути
+      next: () => {
         this.loadRoutes();
         this.isBuildingRoute = false;
       },
-      error: (err) => {
-        console.error(err);
+      error: () => {
         this.isBuildingRoute = false;
         alert("Помилка при побудові маршруту");
       }
     });
   }
+
 
 }
