@@ -56,12 +56,15 @@ export class LocationCreateFormComponent implements OnInit {
 
   ngOnInit() {
     const saved = this.formState.getFormData();
-    this.days.forEach(day => this.selectedDays[day] = true); // за замовчуванням всі виділені
+    console.log("inited:")
+    console.log(saved)
 
-    // Якщо режим pending copy
+    this.days.forEach(day => this.selectedDays[day] = true);
+
+    // спочатку завжди створюємо форму
+    this.initForm();
+
     if (this.mode === 'pendingCopy') {
-      this.initForm();
-
       if (this.prefillData) {
         this.applyPrefill(this.prefillData);
       } else if (this.locationId) {
@@ -70,17 +73,15 @@ export class LocationCreateFormComponent implements OnInit {
           error: err => console.error('Не вдалося завантажити локацію', err)
         });
       }
-
       return;
     }
 
     if (saved) {
       this.form.patchValue(saved.formValue);
       this.selectedImages = saved.selectedImages || [];
-    } else {
-      this.initForm();
     }
   }
+
 
   async reverseGeocode(lat: number, lng: number): Promise<string | null> {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
@@ -430,7 +431,10 @@ export class LocationCreateFormComponent implements OnInit {
     latitude?: number,
     longitude?: number
   }>, dto: any) {
+    console.log("this.formState");
     this.formState.saveFormData({formValue: this.form.value, selectedImages: this.selectedImages});
+    console.log("this.formState");
+    console.log(this.formState.getFormData());
 
     const ref = this.dialog.open(DuplicatesDialogComponent, {data: {similar}, width: '600px'});
     ref.afterClosed().subscribe(result => {
