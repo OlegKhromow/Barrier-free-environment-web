@@ -8,11 +8,12 @@ import {LocationInfoComponent} from '../location-info/location-info.component';
 import {AuthService} from '../../core/services/security/auth.service';
 import {SlideshowComponent} from '../slideshow-component/slideshow-component';
 import {LocationCreateFormComponent} from '../location-create-form/location-create-form.component';
+import {PendingLocationInfoComponent} from '../pending-location-info/pending-location-info.component';
 
 @Component({
   selector: 'app-location-sidebar',
   standalone: true,
-  imports: [CommonModule, LocationInfoComponent, SlideshowComponent, LocationCreateFormComponent],
+  imports: [CommonModule, LocationInfoComponent, SlideshowComponent, LocationCreateFormComponent, PendingLocationInfoComponent],
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })

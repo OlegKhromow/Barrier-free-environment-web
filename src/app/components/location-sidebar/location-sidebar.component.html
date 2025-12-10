@@ -18,7 +18,11 @@
             </button>
           </div>
         }
-        <app-location-info [location]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
+        @if (currentView === 'location'){
+          <app-location-info [location]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
+        } @else {
+          <app-pending-location-info [location] = location [pendingLocation]="displayData" [criteriaTree]="criteriaTree"></app-pending-location-info>
+        }
 
       } @else {
         <!-- Порожній стан -->

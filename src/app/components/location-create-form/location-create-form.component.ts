@@ -122,7 +122,7 @@ export class LocationCreateFormComponent implements OnInit {
     this.form.patchValue({
       name: data.name || '',
       address: data.address || '',
-      type: data.type.id || '',
+      ...(this.mode === 'create' ? { type: data.type.id || '' } : {}),
       description: data.description || '',
       contacts: data.contacts || {},
       workingHours: data.workingHours || {}
@@ -140,10 +140,9 @@ export class LocationCreateFormComponent implements OnInit {
 
 
   private async initForm() {
-    this.form = this.fb.group({
+    const baseForm: any = {
       name: ['', Validators.required],
       address: ['', Validators.required],
-      type: ['', Validators.required],
       description: [''],
       contacts: this.fb.group({
         phone: [''],
@@ -152,27 +151,36 @@ export class LocationCreateFormComponent implements OnInit {
       }),
       workingHours: this.fb.group(
         this.days.reduce((acc, day) => {
-          acc[day] = this.fb.group({open: [''], close: ['']});
+          acc[day] = this.fb.group({ open: [''], close: [''] });
           return acc;
         }, {} as Record<string, FormGroup>),
-        {validators: [workingHoursValidator]}
+        { validators: [workingHoursValidator] }
       ),
       quickTime: this.fb.group({
         open: [''],
         close: ['']
-      }, {validators: [this.quickTimeValidator]}),
+      }, { validators: [this.quickTimeValidator] }),
       selectedDays: this.fb.group(
         this.days.reduce((acc, day) => {
-          acc[day] = [false]; // за замовчуванням всі дні виділені
+          acc[day] = [false];
           return acc;
         }, {} as Record<string, any>)
       )
-    });
+    };
+
+    if (this.mode === 'create') {
+      baseForm.type = ['', Validators.required];
+    }
+
+    this.form = this.fb.group(baseForm);
 
     this.selectedImages = [];
-    if (this.mode === 'create')
+
+    if (this.mode === 'create') {
       await this.setAddress();
+    }
   }
+
 
   private async setAddress() {
     const address = await this.reverseGeocode(this.lat, this.lng);
@@ -326,13 +334,27 @@ export class LocationCreateFormComponent implements OnInit {
     const raw = this.form.value;
     const normalizedWorkingHours = this.normalizeWorkingHours(this.form.get('workingHours') as FormGroup);
 
-    const dto = {
-      ...raw,
-      workingHours: normalizedWorkingHours,
-      coordinates: {lat: this.lat, lng: this.lng},
-      status: LocationStatusEnum.PENDING,
-      selectedImages: this.selectedImages
-    };
+    let dto = undefined;
+    if (this.mode === 'create') {
+      dto = {
+        ...raw,
+        workingHours: normalizedWorkingHours,
+        coordinates: {lat: this.lat, lng: this.lng},
+        status: LocationStatusEnum.PENDING,
+        selectedImages: this.selectedImages
+      };
+    } else {
+      dto = {
+        ...raw,
+        location_id: this.locationId,
+        workingHours: normalizedWorkingHours,
+        coordinates: {lat: this.lat, lng: this.lng},
+        status: LocationStatusEnum.PENDING,
+        selectedImages: this.selectedImages
+      };
+    }
+    console.log("dto:")
+    console.log(dto);
 
     if (this.mode === 'create'){
       this.locationService.checkDuplicates(dto).subscribe({
@@ -372,7 +394,6 @@ export class LocationCreateFormComponent implements OnInit {
       const dtoNormalized = {
         name: dto.name,
         address: dto.address,
-        type: dto.type,
         description: dto.description,
         contacts: dto.contacts,
         workingHours: dto.workingHours
@@ -381,7 +402,6 @@ export class LocationCreateFormComponent implements OnInit {
       const prefillNormalized = {
         name: this.prefillData.name,
         address: this.prefillData.address,
-        type: this.prefillData.type.id,
         description: this.prefillData.description,
         contacts: this.prefillData.contacts,
         workingHours: this.prefillData.workingHours
@@ -396,8 +416,12 @@ export class LocationCreateFormComponent implements OnInit {
         this.alertService.open("Ви не внесли жодних змін.");
         return;
       }
+      if (!this.locationId) {
+        console.error('locationId is missing');
+        return;
+      }
 
-      this.locationService.createPendingCopy(this.prefillData.id, dto).subscribe({
+      this.locationService.createPendingCopy(this.locationId, dto).subscribe({
         next: (res) => {
           console.log('Pending copy created', res);
           this.alertService.open('Дані надіслано на перевірку');
