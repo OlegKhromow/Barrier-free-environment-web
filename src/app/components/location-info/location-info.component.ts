@@ -16,6 +16,7 @@ import {BarrierlessCriteriaCheckService} from '../../core/services/barrierless-c
 })
 export class LocationInfoComponent implements OnChanges {
   @Input() location: Location | undefined;
+  @Input() pendingLocation: any | undefined;
   @Input() criteriaTree: any | null = null;
   openTypes = new Set<any>();
   showCommentsMap = new Map<any, boolean>();
@@ -36,6 +37,9 @@ export class LocationInfoComponent implements OnChanges {
   ];
 
   ngOnChanges(changes: SimpleChanges) {
+    if (this.pendingLocation) {
+      this.location = this.pendingLocation;
+    }
     this.preparedComments.clear();
     this.commentImages.clear();
   }

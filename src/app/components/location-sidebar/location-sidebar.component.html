@@ -21,7 +21,7 @@
         @if (currentView === 'location'){
           <app-location-info [location]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
         } @else {
-          <app-pending-location-info [location] = location [pendingLocation]="displayData" [criteriaTree]="criteriaTree"></app-pending-location-info>
+          <app-location-info [pendingLocation]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
         }
 
       } @else {
@@ -72,7 +72,7 @@
   </div>
 
   <!-- Нижній блок із посиланнями -->
-  @if (location) {
+  @if (location && !isAdmin) {
     <div class="p-2 border-gray-300 text-sm text-gray-700">
 
       <!-- Оцінювання -->

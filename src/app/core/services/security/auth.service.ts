@@ -68,7 +68,6 @@ export class AuthService {
     return this.http.patch<UserDTO>(`${this.apiUrl}/users/username/${username}/role`, {role: newRole});
   }
 
-
   isLoggedIn(): boolean {
     const isLogged = !!this.getToken();
     this.isLoggedInSubject.next(isLogged);

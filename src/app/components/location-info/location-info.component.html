@@ -162,7 +162,8 @@
                         <div class="absolute top-1/2 -translate-y-1/2
                                 w-2 h-4 bg-gray-800 rounded-full shadow-md
                                 transition-all duration-300"
-                             [style.left.%]="getBalancePosition(c)">
+                             [style.left.%]="getBalancePosition(c) !== 100 ? getBalancePosition(c) : null"
+                             [style.right.%]="getBalancePosition(c) === 100 ? 0 : null">
                         </div>
                       </div>
 

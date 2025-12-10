@@ -1,4 +1,4 @@
-import {Component, Input, Output, EventEmitter, OnChanges} from '@angular/core';
+import {Component, Input, Output, EventEmitter, OnChanges, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location } from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
@@ -8,21 +8,22 @@ import {LocationInfoComponent} from '../location-info/location-info.component';
 import {AuthService} from '../../core/services/security/auth.service';
 import {SlideshowComponent} from '../slideshow-component/slideshow-component';
 import {LocationCreateFormComponent} from '../location-create-form/location-create-form.component';
-import {PendingLocationInfoComponent} from '../pending-location-info/pending-location-info.component';
 
 @Component({
   selector: 'app-location-sidebar',
   standalone: true,
-  imports: [CommonModule, LocationInfoComponent, SlideshowComponent, LocationCreateFormComponent, PendingLocationInfoComponent],
+  imports: [CommonModule, LocationInfoComponent, SlideshowComponent, LocationCreateFormComponent],
   templateUrl: './location-sidebar.component.html',
   styleUrls: ['./location-sidebar.component.css']
 })
-export class LocationSidebarComponent implements OnChanges{
+export class LocationSidebarComponent implements OnChanges, OnInit {
   @Input() location: Location | null = null;
   // Новий @Input для duplicate режиму
   @Input() duplicateMode: boolean = false;
   @Input() locationPendingMap: Map<Location, any> | null = null;
   images: string[] | null = null;
+
+  isAdmin: boolean = false;
 
   // Повідомляємо MapPage про вибір користувача у сайдбарі
   @Output() duplicateAnswer = new EventEmitter<'yes' | 'no'>();
@@ -43,6 +44,19 @@ export class LocationSidebarComponent implements OnChanges{
   }
 
   constructor(private locationService: LocationService, private router: Router, private authService: AuthService) {}
+
+  ngOnInit() {
+    if (this.authService.isLoggedIn()) {
+      this.authService.getAuthoritiesByUsername().subscribe({
+        next: (roles) => {
+          this.isAdmin = roles.includes('ADMIN');
+        },
+        error: () => {
+          this.isAdmin = false;
+        }
+      });
+    }
+  }
 
   goToEvaluation(event: Event, locationId: string) {
     if (!this.authService.isLoggedIn()) {
