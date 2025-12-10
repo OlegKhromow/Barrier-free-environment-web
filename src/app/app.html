@@ -1,6 +1,7 @@
 <div class="h-screen flex flex-col">
   <app-menu-bar class="sticky top-0 z-40"></app-menu-bar>
   <main class="h-full">
+    <app-accessibility-toolbar></app-accessibility-toolbar>
     <router-outlet></router-outlet>
     @if (showLogin) {
       <app-login-overlay></app-login-overlay>

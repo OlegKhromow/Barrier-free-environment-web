@@ -7,11 +7,12 @@ import {RegisterOverlay} from './components/register-overlay/register-overlay';
 import {AlertService} from './core/services/alert.service';
 import {AlertModalComponent} from './components/alert-modal/alert-modal.component';
 import {AsyncPipe} from '@angular/common';
+import {AccessibilityToolbarComponent} from './components/accessibility-toolbar/accessibility-toolbar.component';
 
 @Component({
   selector: 'app-root',
   imports: [
-    RouterOutlet, MenuBarComponent, LoginOverlay, RegisterOverlay, AlertModalComponent, AsyncPipe
+    RouterOutlet, MenuBarComponent, LoginOverlay, RegisterOverlay, AlertModalComponent, AsyncPipe, AccessibilityToolbarComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

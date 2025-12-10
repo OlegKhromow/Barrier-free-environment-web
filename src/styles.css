@@ -8,3 +8,18 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .authorization-btn{
   @apply ml-4 px-4 py-1 rounded-lg bg-[#F0F0F0] text-deep-dark-blue font-semibold hover:bg-deep-dark-blue hover:text-[#F0F0F0] transition border-deep-dark-blue border-[1px];
 }
+
+.grayscale {
+  filter: grayscale(100%);
+  overflow-x: hidden;
+  transition: filter 0.4s ease;
+}
+
+#accessibility-toolbar {
+  filter: none !important;
+  pointer-events: auto !important;
+}
+
+/*body.grayscale > :not(#accessibility-toolbar):not(#accessibility-toolbar *) {*/
+/*  filter: grayscale(100%);*/
+/*}*/
