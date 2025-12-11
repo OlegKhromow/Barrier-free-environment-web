@@ -20,12 +20,13 @@
   <p class="text-sm text-gray-700 leading-relaxed">{{ location?.description || 'Немає опису' }}</p>
 </div>
 
-<div class="mb-6 p-4 bg-white rounded-xl shadow-sm">
-  <h3 class="text-lg font-semibold text-deep-dark-blue mb-2 flex items-center gap-2">🏷 Категорія</h3>
-  <p class="text-base font-medium text-gray-800">{{ location?.type?.name }}</p>
-  <p class="text-sm text-gray-600 italic mt-1">{{ location?.type?.description }}</p>
-</div>
-
+@if (location?.type) {
+  <div class="mb-6 p-4 bg-white rounded-xl shadow-sm">
+    <h3 class="text-lg font-semibold text-deep-dark-blue mb-2 flex items-center gap-2">🏷 Категорія</h3>
+    <p class="text-base font-medium text-gray-800">{{ location?.type?.name }}</p>
+    <p class="text-sm text-gray-600 italic mt-1">{{ location?.type?.description }}</p>
+  </div>
+}
 
 <!-- Контакти -->
 <div class="mb-6 p-4 bg-white rounded-xl shadow-sm">
@@ -102,7 +103,20 @@
       <p class="text-sm font-semibold text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full w-fit">Очікує перевірки</p>
     }
     @case ('rejected') {
-      <p class="text-sm font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full w-fit">Відхилено</p>
+      <div class="space-y-2">
+        <!-- Чіп статусу -->
+        <p class="text-sm font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full w-fit">
+          Відхилено
+        </p>
+
+        <!-- Блок причини -->
+        <div class="border border-red-200 bg-red-50/60 p-3 rounded-lg">
+          <p class="text-sm font-semibold text-red-700 mb-1">Причина відхилення:</p>
+          <p class="text-sm text-red-800 whitespace-pre-line">
+            {{ location?.rejectionReason }}
+          </p>
+        </div>
+      </div>
     }
     @default {
       <p class="text-sm font-medium text-gray-500">Невідомий статус</p>
@@ -112,103 +126,106 @@
 
 
 <!-- Критерії -->
-<div class="mt-2 p-4 transition-all duration-200 bg-white rounded-xl shadow-sm">
-  @for (type of criteriaTree.group.types; track type) {
-    @if (type.criterias.length !== 0) {
-      <!-- Заголовок типу критерію -->
-      <div class="mb-2">
-        <div class="cursor-pointer select-none flex items-center text-gray-700"
-             (click)="toggleType(type)">
+@if (criteriaTree) {
+  <div class="mt-2 p-4 transition-all duration-200 bg-white rounded-xl shadow-sm">
+    <h3 class="text-lg font-semibold text-deep-dark-blue mb-2 flex items-center gap-2">♿️ Критерії безбарʼєрності</h3>
+    @for (type of criteriaTree.group.types; track type) {
+      @if (type.criterias.length !== 0) {
+        <!-- Заголовок типу критерію -->
+        <div class="mb-2">
+          <div class="cursor-pointer select-none flex items-center text-gray-700"
+               (click)="toggleType(type)">
         <span class="mr-1 transition-transform duration-200"
               [class.rotate-90]="isTypeOpen(type)">▶</span>
-          <strong>{{ type.name }}</strong>
-        </div>
+            <strong>{{ type.name }}</strong>
+          </div>
 
-        <!-- Критерії -->
-        @if (isTypeOpen(type)) {
-          <div class="overflow-hidden ml-6" animate.enter="enter-animation" animate.leave="leave-animation">
-            <ul class="ml-6 list-disc text-lg text-gray-700 mt-1 space-y-2">
-              @for (c of type.criterias; track c) {
+          <!-- Критерії -->
+          @if (isTypeOpen(type)) {
+            <div class="overflow-hidden ml-6" animate.enter="enter-animation" animate.leave="leave-animation">
+              <ul class="ml-6 list-disc text-lg text-gray-700 mt-1 space-y-2">
+                @for (c of type.criterias; track c) {
 
-                <li>
-                  <!-- Назва критерію -->
-                  <div class="font-medium text-gray-800">
-                    {{ c.name }}
-                    <small class="text-gray-500">({{ c.rank }})</small>
-                  </div>
+                  <li>
+                    <!-- Назва критерію -->
+                    <div class="font-medium text-gray-800">
+                      {{ c.name }}
+                      <small class="text-gray-500">({{ c.rank }})</small>
+                    </div>
 
-                  <!-- Опис -->
-                  <div class="text-gray-600 text-xs mb-1">
-                    {{ c.description }}
-                  </div>
+                    <!-- Опис -->
+                    <div class="text-gray-600 text-xs mb-1">
+                      {{ c.description }}
+                    </div>
 
-                  <!-- Якщо є перевірки -->
-                  @if (c.barrierlessCriteriaChecks?.length > 0) {
+                    <!-- Якщо є перевірки -->
+                    @if (c.barrierlessCriteriaChecks?.length > 0) {
 
-                    <!-- Лічильники -->
-                    <div class="ml-4 text-xs text-gray-700 mt-2">
-                      <div class="flex justify-between text-xs mb-1">
+                      <!-- Лічильники -->
+                      <div class="ml-4 text-xs text-gray-700 mt-2">
+                        <div class="flex justify-between text-xs mb-1">
                     <span class="text-green-700 font-medium">
                       Безбар’єрно: {{ countChecks(c, false) }}
                     </span>
-                        <span class="text-red-700 font-medium">
+                          <span class="text-red-700 font-medium">
                       Проблеми: {{ countChecks(c, true) }}
                     </span>
-                      </div>
+                        </div>
 
-                      <!-- Повзунок -->
-                      <div class="relative w-full h-3 rounded-full bg-gradient-to-r
+                        <!-- Повзунок -->
+                        <div class="relative w-full h-3 rounded-full bg-gradient-to-r
                               from-green-500 via-yellow-300 to-red-500">
-                        <div class="absolute top-1/2 -translate-y-1/2
+                          <div class="absolute top-1/2 -translate-y-1/2
                                 w-2 h-4 bg-gray-800 rounded-full shadow-md
                                 transition-all duration-300"
-                             [style.left.%]="getBalancePosition(c) !== 100 ? getBalancePosition(c) : null"
-                             [style.right.%]="getBalancePosition(c) === 100 ? 0 : null">
+                               [style.left.%]="getBalancePosition(c) !== 100 ? getBalancePosition(c) : null"
+                               [style.right.%]="getBalancePosition(c) === 100 ? 0 : null">
+                          </div>
                         </div>
-                      </div>
 
-                      <div class="text-xs text-gray-500 mt-1 text-center">
-                        {{ 100 - getBalancePosition(c) | number:'1.0-0' }}% безбар’єрно /
-                        {{ getBalancePosition(c) | number:'1.0-0' }}% з проблемами
-                      </div>
+                        <div class="text-xs text-gray-500 mt-1 text-center">
+                          {{ 100 - getBalancePosition(c) | number:'1.0-0' }}% безбар’єрно /
+                          {{ getBalancePosition(c) | number:'1.0-0' }}% з проблемами
+                        </div>
 
-                      <!-- Comments -->
-                      <div class="cursor-pointer text-blue-600 hover:underline select-none mt-2 flex items-center gap-1"
-                           (click)="toggleComments(c)">
-                        💬 <span>Коментарі ({{ preparedComments.get(c)?.length || 0 }})</span>
-                      </div>
+                        <!-- Comments -->
+                        <div
+                          class="cursor-pointer text-blue-600 hover:underline select-none mt-2 flex items-center gap-1"
+                          (click)="toggleComments(c)">
+                          💬 <span>Коментарі ({{ preparedComments.get(c)?.length || 0 }})</span>
+                        </div>
 
-                      @if (isCommentsOpen(c)) {
-                        <ul class="ml-4 mt-3 space-y-3">
-                          @for (comment of preparedComments.get(c); track comment) {
-                            @if (comment.comment != undefined || commentImages.has(comment.imageServiceId)) {
-                              <li
-                                class="border-l-4 border-deep-dark-blue pl-3 py-1 bg-gray-50 shadow-sm rounded-sm">
-                                <p class="text-sm font-medium text-gray-900 mb-2 italic">
-                                  {{ comment.comment }}
-                                </p>
-                                <app-slideshow-component
-                                  [images]="commentImages.get(comment.imageServiceId) ?? null"
-                                  [compactMode]="true"></app-slideshow-component>
-                              </li>
+                        @if (isCommentsOpen(c)) {
+                          <ul class="ml-4 mt-3 space-y-3">
+                            @for (comment of preparedComments.get(c); track comment) {
+                              @if (comment.comment != undefined || commentImages.has(comment.imageServiceId)) {
+                                <li
+                                  class="border-l-4 border-deep-dark-blue pl-3 py-1 bg-gray-50 shadow-sm rounded-sm">
+                                  <p class="text-sm font-medium text-gray-900 mb-2 italic">
+                                    {{ comment.comment }}
+                                  </p>
+                                  <app-slideshow-component
+                                    [images]="commentImages.get(comment.imageServiceId) ?? null"
+                                    [compactMode]="true"></app-slideshow-component>
+                                </li>
+                              }
                             }
-                          }
-                        </ul>
-                      }
-                    </div>
+                          </ul>
+                        }
+                      </div>
 
-                  } @else {
-                    <p class="text-gray-400 text-xs italic ml-2">
-                      Немає перевірок
-                    </p>
-                  }
-                </li>
-              }
-            </ul>
-          </div>
-        }
-      </div>
+                    } @else {
+                      <p class="text-gray-400 text-xs italic ml-2">
+                        Немає перевірок
+                      </p>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      }
     }
-  }
-</div>
-
+  </div>
+}

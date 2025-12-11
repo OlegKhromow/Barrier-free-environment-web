@@ -17,7 +17,7 @@
 
     <div class="p-6 flex-1 overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable]">
       <h2 class="text-3xl font-bold mb-6 text-center text-deep-dark-blue">
-        {{mode === 'create' ? 'Створення локації' : 'Оновлення даних локації'}}
+        {{ mode === 'create' ? 'Створення локації' : 'Оновлення даних локації' }}
       </h2>
 
       <form [formGroup]="form" class="flex flex-col gap-5">
@@ -40,18 +40,21 @@
                  focus:shadow-md focus:ring-2 focus:ring-deep-dark-blue/60
                  transition"></textarea>
 
-        <div *ngIf="mode === 'create'">
-          <label class="font-medium text-deep-dark-blue">Тип локації</label>
-          <select formControlName="type"
-                  class="rounded-xl px-4 py-2.5 w-full bg-gray-50 shadow-inner
+        <label class="font-medium text-deep-dark-blue">Тип локації</label>
+        <select formControlName="type"
+                class="rounded-xl px-4 py-2.5 w-full bg-gray-50 shadow-inner
                  border border-gray-300 text-deep-dark-blue focus:outline-none
                  focus:ring-2 focus:ring-deep-dark-blue/60">
+          @if (mode === 'create') {
             <option value="" disabled>Оберіть тип*</option>
             @for (t of (locationTypes$ | async); track t.id) {
               <option [value]="t.id">{{ t.name }}</option>
             }
-          </select>
-        </div>
+          } @else {
+            <option [value]="prefillData.type.id">{{ prefillData.type.name }}</option>
+          }
+
+        </select>
 
         <div formGroupName="contacts" class="grid gap-3">
           <div>
@@ -187,12 +190,13 @@
       <button type="button" (click)="save()" [disabled]="isFormInvalid() || isLoading"
               class="px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg">
         @if (isLoading) {
-          <span class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+          <span
+            class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
         }
         @if (isLoading) {
           Обробка...
         } @else {
-          {{mode === 'create' ? 'Зберегти' : 'Надіслати на перевірку'}}
+          {{ mode === 'create' ? 'Зберегти' : 'Надіслати на перевірку' }}
         }
       </button>
     </div>

@@ -15,7 +15,7 @@ import {SettingsComponent} from './components/settings-component/settings-compon
 import {
   LocationCabinetListComponent
 } from './components/location-cabinet-list-component/location-cabinet-list-component';
-import {CabinetV2} from './pages/cabinet-v2/cabinet-v2';
+import {Cabinet} from './pages/cabinet/cabinet.component';
 
 export const routes: Routes = [
   {
@@ -31,7 +31,7 @@ export const routes: Routes = [
 
   {
     path: 'cabinet',
-    component: CabinetV2,
+    component: Cabinet,
     canActivate: [authGuard],
     children: [
       {path: 'profile', component: ProfileComponent}, // створіть компонент профілю

@@ -6,19 +6,19 @@ import { RouterOutlet } from '@angular/router';
 
 
 @Component({
-  selector: 'app-cabinet-v2',
+  selector: 'app-cabinet',
   imports: [CabinetSideMenu, RouterOutlet],
-  templateUrl: './cabinet-v2.html',
-  styleUrl: './cabinet-v2.css'
+  templateUrl: './cabinet.html',
+  styleUrl: './cabinet.css'
 })
-export class CabinetV2 {
+export class Cabinet {
   private authService = inject(AuthService);
-  
+
   user: any = null;
   isAdmin = false;
   loading = true;
   error: string | null = null;
-  
+
   ngOnInit() {
     this.authService.getByUsername().subscribe({
       next: (data) => {

@@ -1,30 +1,27 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { LocationService } from '../../core/services/location.service';
-import { Location } from '../../core/models/location';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
+import {ActivatedRoute, Router} from '@angular/router';
+import {LocationService} from '../../core/services/location.service';
+import {Location} from '../../core/models/location';
 import * as L from 'leaflet';
+import {LocationInfoComponent} from '../../components/location-info/location-info.component';
+import {SlideshowComponent} from '../../components/slideshow-component/slideshow-component';
 
 @Component({
   selector: 'app-user-location-page',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage],
+  imports: [CommonModule, NgOptimizedImage, LocationInfoComponent, SlideshowComponent],
   templateUrl: './user-location-page.component.html',
   styleUrls: ['./user-location-page.component.css']
 })
 export class UserLocationPageComponent implements OnInit, AfterViewInit {
   location: Location | null = null;
-  locations: Location[] | undefined;
+  images: string[] | null = null;
   pendingLocations: any[] = [];
   criteriaTree: any | null = null;
   rejectionReason = '';
 
-
-  duplicateMode = false;
-
-  // map
   private map!: L.Map;
-  markers: Array<{ marker: L.Marker, iconUrl: string, baseSize: [number, number], location?: Location }> = [];
 
   days = [
     { key: 'monday', label: 'Понеділок' },
@@ -35,10 +32,6 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
     { key: 'saturday', label: 'Субота' },
     { key: 'sunday', label: 'Неділя' }
   ];
-
-  showGroup = true;
-  openTypes = new Set<any>();
-  showCommentsMap = new Map<any, boolean>();
 
   constructor(
     private route: ActivatedRoute,
@@ -56,6 +49,11 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
 
         this.loadCriteriaTree();
         this.loadPendingLocations();
+        this.locationService.getLocationImages(this.location.imageServiceId).subscribe({
+          next: res => {
+            this.images = res;
+          }
+        })
 
         // ✅ Викликати checkDuplicates лише якщо статус pending або rejected
         if (loc.status === 'pending' || loc.status === 'rejected') {
@@ -69,9 +67,6 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
     // Повне оновлення сторінки
     window.location.href = `/user-location/${id}`;
   }
-
-
-
 
   ngAfterViewInit(): void {
     const id = String(this.route.snapshot.paramMap.get('id'));
@@ -138,24 +133,29 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private addMarker(): void {
-    if (!this.location || !this.map) return;
+  private async addMarker() {
+    if (this.location) {
+      const typeName = this.location.type.name;
+      const customUrl = typeName ? `assets/map-markers/light/${typeName}.png` : null;
+      let iconUrl = 'assets/map-markers/default-marker.png';
 
-    const iconUrl = 'assets/map-markers/1.png';
-    const icon = this.createMarkerIcon(iconUrl, [35, 40]);
-
-    const marker = L.marker(
-      [this.location.latitude, this.location.longitude],
-      {
-        icon,
-        interactive: false
+      // Перевіряємо існування кастомної іконки
+      if (customUrl && await this.checkIconExists(customUrl)) {
+        iconUrl = customUrl;
       }
-    ).addTo(this.map);
 
-    (marker as any).getElement()?.style.setProperty('pointer-events', 'none');
+      const icon = this.createMarkerIcon(iconUrl, [35, 40]);
+      L.marker([this.location.latitude, this.location.longitude], {icon, interactive: false}).addTo(this.map);
+    }
+  }
 
-    this.markers = [{ marker, iconUrl, baseSize: [35, 40], location: this.location }];
-    this.map.setView([this.location.latitude, this.location.longitude], 15);
+  private checkIconExists(url: string): Promise<boolean> {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
   }
 
   private createMarkerIcon(iconUrl: string, size: [number, number]): L.Icon {
@@ -177,10 +177,6 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
           console.log('🕒 Pending Locations:', data);
         });
     }
-  }
-
-  toggleGroup() {
-    this.showGroup = !this.showGroup;
   }
 
   similarLocations: any[] = [];
@@ -211,46 +207,6 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-
-
-  toggleType(type: any) {
-    if (this.openTypes.has(type)) {
-      this.openTypes.delete(type);
-    } else {
-      this.openTypes.add(type);
-    }
-  }
-
-  isTypeOpen(type: any) {
-    return this.openTypes.has(type);
-  }
-
-  countChecks(c: any, hasIssue: boolean): number {
-    return c.barrierlessCriteriaChecks?.filter((ch: any) => ch.hasIssue === hasIssue).length || 0;
-  }
-
-  getComments(c: any): string[] {
-    return c.barrierlessCriteriaChecks
-      ?.map((ch: any) => ch.comment)
-      .filter((comment: string) => !!comment?.trim()) || [];
-  }
-
-  toggleComments(c: any) {
-    const isOpen = this.showCommentsMap.get(c) || false;
-    this.showCommentsMap.set(c, !isOpen);
-  }
-
-  isCommentsOpen(c: any): boolean {
-    return this.showCommentsMap.get(c) || false;
-  }
-
-  getBalancePosition(c: any): number {
-    const total = c.barrierlessCriteriaChecks?.length || 0;
-    if (total === 0) return 50;
-    const hasIssue = this.countChecks(c, true);
-    return (hasIssue / total) * 100;
-  }
-
   hasNoSchedule(workingHours: any): boolean {
     if (!workingHours) return true;
     return this.days.every(d => {
@@ -265,14 +221,5 @@ export class UserLocationPageComponent implements OnInit, AfterViewInit {
     if (!open && !close) return 'вихідний';
     if (open && close) return `${open} – ${close}`;
     return 'вихідний';
-  }
-
-  getAccessibilityLevel(score: number | null | undefined): string {
-    if (score == null) return 'Немає даних';
-    if (score === 100) return 'Повна безбар’єрність';
-    if (score >= 70) return 'Висока безбар’єрність';
-    if (score >= 50) return 'Середня безбар’єрність';
-    if (score >= 30) return 'Низька безбар’єрність';
-    return 'Недоступна';
   }
 }
