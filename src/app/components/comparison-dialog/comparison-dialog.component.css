@@ -1,0 +1,23 @@
+.swap-btn {
+  @apply ml-2 text-blue-600 hover:text-blue-800 text-lg;
+}
+
+.hours-box {
+  @apply border rounded p-3 text-xs;
+}
+
+.hours-row {
+  @apply border-b last:border-0 py-1;
+}
+
+.btn-primary {
+  @apply px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition;
+}
+
+.btn-outline {
+  @apply px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 transition;
+}
+
+.btn-danger {
+  @apply px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition;
+}

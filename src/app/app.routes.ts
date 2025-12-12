@@ -6,8 +6,7 @@ import {AdminPanelComponent} from './pages/admin-panel/admin-panel.component';
 import {Unauthorized401Component} from './pages/unauthorized-401/unauthorized-401.component';
 import {Unauthorized403Component} from './pages/unauthorized-403/unauthorized-403.component';
 import {LocationsListPage} from './pages/locations-list-page/locations-list-page.component';
-import {LocationDetailPage} from './pages/location-detail-page/location-detail-page.component';
-import {UserLocationPageComponent} from './pages/user-location-page/user-location-page.component';
+import {LocationDetailPageComponent} from './pages/location-detail-page/location-detail-page.component';
 import {UserListPageComponent} from './pages/user-list-page/user-list-page.component';
 import {UserDetailPageComponent} from './pages/user-detail-page/user-detail-page.component';
 import {ProfileComponent} from './components/profile-component/profile-component';
@@ -55,7 +54,7 @@ export const routes: Routes = [
     data: {role: 'ADMIN'}
   },
   {
-    path: 'locations/:id', component: LocationDetailPage, canActivate: [authGuard],
+    path: 'locations/:id', component: LocationDetailPageComponent, canActivate: [authGuard],
     data: {role: 'ADMIN'}
   },
   {
@@ -66,7 +65,7 @@ export const routes: Routes = [
     path: 'users/:username', component: UserDetailPageComponent, canActivate: [authGuard],
     data: {role: 'ADMIN'}
   },
-  {path: 'user-location/:id', component: UserLocationPageComponent, canActivate: [authGuard]},
+  {path: 'user-location/:id', component: LocationDetailPageComponent, canActivate: [authGuard]},
   {path: 'unauthorized-401', component: Unauthorized401Component},
   {path: 'unauthorized-403', component: Unauthorized403Component},
   {

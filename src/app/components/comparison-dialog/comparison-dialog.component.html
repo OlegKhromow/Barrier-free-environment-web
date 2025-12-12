@@ -1,0 +1,151 @@
+<div id="comparison-dialog" class="fixed inset-0 bg-black/40 flex justify-center items-start pt-10 z-50">
+  <div class="bg-white w-[95%] max-w-5xl rounded-xl shadow p-6 relative overflow-auto max-h-[95%]">
+
+    <button (click)="cancel()" class="absolute top-3 right-3 text-gray-600 text-xl">
+      ✕
+    </button>
+
+    <h2 class="text-2xl font-bold text-center mb-6">
+      Порівняння змінених даних локації
+    </h2>
+
+    <!-- Лише змінені поля -->
+    @for (item of differentFields; track item.key) {
+      <div class="border-b py-4 last:border-0">
+        <h3 class="font-semibold text-lg mb-4 text-center">{{ item.label }}</h3>
+
+        @if (item.key !== 'contacts' && item.key !== 'workingHours') {
+          <div class="grid grid-cols-3 gap-6">
+            <div>
+              <h4 class="text-sm text-gray-500">Поточне значення</h4>
+              <pre class="text-sm whitespace-pre-line max-h-40 overflow-auto">{{ item.original || '—' }}</pre>
+            </div>
+
+            <!-- Кнопка перемикання -->
+            <div class="flex justify-center">
+              <button
+                (click)="swapField(item.key)"
+                [class.rotate-180]="item.pending == null"
+                class="p-2 rounded-full w-11 h-11 bg-gray-200 hover:bg-gray-300 transition-transform duration-300"
+              >
+                <span class="text-xl">⬅</span>
+              </button>
+            </div>
+
+            <div>
+              <h4 class="text-sm text-gray-500">Запропоноване значення</h4>
+              <pre class="text-sm whitespace-pre-line  max-h-40 overflow-auto">{{ item.pending || '—' }}</pre>
+            </div>
+          </div>
+        }
+
+        @if (item.key === 'contacts') {
+          <div class="grid grid-cols-3 gap-8">
+            <div>
+              <p class="text-sm text-gray-500 mb-2">Поточні контакти</p>
+              <div class="space-y-2 text-sm">
+                <div><strong>Телефон:</strong> <span class="font-mono"> {{ item.original?.phone || '—' }}</span></div>
+                <div><strong>Email:</strong> {{ item.original?.email || '—' }}</div>
+                <div><strong>Сайт:</strong> {{ item.original?.website || '—' }}</div>
+              </div>
+            </div>
+
+            <div class="flex justify-center">
+              <button
+                (click)="swapField(item.key)"
+                [class.rotate-180]="item.pending == null"
+                class="p-2 rounded-full w-11 h-11 bg-gray-200 hover:bg-gray-300 transition-transform duration-300"
+              >
+                <span class="text-xl">⬅</span>
+              </button>
+            </div>
+
+
+            <div>
+              <p class="text-sm text-gray-500 mb-2">Запропоновані контакти</p>
+              <div class="space-y-2 text-sm bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <div><strong>Телефон:</strong> <span class="font-mono"> {{ item.pending?.phone || '—' }}</span></div>
+                <div><strong>Email:</strong> {{ item.pending?.email || '—' }}</div>
+                <div><strong>Сайт:</strong> {{ item.pending?.website || '—' }}</div>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (item.key === 'workingHours') {
+          <div class="grid grid-cols-3 gap-8 items-start">
+            <div>
+              <p class="text-sm text-gray-500 mb-3">Поточний графік</p>
+              <div class="text-sm space-y-1">
+                @for (day of daysOfWeek; track day) {
+                  <div class="flex justify-between">
+                    <span class="capitalize">{{ dayMap[day] }}:</span>
+                    <span class="font-mono">
+                      {{ formatTime(item.original?.[day]) }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="flex justify-center">
+              <button
+                (click)="swapField(item.key)"
+                [class.rotate-180]="item.pending == null"
+                class="p-2 rounded-full w-11 h-11 bg-gray-200 hover:bg-gray-300 transition-transform duration-300"
+              >
+                <span class="text-xl">⬅</span>
+              </button>
+            </div>
+
+            <div>
+              <p class="text-sm text-gray-500 mb-3">Запропонований графік</p>
+              <div class="text-sm space-y-1 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                @for (day of daysOfWeek; track day) {
+                  <div class="flex justify-between">
+                    <span class="capitalize">{{ dayMap[day] }}:</span>
+                    <span class="font-mono">
+                      {{ formatTime(item.pending?.[day]) }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+      </div>
+    }
+
+
+    <!-- Кнопка перенесення -->
+    <div class="flex justify-center mt-6">
+      <button (click)="applyAll()"
+              class="px-6 py-2 rounded-xl bg-deep-dark-blue hover:scale-x-95 duration-300 text-white font-medium shadow">
+        Перенести всі зміни
+      </button>
+    </div>
+
+    <!-- Дії -->
+    <div class="flex justify-end gap-3 mt-8">
+      <button (click)="cancel()" class="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200">
+        Скасувати
+      </button>
+
+      @if (!duplicateMode) {
+        <button (click)="openReject()" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">
+          Відхилити
+        </button>
+      }
+
+      <button (click)="confirm()" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">
+        Підтвердити
+      </button>
+    </div>
+
+    <!-- Причина відхилення -->
+    @if (showRejectForm) {
+      <app-reject-dialog (submit)="submitReject($event)" (cancel)="showRejectForm = false"></app-reject-dialog>
+    }
+  </div>
+</div>

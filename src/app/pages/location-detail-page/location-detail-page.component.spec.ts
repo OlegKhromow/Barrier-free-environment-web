@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LocationDetailPageComponent } from './location-detail-page.component';
 
-describe('LocationDetailPageComponent', () => {
+describe('UserLocationPageComponent', () => {
   let component: LocationDetailPageComponent;
   let fixture: ComponentFixture<LocationDetailPageComponent>;
 

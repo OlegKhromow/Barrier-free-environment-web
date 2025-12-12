@@ -1,0 +1,30 @@
+  <div class="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+
+      <h2 class="text-xl font-semibold mb-4 text-gray-800 text-center">
+        Причина відхилення
+      </h2>
+
+      <textarea
+        [(ngModel)]="rejectionReason"
+        rows="4"
+        class="w-full border rounded-lg p-2 focus:ring focus:ring-red-200"
+        placeholder="Опишіть причину відхилення"></textarea>
+
+      <div class="text-right mt-4 space-x-2">
+        <button
+          (click)="onCancel()"
+          class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+        >
+          Скасувати
+        </button>
+
+        <button
+          (click)="onSubmit()"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          Відхилити
+        </button>
+      </div>
+    </div>
+  </div>

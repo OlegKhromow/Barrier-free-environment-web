@@ -1,37 +1,4 @@
-/* --- Map container --- */
 #map {
   position: relative;
-  width: 100%;
-  height: 400px; /* або будь-яка висота, яка була до цього */
-  margin-top: 64px; /* відступ, щоб не заходило під менюбар */
-  z-index: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-/* --- Загальні стилі для секцій --- */
-.section {
-  margin-top: 1rem;
-  padding: 1rem;
-}
-
-/* --- Критерії безбар'єрності --- */
-.criteria-tree {
-  margin-top: 1.5rem;
-}
-
-/* --- Кнопки, форми, сайдбар тощо --- */
-button {
-  cursor: pointer;
-}
-
-/* --- Для sidebar, якщо він є праворуч --- */
-.sidebar {
-  z-index: 2;
-}
-
-/* --- Забезпечує, щоб карта не перекривала інші елементи --- */
-.leaflet-container {
-  z-index: 0 !important;
+  z-index: 0; /* або навіть -1, якщо потрібно */
 }

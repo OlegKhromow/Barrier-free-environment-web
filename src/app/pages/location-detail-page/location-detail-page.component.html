@@ -1,651 +1,226 @@
 <div class="container mx-auto p-6 max-w-6xl">
-  <ng-container *ngIf="location; else empty">
+
+  @if (location) {
     <!-- Дві колонки: інформація + карта -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
       <!-- ЛІВА КОЛОНКА — ІНФОРМАЦІЯ -->
       <div>
-        <p class="text-gray-600 mb-4">
-          {{ getAccessibilityLevel(location.overallAccessibilityScore) }}
-          <span *ngIf="location.overallAccessibilityScore != null" class="text-sm text-gray-400">
-            ({{ location.overallAccessibilityScore }}%)
-          </span>
-        </p>
 
-        <div class="flex items-center justify-between mb-2">
-          <h1 class="text-3xl font-bold text-green-700">{{ location.name }}</h1>
-          <button
-            (click)="openUpdateForm($event)"
-            class="text-sm text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition"
-          >
+        <!-- Редагування локації-->
+        @if (mode === 'admin') {
+          <button (click)="openUpdateForm($event)"
+                  class="w-full text-center text-base font-semibold
+               text-white bg-deep-dark-blue opacity-90
+               px-4 py-2 rounded-xl shadow-md hover:opacity-80 hover:shadow-lg
+               active:scale-[0.98] transition duration-200">
             Редагувати
           </button>
-        </div>
 
+          @if (showUpdateForm) {
+            <!--TODO change on location-create-form-->
+            <app-location-edit-dialog
+              [locationId]="location.id"
+              [prefillData]="location"
+              (close)="showUpdateForm = false"
+              (saved)="onUpdateSubmitted($event)">
+            </app-location-edit-dialog>
+          }
+        }
 
-        <app-location-edit-dialog
-          *ngIf="showUpdateForm"
-          [locationId]="location.id"
-          [prefillData]="location"
-          (close)="showUpdateForm = false"
-          (saved)="onUpdateSubmitted($event)">
-        </app-location-edit-dialog>
-        <p class="text-gray-600 mb-6">{{ location.address }}</p>
-
-        <!-- Опис -->
-        <section class="mb-6">
-          <h2 class="font-semibold text-gray-800 text-lg mb-1">Опис</h2>
-          <p class="text-sm text-gray-700">{{ location.description || 'Немає опису' }}</p>
-        </section>
-
-        <!-- Категорія -->
-        <section class="mb-6">
-          <h2 class="font-semibold text-gray-800 text-lg mb-1">Категорія</h2>
-          <p class="text-sm text-gray-700">{{ location.type.name }}</p>
-          <p class="text-sm text-gray-700">{{ location.type.description }}</p>
-        </section>
-
-        <!-- Контакти -->
-        <section class="mb-6">
-          <h2 class="font-semibold text-gray-800 text-lg mb-1">Контакти</h2>
-          <ng-container
-            *ngIf="location.contacts && (location.contacts.phone || location.contacts.email || location.contacts.website); else noContacts">
-            <ul class="text-sm text-gray-700 space-y-1">
-              <li *ngIf="location.contacts.phone">📞 {{ location.contacts.phone }}</li>
-              <li *ngIf="location.contacts.email">✉️ {{ location.contacts.email }}</li>
-              <li *ngIf="location.contacts.website">
-                🌍 <a [href]="location.contacts.website" target="_blank"
-                     class="text-blue-600 underline">{{ location.contacts.website }}</a>
-              </li>
-            </ul>
-          </ng-container>
-          <ng-template #noContacts>
-            <p class="text-sm text-gray-500">Немає контактів</p>
-          </ng-template>
-        </section>
-
-        <!-- Розклад -->
-        <section class="mb-6">
-          <h2 class="font-semibold text-gray-800 text-lg mb-1">Графік роботи</h2>
-          <ng-container *ngIf="location?.workingHours && !hasNoSchedule(location.workingHours); else noSchedule">
-            <div *ngFor="let d of days" class="text-sm text-gray-700">
-              {{ d.label }}: {{ getDaySchedule(d.key, location.workingHours) }}
-            </div>
-          </ng-container>
-          <ng-template #noSchedule>
-            <p class="text-sm text-gray-500">Немає розкладу</p>
-          </ng-template>
-        </section>
-
-        <!-- Статус -->
-        <section class="mb-6">
-          <h2 class="font-semibold text-gray-800 text-lg mb-1">Стан</h2>
-          <ng-container [ngSwitch]="location.status">
-            <p *ngSwitchCase="'published'" class="text-sm font-medium text-green-600">Опубліковано</p>
-            <p *ngSwitchCase="'pending'" class="text-sm font-medium text-yellow-600">Очікує перевірки</p>
-            <p *ngSwitchCase="'rejected'" class="text-sm font-medium text-red-600">Відхилено</p>
-            <p *ngSwitchDefault class="text-sm font-medium text-gray-500">Невідомий статус</p>
-          </ng-container>
-        </section>
+        <app-location-info [location]="location" [criteriaTree]="criteriaTree"></app-location-info>
       </div>
-      <!-- Кнопки керування статусом -->
-      <section class="mb-6">
-        <h2 class="font-semibold text-gray-800 text-lg mb-2">Керування статусом</h2>
-
-        <!-- pending -->
-        <div *ngIf="location.status === 'pending'" class="space-x-2">
-          <button
-            (click)="changeStatus('published')"
-            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg">
-            Опублікувати
-          </button>
-
-          <button
-            (click)="openRejectForm()"
-            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg">
-            Відхилити
-          </button>
-
-          <button
-            (click)="deleteLocation()"
-            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg">
-            Видалити
-          </button>
-        </div>
-
-        <!-- published -->
-        <div *ngIf="location.status === 'published'" class="space-x-2">
-          <button
-            (click)="changeStatus('pending')"
-            class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
-            Зняти з публікації
-          </button>
-
-          <button
-            (click)="deleteLocation()"
-            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg">
-            Видалити
-          </button>
-        </div>
-
-        <!-- rejected -->
-        <div *ngIf="location.status === 'rejected'" class="space-x-2">
-          <button
-            (click)="changeStatus('pending')"
-            class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
-            Відправити на перевірку
-          </button>
-
-          <button
-            (click)="deleteLocation()"
-            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg">
-            Видалити
-          </button>
-        </div>
-      </section>
-
-      <!-- 🪟 Форма відхилення -->
-      <div *ngIf="showRejectForm" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-          <h2 class="text-xl font-semibold mb-4 text-gray-800">Причина відхилення</h2>
-          <textarea [(ngModel)]="rejectionReason"
-                    rows="4"
-                    class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-red-200"
-                    placeholder="Опишіть причину відхилення"></textarea>
-
-          <div class="text-right mt-4 space-x-2">
-            <button (click)="cancelRejection()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-              Скасувати
-            </button>
-            <button (click)="submitRejection()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-              Відхилити
-            </button>
-          </div>
-        </div>
-      </div>
-
-
 
       <!-- ПРАВА КОЛОНКА — КАРТА -->
       <div class="relative">
-        <div id="map" class="w-full h-[400px] rounded-xl shadow-md border"></div>
+
+        <!-- Кнопки керування статусом -->
+        @if (mode === 'admin') {
+          <section class="mb-6">
+            <h2 class="font-semibold text-center text-gray-800 text-lg mb-2">Керування статусом</h2>
+            <div class="flex justify-around">
+              @switch (location.status) {
+                @case ('pending') {
+                  <button (click)="changeStatus('published')"
+                          class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg">
+                    Опублікувати
+                  </button>
+
+                  <button (click)="openRejectForm()"
+                          class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg">
+                    Відхилити
+                  </button>
+                }
+                @case ('published') {
+                  <button (click)="changeStatus('pending')"
+                          class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
+                    Зняти з публікації
+                  </button>
+                }
+                @case ('rejected') {
+                  <button (click)="changeStatus('pending')"
+                          class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
+                    Відправити на перевірку
+                  </button>
+                }
+              }
+              <button (click)="deleteLocation()"
+                      class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg">
+                Видалити
+              </button>
+            </div>
+          </section>
+
+        }
+
+        @if (images?.length) {
+          <app-slideshow-component [images]="images" class="rounded"></app-slideshow-component>
+        }
+
+        <div id="map" class="w-full h-[500px] rounded-xl shadow-md border"></div>
+
       </div>
     </div>
 
-    <!-- Критерії нижче під картою -->
-    <section *ngIf="criteriaTree" class="mt-10 border-t pt-6">
-      <div class="ml-1">
-        <div class="cursor-pointer font-semibold text-gray-800 flex items-center" (click)="toggleGroup()">
-          <span [class.rotate-90]="showGroup" class="mr-1 transition-transform duration-200">▶</span>
-          {{ criteriaTree.group.name }}
-        </div>
 
-        <div *ngIf="showGroup" class="ml-4 mt-2 transition-all duration-200">
-          <div *ngFor="let type of criteriaTree.group.types" class="mb-3">
-            <div class="cursor-pointer flex items-center text-gray-700" (click)="toggleType(type)">
-              <span [class.rotate-90]="isTypeOpen(type)" class="mr-1 transition-transform duration-200">▶</span>
-              <strong>{{ type.name }}</strong>
-            </div>
+    <!-- 🆕 СЕКЦІЯ ОНОВЛЕННЯ -->
+    <section class="mt-10 border-t pt-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-3">Оновлення</h2>
+      @if (pendingLocations.length > 0) {
+        <ul class="space-y-3">
+          @for (pending of pendingLocations; track pending.id) {
+            <li class="border rounded-lg p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+                (click)="openPendingModal(pending)">
 
-            <ul *ngIf="isTypeOpen(type)" class="ml-6 list-disc text-sm text-gray-700 mt-1 space-y-2">
-              <li *ngFor="let c of type.criterias">
-                <div class="font-medium text-gray-800">
-                  {{ c.name }} <small class="text-gray-500">({{ c.rank }})</small>
-                </div>
-                <div class="text-gray-600 text-xs mb-1">{{ c.description }}</div>
-
-                <div *ngIf="c.barrierlessCriteriaChecks?.length > 0; else noChecks"
-                     class="ml-4 text-xs text-gray-700 mt-2">
-                  <div class="flex justify-between text-xs mb-1">
-                    <span class="text-green-700 font-medium">Безбар’єрно: {{ countChecks(c, false) }}</span>
-                    <span class="text-red-700 font-medium">Проблеми: {{ countChecks(c, true) }}</span>
-                  </div>
-
-                  <div
-                    class="relative w-full h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-300 to-red-500">
-                    <div
-                      class="absolute top-1/2 -translate-y-1/2 w-2 h-4 bg-gray-800 rounded-full shadow-md transition-all duration-300"
-                      [style.left.%]="getBalancePosition(c)">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="font-medium text-gray-800">{{ pending.name || 'Без назви' }}</p>
+                  <p class="text-sm text-gray-600">{{ pending.address }}</p>
+                  @if (pending.description) {
+                    <div class="text-sm text-gray-700 mt-2">
+                      {{
+                        pending.description?.length > 150
+                          ? (pending.description | slice:0:150) + '...'
+                          : pending.description
+                      }}
                     </div>
-                  </div>
-
-                  <div class="text-xs text-gray-500 mt-1 text-center">
-                    {{ 100 - getBalancePosition(c) | number:'1.0-0' }}% безбар’єрно /
-                    {{ getBalancePosition(c) | number:'1.0-0' }}% з проблемами
-                  </div>
-
-                  <div class="cursor-pointer text-blue-600 hover:underline mt-1"
-                       (click)="toggleComments(c)">
-                    💬 Коментарі ({{ getComments(c).length }})
-                  </div>
-
-                  <ul *ngIf="isCommentsOpen(c)" class="ml-4 mt-1 list-disc text-gray-600 text-xs space-y-1">
-                    <li *ngFor="let comment of getComments(c)">"{{ comment }}"</li>
-                  </ul>
+                  }
                 </div>
 
-                <ng-template #noChecks>
-                  <p class="text-gray-400 text-xs italic ml-2">Немає перевірок</p>
-                </ng-template>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-  </ng-container>
+                @switch (pending.status) {
+                  @case ('pending') {
+                    <span class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">Очікує перевірки</span>
+                  }
+                  @case ('rejected') {
+                    <span class="text-xs text-red-700 bg-red-100 px-2 py-1 rounded">Відхилено</span>
+                  }
+                }
+              </div>
 
-  <ng-template #empty>
+              <div class="text-xs text-gray-500 mt-1">
+                Оновлено: {{ pending.updatedAt | date:'medium' }}
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-sm text-gray-500">Наразі немає оновлень.</p>
+      }
+    </section>
+
+  } @else {
     <div class="flex flex-col items-center justify-center h-96 text-center">
       <h1 class="font-semibold text-2xl mb-3">Локація не знайдена</h1>
-      <img ngSrc="assets/hand-point.png" alt="hand point" height="128" width="128">
+      <img ngSrc="assets/unhappy.png" alt="hand point" height="128" width="128">
     </div>
-  </ng-template>
-  <!-- 🆕 СЕКЦІЯ ОНОВЛЕННЯ -->
-  <section class="mt-10 border-t pt-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-3">Оновлення</h2>
+  }
 
-    <ng-container *ngIf="pendingLocations.length > 0; else noUpdates">
-      <ul class="space-y-3">
-        <li
-          *ngFor="let pending of pendingLocations"
-          class="border rounded-lg p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
-          (click)="openModal(pending)"
+
+
+  <!-- 🆕 МОДАЛЬНЕ ВІКНО ДЕТАЛЕЙ ОНОВЛЕННЯ -->
+  @if (selectedPending && !showComparisonForm) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[80%] shadow-lg relative overflow-auto">
+        <button
+          class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"
+          (click)="closePendingModal()"
         >
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="font-medium text-gray-800">{{ pending.name || 'Без назви' }}</p>
-              <p class="text-sm text-gray-600">{{ pending.address }}</p>
+          ✖
+        </button>
+        @if (mode === 'admin' && selectedPending.status === 'rejected') {
+          <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Відхилене оновлення</h2>
+        }
+        <app-location-info [location]="selectedPending"></app-location-info>
+
+        @if (mode === 'user') {
+          <p class="text-xs text-gray-500 mt-2">Оновлено: {{ selectedPending.updatedAt | date:'medium' }}</p>
+        } @else {
+          @if (selectedPending.status === 'rejected') {
+            <div class="flex justify-end mt-6 space-x-2">
+              <button (click)="closePendingModal()"
+                      class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                Закрити
+              </button>
+
+              <button (click)="deletePending(selectedPending.id)"
+                      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                Видалити
+              </button>
             </div>
-            <span *ngIf="pending.status === 'pending'"  class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
-      Очікує перевірки
-    </span>
-            <span *ngIf="pending.status === 'rejected'"  class="text-xs text-white bg-red-700 px-2 py-1 rounded">
-      Відмовлено
-    </span>
-          </div>
-          <div *ngIf="pending.description" class="text-sm text-gray-700 mt-2">
-            {{ pending.description }}
-          </div>
-          <div class="text-xs text-gray-500 mt-1">
-            Оновлено: {{ pending.updatedAt | date:'medium' }}
-          </div>
-        </li>
-
-      </ul>
-    </ng-container>
-
-    <ng-template #noUpdates>
-      <p class="text-sm text-gray-500">Наразі немає оновлень.</p>
-    </ng-template>
-  </section>
-
+          }
+        }
+      </div>
+    </div>
+  }
 
   <!-- Список схожих -->
-  <div *ngIf="showDuplicates && similarLocations.length" class="mt-6">
-    <h3 class="text-lg font-semibold mb-2">Схожі локації поруч:</h3>
+  @if (showDuplicates && similarLocations.length) {
+    <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-2">Схожі локації поруч:</h3>
 
-    <ul class="divide-y divide-gray-200 border rounded-lg">
-      <li *ngFor="let loc of similarLocations" class="p-3 hover:bg-gray-50 flex justify-between items-center">
-        <div>
-          <div class="font-medium text-gray-800">{{ loc.name }}</div>
-          <div class="text-sm text-gray-500">{{ loc.address }}</div>
-        </div>
-        <button class="text-blue-600 hover:underline"
-                (click)="viewLocation(loc.id)">
-          Переглянути
-        </button>
-        <button class="text-red-600 hover:underline"
-                (click)="openDuplicateModal(loc)">
-          Перенести дані
-        </button>
-
-
-      </li>
-    </ul>
-  </div>
-  <!-- 🪟 МОДАЛКА ДЛЯ REJECTED ПЕНДІНГУ -->
-  <div *ngIf="showRejectedPendingModal"
-       class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
-
-      <button (click)="showRejectedPendingModal = false"
-              class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">✕</button>
-
-      <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Відхилене оновлення</h2>
-
-      <div class="space-y-2 text-sm text-gray-800">
-        <p><strong>Назва:</strong> {{ selectedPending?.name }}</p>
-        <p><strong>Адреса:</strong> {{ selectedPending?.address }}</p>
-        <p><strong>Опис:</strong> {{ selectedPending?.description || '—' }}</p>
-
-        <div *ngIf="selectedPending?.contacts">
-          <p><strong>Телефон:</strong> {{ selectedPending?.contacts.phone || '—' }}</p>
-          <p><strong>Email:</strong> {{ selectedPending?.contacts.email || '—' }}</p>
-          <p><strong>Сайт:</strong> {{ selectedPending?.contacts.website || '—' }}</p>
-        </div>
-        <section class="mb-6">
-          <h2 class="font-semibold text-gray-800 text-lg mb-1">Графік роботи</h2>
-
-          <ng-container *ngIf="selectedPending?.workingHours && !hasNoSchedule(selectedPending.workingHours); else noSchedulePending">
-            <div *ngFor="let d of days" class="text-sm text-gray-700">
-              {{ d.label }}: {{ getDaySchedule(d.key, selectedPending.workingHours) }}
+      <ul class="divide-y divide-gray-200 border rounded-lg">
+        @for (loc of similarLocations; track loc.id) {
+          <li class="p-3 hover:bg-gray-50 flex justify-between items-center">
+            <div>
+              <div class="font-medium text-gray-800">{{ loc.name }}</div>
+              <div class="text-sm text-gray-500">{{ loc.address }}</div>
             </div>
-          </ng-container>
-
-          <ng-template #noSchedulePending>
-            <p class="text-sm text-gray-500">Немає розкладу</p>
-          </ng-template>
-        </section>
-
-
-        <p *ngIf="selectedPending?.rejectionReason" class="text-red-600 mt-3">
-          <strong>Причина відхилення:</strong> {{ selectedPending.rejectionReason }}
-        </p>
-      </div>
-
-      <div class="flex justify-end mt-6 space-x-2">
-        <button (click)="showRejectedPendingModal = false"
-                class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-          Закрити
-        </button>
-
-        <button (click)="deletePending(selectedPending.id)"
-                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-          Видалити
-        </button>
-      </div>
+            <button class="text-blue-600 hover:underline"
+                    (click)="viewLocation(loc.id)">
+              Переглянути
+            </button>
+            @if (mode === 'admin') {
+              <button class="text-red-600 hover:underline"
+                      (click)="openDuplicateModal(loc)">
+                Перенести дані
+              </button>
+            }
+          </li>
+        }
+      </ul>
     </div>
-  </div>
+  }
 
-  <!-- 🪟 Модалка порівняння -->
-  <div
-    *ngIf="showModal && selectedPending && modalLocation"
-    class="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center z-50 pt-10 overflow-y-auto"
-  >
-    <div class="bg-white w-[95%] max-w-6xl rounded-xl shadow-lg p-6 relative">
-      <button
-        (click)="closeModal()"
-        class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl"
-      >
-        ✕
-      </button>
+  @if (showRejectForm) {
+    <app-reject-dialog (cancel)="rejectionCancel()" (submit)="rejectionSubmit($event)"></app-reject-dialog>
+  }
 
-      <h2 class="text-2xl font-semibold mb-6 text-center">Порівняння даних локації</h2>
+  @if (showComparisonForm) {
+    <app-comparison-dialog
+      [originalLocation]="modalLocation"
+      [pendingCopy]="selectedPending"
+      (canceled)="closeModal()"
+      (confirmed)="confirmChanges($event)"
+      (rejected)="submitPendingRejection($event)"></app-comparison-dialog>
+  }
 
-      <div class="divide-y">
-        <!-- Назва -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Назва</h3>
-            <div class="flex justify-between text-sm">
-              <span>{{ modalLocation?.name }}</span>
-              <button (click)="swapField('name')" class="ml-2 text-blue-600">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Назва</h3>
-            <div class="text-sm flex justify-between">
-              <span>{{ selectedPending?.name }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Адреса -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Адреса</h3>
-            <div class="flex justify-between text-sm">
-              <span>{{ modalLocation?.address }}</span>
-              <button (click)="swapField('address')" class="ml-2 text-blue-600">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Адреса</h3>
-            <div class="text-sm flex justify-between">
-              <span>{{ selectedPending?.address }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Опис -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Опис</h3>
-            <div class="flex justify-between text-sm">
-              <p class="whitespace-pre-line max-h-48 overflow-auto">{{ modalLocation?.description }}</p>
-              <button (click)="swapField('description')" class="ml-2 text-blue-600 flex-shrink-0">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Опис</h3>
-            <div class="text-sm max-h-48 overflow-auto">
-              {{ selectedPending?.description }}
-            </div>
-          </div>
-        </div>
-
-        <!-- Контакти -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Контакти</h3>
-            <div *ngFor="let field of ['phone','email','website']" class="flex justify-between text-sm">
-              <span>{{ field }}: {{ modalLocation?.contacts?.[field] || '—' }}</span>
-              <button (click)="swapContactField(field)" class="ml-2 text-blue-600">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Контакти</h3>
-            <div class="text-sm space-y-1">
-              <div *ngFor="let field of ['phone','email','website']">
-                {{ field }}: {{ selectedPending?.contacts?.[field] || '—' }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Розклад -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <div class="flex justify-between items-center">
-              <h3 class="font-semibold text-gray-700 mb-1">Розклад роботи</h3>
-              <button (click)="swapWorkingHours()" class="text-blue-600 text-sm ml-2">⮂</button>
-            </div>
-            <div class="border rounded p-2 text-xs">
-              <div *ngFor="let d of days" class="border-b last:border-0 py-1">
-                <strong>{{ d.label }}:</strong>
-                {{ modalLocation?.workingHours?.[d.key]?.open || '—' }} –
-                {{ modalLocation?.workingHours?.[d.key]?.close || '—' }}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Розклад роботи</h3>
-            <div class="border rounded p-2 text-xs">
-              <div *ngFor="let d of days" class="border-b last:border-0 py-1">
-                <strong>{{ d.label }}:</strong>
-                {{ selectedPending?.workingHours?.[d.key]?.open || '—' }} –
-                {{ selectedPending?.workingHours?.[d.key]?.close || '—' }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 mt-4">
-        <button class="btn btn-primary" (click)="confirmChanges()">Підтвердити</button>
-        <button class="btn btn-outline" (click)="closeModal()">Скасувати</button>
-        <button class="btn btn-danger" (click)="openRejectPendingForm()">Відхилити</button>
-      </div>
-      <div *ngIf="showRejectPendingForm" class="mt-4 p-3 border rounded bg-gray-50">
-        <label for="reason" class="block font-medium mb-1">Причина відхилення</label>
-        <textarea id="reason" [(ngModel)]="rejectionPendingReason"
-                  class="w-full border p-2 rounded"
-                  rows="3" placeholder="Вкажіть причину..."></textarea>
-
-        <div class="flex justify-end gap-2 mt-2">
-          <button class="btn btn-secondary" (click)="cancelPendingRejection()">Скасувати</button>
-          <button class="btn btn-danger" (click)="submitPendingRejection()">Підтвердити відхилення</button>
-        </div>
-      </div>
-
-
-    </div>
-  </div>
-  <!-- 🪟 Форма відхилення -->
-  <div *ngIf="showRejectForm" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-      <h2 class="text-xl font-semibold mb-4 text-gray-800">Причина відхилення</h2>
-      <textarea [(ngModel)]="rejectionReason"
-                rows="4"
-                class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-red-200"
-                placeholder="Опишіть причину відхилення"></textarea>
-
-      <div class="text-right mt-4 space-x-2">
-        <button (click)="cancelRejection()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-          Скасувати
-        </button>
-        <button (click)="submitRejection()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-          Відхилити
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div
-    *ngIf="showModalDuplicate && selectedDuplicate && modalLocation"
-    class="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center z-50 pt-10 overflow-y-auto"
-  >
-    <div class="bg-white w-[95%] max-w-6xl rounded-xl shadow-lg p-6 relative">
-      <button
-        (click)="closeModalDuplicate()"
-        class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl"
-      >
-        ✕
-      </button>
-
-      <h2 class="text-2xl font-semibold mb-6 text-center">Порівняння даних локації</h2>
-
-      <div class="divide-y">
-        <!-- Назва -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Назва</h3>
-            <div class="flex justify-between text-sm">
-              <span>{{ selectedDuplicate?.name }}</span>
-              <button (click)="swapDuplicateField('name')" class="ml-2 text-blue-600">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Назва</h3>
-            <div class="text-sm flex justify-between">
-              <span>{{ modalLocation?.name }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Адреса -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Адреса</h3>
-            <div class="flex justify-between text-sm">
-              <span>{{ selectedDuplicate?.address }}</span>
-              <button (click)="swapDuplicateField('address')" class="ml-2 text-blue-600">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Адреса</h3>
-            <div class="text-sm flex justify-between">
-              <span>{{ modalLocation?.address }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Опис -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Опис</h3>
-            <div class="flex justify-between text-sm">
-              <p class="whitespace-pre-line max-h-48 overflow-auto">{{ selectedDuplicate?.description }}</p>
-              <button (click)="swapDuplicateField('description')" class="ml-2 text-blue-600 flex-shrink-0">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Опис</h3>
-            <div class="text-sm max-h-48 overflow-auto">
-              {{ modalLocation?.description }}
-            </div>
-          </div>
-        </div>
-
-        <!-- Контакти -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Контакти</h3>
-            <div *ngFor="let field of ['phone','email','website']" class="flex justify-between text-sm">
-              <span>{{ field }}: {{ selectedDuplicate?.contacts?.[field] || '—' }}</span>
-              <button (click)="swapDuplicateContactField(field)" class="ml-2 text-blue-600">⮂</button>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Контакти</h3>
-            <div class="text-sm space-y-1">
-              <div *ngFor="let field of ['phone','email','website']">
-                {{ field }}: {{ modalLocation?.contacts?.[field] || '—' }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Розклад -->
-        <div class="grid grid-cols-2 gap-6 py-3 items-start">
-          <div>
-            <div class="flex justify-between items-center">
-              <h3 class="font-semibold text-gray-700 mb-1">Розклад роботи</h3>
-              <button (click)="swapDuplicateWorkingHours()" class="text-blue-600 text-sm ml-2">⮂</button>
-            </div>
-            <div class="border rounded p-2 text-xs">
-              <div *ngFor="let d of days" class="border-b last:border-0 py-1">
-                <strong>{{ d.label }}:</strong>
-                {{ selectedDuplicate?.workingHours?.[d.key]?.open || '—' }} –
-                {{ selectedDuplicate?.workingHours?.[d.key]?.close || '—' }}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 class="font-semibold text-gray-700 mb-1">Розклад роботи</h3>
-            <div class="border rounded p-2 text-xs">
-              <div *ngFor="let d of days" class="border-b last:border-0 py-1">
-                <strong>{{ d.label }}:</strong>
-                {{ modalLocation?.workingHours?.[d.key]?.open || '—' }} –
-                {{ modalLocation?.workingHours?.[d.key]?.close || '—' }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6 text-right space-x-2">
-        <button
-          (click)="closeModalDuplicate()"
-          class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-        >
-          Закрити
-        </button>
-
-        <button
-          (click)="confirmDuplicateChanges()"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          ✅ Підтвердити зміни
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-
+  @if (showDuplicateForm) {
+    <app-comparison-dialog
+      [duplicateMode]="true"
+      [originalLocation]="dublicateLocation"
+      [pendingCopy]="location"
+      (canceled)="closeDuplicateModal()"
+      (confirmed)="confirmDuplicateChanges($event)"></app-comparison-dialog>
+  }
 
 </div>
