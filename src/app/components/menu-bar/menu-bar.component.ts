@@ -1,10 +1,12 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {NavigationEnd, Router, RouterLink} from '@angular/router';
 import {AuthService} from '../../core/services/security/auth.service';
 import {NgOptimizedImage} from '@angular/common';
 import {SearchBarComponent} from '../search-bar/search-bar.component';
 import {LanguageSwitcherComponent} from '../language-switcher/language-switcher.component';
 import {filter} from 'rxjs';
+import {Location} from '../../core/models/location';
+import {LocationStore} from '../../core/stores/LocationStore';
 
 @Component({
   selector: 'app-menu-bar',
@@ -25,7 +27,44 @@ export class MenuBarComponent implements OnInit {
   showSearchBar = false;
   language: 'ua' | 'en' = 'ua';
 
-  authService: AuthService = inject(AuthService);
+
+  @Input() locations: Location[] | null = null;
+
+  query = '';
+  filtered: Location[] = [];
+
+  onSearch(query: string) {
+    this.query = query;
+
+    if (!this.locations || !query.trim()) {
+      this.filtered = [];
+      return;
+    }
+
+    const q = query.toLowerCase();
+
+    this.filtered = this.locations
+      .filter(l =>
+        l.name?.toLowerCase().includes(q) ||
+        l.type?.name?.toLowerCase().includes(q)
+      )
+      .slice(0, 20);
+  }
+
+  selectLocation(loc: Location) {
+    this.filtered = [];
+
+    this.router.navigate(['/map'], {
+      queryParams: {
+        flyToLat: loc.latitude,
+        flyToLng: loc.longitude,
+        selectedId: loc.id
+      }
+    });
+  }
+
+
+authService: AuthService = inject(AuthService);
 
   menuItems = [
     {label: 'Карта', link: '/map', show: () => true},
@@ -33,7 +72,7 @@ export class MenuBarComponent implements OnInit {
     {label: 'Адмін-панель', link: '/admin', show: () => this.isAdmin},
   ];
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private locationStore: LocationStore) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
@@ -49,6 +88,10 @@ export class MenuBarComponent implements OnInit {
       } else {
         this.isAdmin = false;
       }
+    });
+    this.locationStore.locations$.subscribe(locations => {
+      this.locations = locations;
+      this.filtered = [];
     });
   }
 
@@ -76,9 +119,6 @@ export class MenuBarComponent implements OnInit {
     window.location.reload();
   }
 
-  onSearch(query: string) {
-    console.log('Шукаємо:', query);
-  }
 
   setLanguage(lang: 'ua' | 'en') {
     this.language = lang;

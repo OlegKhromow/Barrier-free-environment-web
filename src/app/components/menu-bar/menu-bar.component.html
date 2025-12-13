@@ -7,9 +7,42 @@
         <span class="text-2xl font-bold">Місто без бар’єрів</span>
       </div>
 
-      @if (showSearchBar) {
-        <app-search-bar (search)="onSearch($event)" class="w-1/3"></app-search-bar>
+      @if (showSearchBar && locations?.length) {
+        <div class="relative w-1/3">
+          <app-search-bar (search)="onSearch($event)"></app-search-bar>
+
+          <!-- Результати -->
+          @if (query && filtered.length > 0) {
+            <div
+              class="absolute top-full mt-1 w-full bg-white text-black
+               rounded-lg shadow-lg max-h-80 overflow-auto z-[999]"
+            >
+              @for (loc of filtered; track loc.id) {
+                <div
+                  class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  (click)="selectLocation(loc)"
+                >
+                  <div class="font-semibold">{{ loc.name }}</div>
+                  <div class="text-sm text-gray-500">
+                    {{ loc.type?.name }}
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- НІЧОГО НЕ ЗНАЙДЕНО -->
+          @if (query && filtered.length === 0) {
+            <div
+              class="absolute top-full mt-1 w-full bg-white text-gray-500
+               rounded-lg shadow-lg z-[999] px-4 py-3 text-sm"
+            >
+              Нічого не знайдено
+            </div>
+          }
+        </div>
       }
+
 
       <div class="hidden md:flex space-x-6 items-center">
 

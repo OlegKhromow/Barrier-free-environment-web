@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {AfterViewInit, Component, HostListener, inject, OnInit} from '@angular/core';
+import {AfterViewInit, Component, HostListener, inject, OnDestroy, OnInit} from '@angular/core';
 import * as L from 'leaflet';
 import {LayerGroup} from 'leaflet';
 import {Location} from '../../core/models/location';
@@ -15,6 +15,7 @@ import {v4 as uuidv4} from 'uuid';
 import {FormsModule} from '@angular/forms';
 import {LocateControl} from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+import {LocationStore} from '../../core/stores/LocationStore';
 
 
 @Component({
@@ -29,7 +30,7 @@ import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
   templateUrl: './map-page.html',
   styleUrls: ['./map-page.css']
 })
-export class MapPage implements OnInit, AfterViewInit {
+export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   private map!: L.Map;
   private normalLayer!: L.TileLayer;
   private satelliteLayer!: L.TileLayer;
@@ -63,6 +64,7 @@ export class MapPage implements OnInit, AfterViewInit {
   tempUUID: string | undefined;
 
   private locationService = inject(LocationService);
+  private locationStore = inject(LocationStore);
   private dialog = inject(MatDialog);
   private formState = inject(FormStateService);
   private authService = inject(AuthService);
@@ -165,6 +167,7 @@ export class MapPage implements OnInit, AfterViewInit {
       next: ({locations, pending}) => {
         console.log(locations);
         this.locations = locations;
+        this.locationStore.setLocations(locations);
         this.addMarkers();
 
         // формуємо Map<Location, PendingLocation> тільки якщо є pending
@@ -218,6 +221,11 @@ export class MapPage implements OnInit, AfterViewInit {
       img.src = url;
     });
   }
+
+  ngOnDestroy() {
+    this.locationStore.clear();
+  }
+
 
 
   private loadRoutes(): void {
