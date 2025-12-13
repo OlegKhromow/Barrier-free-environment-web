@@ -122,7 +122,7 @@ export class LocationCreateFormComponent implements OnInit {
     this.form.patchValue({
       name: data.name || '',
       address: data.address || '',
-      type: data.type.id || '',
+      ...(this.mode === 'create' ? { type: data.type.id || '' } : {}),
       description: data.description || '',
       contacts: data.contacts || {},
       workingHours: data.workingHours || {}
@@ -144,7 +144,6 @@ export class LocationCreateFormComponent implements OnInit {
       name: ['', Validators.required],
       address: ['', Validators.required],
       description: [''],
-      type: ['', Validators.required],
       contacts: this.fb.group({
         phone: [''],
         email: ['', Validators.email],

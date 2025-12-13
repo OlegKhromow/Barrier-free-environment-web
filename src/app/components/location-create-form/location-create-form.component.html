@@ -40,21 +40,18 @@
                  focus:shadow-md focus:ring-2 focus:ring-deep-dark-blue/60
                  transition"></textarea>
 
-        <label class="font-medium text-deep-dark-blue">Тип локації</label>
-        <select formControlName="type"
-                class="rounded-xl px-4 py-2.5 w-full bg-gray-50 shadow-inner
+        <div *ngIf="mode === 'create'">
+          <label class="font-medium text-deep-dark-blue">Тип локації</label>
+          <select formControlName="type"
+                  class="rounded-xl px-4 py-2.5 w-full bg-gray-50 shadow-inner
                  border border-gray-300 text-deep-dark-blue focus:outline-none
                  focus:ring-2 focus:ring-deep-dark-blue/60">
-          @if (mode === 'create') {
             <option value="" disabled>Оберіть тип*</option>
             @for (t of (locationTypes$ | async); track t.id) {
               <option [value]="t.id">{{ t.name }}</option>
             }
-          } @else {
-            <option [value]="prefillData.type.id">{{ prefillData.type.name }}</option>
-          }
-
-        </select>
+          </select>
+        </div>
 
         <div formGroupName="contacts" class="grid gap-3">
           <div>

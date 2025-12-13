@@ -21,7 +21,7 @@
         @if (currentView === 'location'){
           <app-location-info [location]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
         } @else {
-          <app-location-info [pendingLocation]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
+          <app-location-info [pendingLocation]="displayData" [criteriaTree]="criteriaTree" [location]="location"></app-location-info>
         }
 
       } @else {

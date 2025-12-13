@@ -37,9 +37,6 @@ export class LocationInfoComponent implements OnChanges {
   ];
 
   ngOnChanges(changes: SimpleChanges) {
-    if (this.pendingLocation) {
-      this.location = this.pendingLocation;
-    }
     this.preparedComments.clear();
     this.commentImages.clear();
   }
