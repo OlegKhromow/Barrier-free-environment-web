@@ -46,7 +46,8 @@ export class MenuBarComponent implements OnInit {
     this.filtered = this.locations
       .filter(l =>
         l.name?.toLowerCase().includes(q) ||
-        l.type?.name?.toLowerCase().includes(q)
+        l.type?.name?.toLowerCase().includes(q)||
+        l.address?.toLowerCase().includes(q)
       )
       .slice(0, 20);
   }
