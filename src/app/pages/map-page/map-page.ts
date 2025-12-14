@@ -563,6 +563,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
             next: () => {
               this.fetchLocations();
               this.resetDuplicateState();
+              this.showCreateForm = false;
             },
             error: err => console.error('Помилка при створенні локації (duplicate proceed):', err)
           });

@@ -82,6 +82,7 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
 
   confirmNo() {
     this.duplicateAnswer.emit('no');
+    this.images = null;
   }
 
   get displayData(): any {

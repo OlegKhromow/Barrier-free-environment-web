@@ -64,16 +64,14 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
         })
 
         // ✅ Викликати checkDuplicates лише якщо статус pending або rejected
-        if (loc.status === 'pending' || loc.status === 'rejected') {
           this.checkDuplicates();
-        }
       });
     }
   }
 
   viewLocation(id: number) {
     // Повне оновлення сторінки
-    window.location.href = `/user-location/${id}`;
+    window.location.href = this.mode === 'admin' ? `/locations/${id}` : `/user-location/${id}`;
   }
 
   ngAfterViewInit(): void {
