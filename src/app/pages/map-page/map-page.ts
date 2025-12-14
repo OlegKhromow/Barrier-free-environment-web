@@ -16,6 +16,7 @@ import {FormsModule} from '@angular/forms';
 import {LocateControl} from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import {LocationStore} from '../../core/stores/LocationStore';
+import { ActivatedRoute } from '@angular/router';
 
 
 @Component({
@@ -46,7 +47,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   clickedLat: number | null = null;
   clickedLng: number | null = null;
   locationPendingMap = new Map<Location, any>();
-  userMarker: L.Marker | null = null;
   isBuildingRoute = false;
   private lc!: LocateControl;
 
@@ -68,6 +68,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   private dialog = inject(MatDialog);
   private formState = inject(FormStateService);
   private authService = inject(AuthService);
+  private activatedRoute = inject(ActivatedRoute);
 // resize fields for location-sidebar
   sidebarWidth = 370;
   minSidebarWidth = 350;
@@ -77,38 +78,40 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.initMap();
 
-    // Спочатку завантажуємо локації, а потім обробляємо flyTo + selectedId
     this.fetchLocations(() => {
-      const params = new URLSearchParams(window.location.search);
-      const flyToLat = params.get('flyToLat');
-      const flyToLng = params.get('flyToLng');
-      const selectedId = params.get('selectedId');
+      this.activatedRoute.queryParams.subscribe(params => {
+        const lat = Number(params['flyToLat']);
+        const lng = Number(params['flyToLng']);
+        const selectedId = params['selectedId'];
 
-      if (flyToLat && flyToLng) {
-        const lat = parseFloat(flyToLat);
-        const lng = parseFloat(flyToLng);
+        if (!lat || !lng) return;
 
-        setTimeout(() => {
-          this.map.flyTo([lat, lng], 17, {animate: true, duration: 0.9});
+        this.map.flyTo([lat, lng], 17, {
+          animate: true,
+          duration: 0.9
+        });
 
-          // якщо є selectedId — відкриваємо сайдбар з цією локацією
-          if (selectedId && this.locations) {
-            const found = this.locations.find(l => l.id === selectedId);
-            if (found) {
-              this.selectedLocation = JSON.parse(JSON.stringify(found));
+        if (selectedId && this.locations) {
+          const found = this.locations.find(l => l.id === selectedId);
+          if (!found) return;
 
-              const foundMarker = this.markers.find(m => m.location?.id === found.id);
-              if (foundMarker) {
-                foundMarker.marker.setZIndexOffset(1000);
-              }
-            }
+          this.selectedLocation = structuredClone(found);
+
+          const foundMarker = this.markers.find(
+            m => m.location?.id === found.id
+          );
+
+          if (foundMarker) {
+            this.markers.forEach(m => m.marker.setZIndexOffset(0));
+            foundMarker.marker.setZIndexOffset(1000);
           }
-        }, 600);
-      }
+        }
+      });
     });
 
     this.calculateDynamicSizes();
   }
+
 
   ngOnInit(): void {
     this.locationService.loadLocationTypes();

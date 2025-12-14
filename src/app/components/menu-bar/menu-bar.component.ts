@@ -1,4 +1,4 @@
-import {Component, inject, Input, OnInit} from '@angular/core';
+import {Component, ElementRef, HostListener, inject, Input, OnInit} from '@angular/core';
 import {NavigationEnd, Router, RouterLink} from '@angular/router';
 import {AuthService} from '../../core/services/security/auth.service';
 import {NgOptimizedImage} from '@angular/common';
@@ -21,6 +21,7 @@ import {LocationStore} from '../../core/stores/LocationStore';
   styleUrl: './menu-bar.component.css'
 })
 export class MenuBarComponent implements OnInit {
+  private elRef = inject(ElementRef);
   isOpen = false;
   isLogin = false;
   isAdmin = false;
@@ -53,7 +54,7 @@ export class MenuBarComponent implements OnInit {
   }
 
   selectLocation(loc: Location) {
-    this.filtered = [];
+    this.clearSearch(); // 👈 ВАЖЛИВО
 
     this.router.navigate(['/map'], {
       queryParams: {
@@ -65,7 +66,8 @@ export class MenuBarComponent implements OnInit {
   }
 
 
-authService: AuthService = inject(AuthService);
+
+  authService: AuthService = inject(AuthService);
 
   menuItems = [
     {label: 'Карта', link: '/map', show: () => true},
@@ -109,6 +111,19 @@ authService: AuthService = inject(AuthService);
 
   toggleMenu() {
     this.isOpen = !this.isOpen;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const clickedInside = this.elRef.nativeElement.contains(event.target);
+    if (!clickedInside) {
+      this.clearSearch();
+    }
+  }
+
+  clearSearch() {
+    this.query = '';
+    this.filtered = [];
   }
 
   openLogin() {
