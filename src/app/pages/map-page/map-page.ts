@@ -17,6 +17,7 @@ import {LocateControl} from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import {LocationStore} from '../../core/stores/LocationStore';
 import { ActivatedRoute } from '@angular/router';
+import {AlertService} from '../../core/services/alert.service';
 
 
 @Component({
@@ -50,11 +51,8 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   isBuildingRoute = false;
   private lc!: LocateControl;
 
-
-
   private currentRoute: L.Polyline | null = null;
   routeMode: 'feet' | 'wheelchair' = 'feet';
-
 
   // duplicate режим
   duplicateMode = false;
@@ -64,6 +62,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   tempUUID: string | undefined;
 
   private locationService = inject(LocationService);
+  private alertService = inject(AlertService);
   private locationStore = inject(LocationStore);
   private dialog = inject(MatDialog);
   private formState = inject(FormStateService);
@@ -153,7 +152,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
-  private fetchLocations(afterLoad?: () => void): void {
+  protected fetchLocations(afterLoad?: () => void): void {
     const isLogged = this.authService.isLoggedIn(); // ✅ перевірка логіну
 
     const requests = isLogged
@@ -374,7 +373,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     this.isSatellite = !this.isSatellite;
   }
 
-
   isPageLoading = false;
 
   handleFormClose(dto: any | null) {
@@ -387,6 +385,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
 
     // Включаємо завантаження для всієї сторінки
     this.isPageLoading = true;
+    console.log(dto);
 
     // Step 1: check location validity first
     this.locationService.isValid(dto).subscribe({
@@ -406,7 +405,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
           err?.error?.message ||
           err?.message ||
           'Сталася помилка при перевірці валідності локації.';
-        alert(`Локація невалідна:\n${message}`);
+        this.alertService.open(`Локація невалідна:\n${message}`);
       }
     });
   }
@@ -431,7 +430,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
         error: (err) => {
           this.isPageLoading = false; // Вимикаємо завантаження при помилці
           const message = err?.error?.message || err?.message || 'Сталася помилка при перевірці зображення.';
-          alert(`Зображення невалідне (${img.file.name}):\n${message}`);
+          this.alertService.open(`Зображення невалідне (${img.file.name}):\n${message}`);
         }
       });
     });
@@ -488,7 +487,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
           err?.error?.message ||
           err?.message ||
           'Сталася невідома помилка при створенні локації.';
-        alert(`Помилка при створенні локації:\n${message}`);
+        this.alertService.open(`Помилка при створенні локації:\n${message}`);
       }
     });
   }

@@ -25,6 +25,7 @@
         [location]="selectedLocation"
         [duplicateMode]="duplicateMode"
         [locationPendingMap]="locationPendingMap"
+        (loadingState)="isPageLoading = $event"
         (duplicateAnswer)="onDuplicateAnswer($event)"
         (requestLogin)="openLoginModal()" class="bg-[#F0F0F0]">
       </app-location-sidebar>

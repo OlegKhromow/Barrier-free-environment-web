@@ -1,8 +1,8 @@
 <aside class="sidebar flex flex-col h-full justify-between">
 
   <div class="overflow-y-auto w-101">
-    @if (images?.length) {
-      <app-slideshow-component [images]="images"></app-slideshow-component>
+    @if (images?.length || imagesPending?.length) {
+      <app-slideshow-component [images]="currentView === 'location' ? images : imagesPending"></app-slideshow-component>
     }
 
     <div class="px-4 pb-4">

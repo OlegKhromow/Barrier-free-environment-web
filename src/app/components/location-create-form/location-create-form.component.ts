@@ -50,7 +50,6 @@ export class LocationCreateFormComponent implements OnInit {
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
   selectedImages: { file: File | null, preview: string }[] = [];
-  oldImages: { file: File | null, preview: string }[] = [];
   isDragOver = false;
   isLoading = false;
 
@@ -127,15 +126,6 @@ export class LocationCreateFormComponent implements OnInit {
       contacts: data.contacts || {},
       workingHours: data.workingHours || {}
     });
-    this.locationService.getLocationImages(data.imageServiceId).subscribe({
-      next: res => {
-        this.selectedImages = res.map(value => ({
-          file: null,
-          preview: value,
-        }));
-        this.oldImages = JSON.parse(JSON.stringify(this.selectedImages));
-      }
-    })
   }
 
 
@@ -317,9 +307,27 @@ export class LocationCreateFormComponent implements OnInit {
   }
 
   private deepEqual(a: any, b: any): boolean {
-    return JSON.stringify(a, Object.keys(a).sort()) ===
-      JSON.stringify(b, Object.keys(b).sort());
+    if (Object.is(a, b)) return true;
+
+    if (
+      typeof a !== 'object' || a === null ||
+      typeof b !== 'object' || b === null
+    ) {
+      return false;
+    }
+
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+
+    if (keysA.length !== keysB.length) return false;
+
+    for (const key of keysA) {
+      if (!this.deepEqual(a[key], b[key])) return false;
+    }
+
+    return true;
   }
+
 
   save() {
     if (this.isFormInvalid()) {
@@ -333,25 +341,14 @@ export class LocationCreateFormComponent implements OnInit {
     const raw = this.form.value;
     const normalizedWorkingHours = this.normalizeWorkingHours(this.form.get('workingHours') as FormGroup);
 
-    let dto = undefined;
-    if (this.mode === 'create') {
-      dto = {
-        ...raw,
-        workingHours: normalizedWorkingHours,
-        coordinates: {lat: this.lat, lng: this.lng},
-        status: LocationStatusEnum.PENDING,
-        selectedImages: this.selectedImages
-      };
-    } else {
-      dto = {
-        ...raw,
-        location_id: this.locationId,
-        workingHours: normalizedWorkingHours,
-        coordinates: {lat: this.lat, lng: this.lng},
-        status: LocationStatusEnum.PENDING,
-        selectedImages: this.selectedImages
-      };
-    }
+    let dto = {
+      ...raw,
+      ...(this.mode === 'pendingCopy' && { location_id: this.locationId }),
+      workingHours: normalizedWorkingHours,
+      coordinates: this.mode === 'create' ? {lat: this.lat, lng: this.lng} : this.prefillData.coordinates,
+      status: LocationStatusEnum.PENDING,
+      selectedImages: this.selectedImages
+    };
     console.log("dto:")
     console.log(dto);
 
@@ -408,9 +405,7 @@ export class LocationCreateFormComponent implements OnInit {
 
       const objectsEqual = this.deepEqual(dtoNormalized, prefillNormalized);
 
-      const imagesChanged = !this.deepEqual(this.selectedImages, this.oldImages);
-
-      if (objectsEqual && !imagesChanged) {
+      if (objectsEqual && this.selectedImages.length === 0) {
         this.setLoadingState(false);
         this.alertService.open("Ви не внесли жодних змін.");
         return;
@@ -420,19 +415,8 @@ export class LocationCreateFormComponent implements OnInit {
         return;
       }
 
-      this.locationService.createPendingCopy(this.locationId, dto).subscribe({
-        next: (res) => {
-          console.log('Pending copy created', res);
-          this.alertService.open('Дані надіслано на перевірку');
-          this.setLoadingState(false);
-          this.saved.emit(res);
-        },
-        error: (err) => {
-          this.setLoadingState(false);
-          console.error('Помилка при створенні pending копії', err);
-          alert('Не вдалося створити копію локації.');
-        }
-      });
+      // upload photo and create pending copy
+      this.saved.emit(dto);
     }
   }
 
