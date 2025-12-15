@@ -186,9 +186,11 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
   private setPendingCopy(pending: any) {
     this.pendingVersion = pending;
     this.currentView = 'pending';
+    console.log('pending', pending)
     this.locationService.getLocationImages(pending?.imageServiceId).subscribe({
       next: (res) => {
-        this.imagesPending = res;
+        this.imagesPending = res.map(item => item.value);
+        console.log('зображення пендінгу', this.imagesPending);
       }
     });
   }
@@ -217,7 +219,7 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
 
       this.locationService.getLocationImages(this.location.imageServiceId).subscribe({
         next: res => {
-          this.images = res;
+          this.images = res.map(item => item.value);
         }
       })
     }

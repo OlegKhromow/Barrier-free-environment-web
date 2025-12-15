@@ -2,17 +2,22 @@ import {Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/c
 import {FormsModule} from '@angular/forms';
 import {RejectDialogComponent} from '../reject-dialog/reject-dialog.component';
 import {AlertService} from '../../core/services/alert.service';
+import {LocationService} from '../../core/services/location.service';
+import {SlideshowComponent} from '../slideshow-component/slideshow-component';
 
 @Component({
   selector: 'app-comparison-dialog',
   imports: [
     FormsModule,
-    RejectDialogComponent
+    RejectDialogComponent,
+    SlideshowComponent
   ],
   templateUrl: './comparison-dialog.component.html',
   styleUrl: './comparison-dialog.component.css'
 })
 export class ComparisonDialogComponent implements OnInit {
+  protected readonly Array = Array;
+
   @Input() originalLocation!: any;
   @Input() pendingCopy!: any;
   @Input() duplicateMode = false;
@@ -22,7 +27,9 @@ export class ComparisonDialogComponent implements OnInit {
   @Output() canceled = new EventEmitter<void>();
 
   private alertService: AlertService = inject(AlertService);
+  private locationService: LocationService = inject(LocationService);
 
+  images: { key: string, value: string; accepted: boolean }[] | null = null;
   differentFields: Array<{ key: string, label: string, original: any, pending: any }> = [];
 
   showRejectForm = false;
@@ -40,6 +47,17 @@ export class ComparisonDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.computeDifferences();
+    this.loadImages();
+  }
+
+  private loadImages() {
+    if (this.pendingCopy && this.pendingCopy.imageServiceId) {
+      this.locationService.getLocationImages(this.pendingCopy.imageServiceId).subscribe({
+        next: (data) => {
+          this.images = data.map(value => ({...value, accepted: false}));
+        }
+      })
+    }
   }
 
   computeDifferences() {
@@ -83,25 +101,49 @@ export class ComparisonDialogComponent implements OnInit {
     for (const diff of this.differentFields) {
       this.swapField(diff.key);
     }
+    this.images?.forEach(image => image.accepted = !image.accepted);
   }
 
   confirm() {
-    if (this.hasAcceptedChanges()) {
+    const imagesAccepted = this.images && this.images.some(img => img.accepted);
+    const hasChanges = this.hasAcceptedChanges();
 
-      const fields = ['name', 'address', 'description', 'contacts', 'workingHours'];
+    if (hasChanges || imagesAccepted) {
       const updatedData: any = {};
 
-      for (const key of fields) {
-        const field = this.differentFields.find(el => el.key === key);
-        const value = field?.original ?? this.originalLocation[key];
-        if (value)
-          updatedData[key] = value;
+      if (hasChanges) {
+        const fields = ['name', 'address', 'description', 'contacts', 'workingHours'];
+        for (const key of fields) {
+          const field = this.differentFields.find(el => el.key === key);
+          const value = field?.original ?? this.originalLocation[key];
+          if (value)
+            updatedData[key] = value;
+        }
       }
 
-      this.confirmed.emit(updatedData);
+      let unacceptedImages;
+      if (imagesAccepted) {
+        updatedData.images = this.images?.filter(image => image.accepted);
+        unacceptedImages = this.images?.filter(image => !image.accepted);
+      }
 
+      if (unacceptedImages && unacceptedImages.length > 0) {
+        let counter = 0;
+        for (const image of unacceptedImages) {
+          this.locationService.deleteLocationImage(this.pendingCopy.imageServiceId, image.key).subscribe({
+            next: () => {
+              counter++;
+              if (counter == unacceptedImages.length) {
+                this.confirmed.emit(updatedData);
+              }
+            },
+            error: (err) => console.error('Помилка видалення зображень', err)
+          })
+        }
+      } else
+        this.confirmed.emit(updatedData);
     } else {
-      this.alertService.open('Немає прийнятих змін для підтвердження!')
+      this.alertService.open('Немає прийнятих змін для підтвердження!');
     }
   }
 

@@ -113,7 +113,45 @@
             </div>
           </div>
         }
+      </div>
+    }
 
+    @if (images?.length) {
+      <div class="border-b py-6">
+        <h3 class="font-semibold text-lg mb-6 text-center">
+          Зображення
+        </h3>
+        <div class="grid grid-cols-3 gap-6">
+          <h4 class="text-sm text-gray-500 mb-2 text-center">Прийняті</h4>
+          <div></div>
+          <h4 class="text-sm text-gray-500 mb-2 text-center">Очікують</h4>
+        </div>
+        @for (img of images; track img.value) {
+          <div class="grid grid-cols-3 gap-6">
+            <div class="rounded-xl">
+              @if (img.accepted) {
+                <app-slideshow-component [images]="Array.of(img.value)"></app-slideshow-component>
+              }
+            </div>
+
+            <!-- Кнопка перемикання -->
+            <div class="flex justify-center items-center">
+              <button
+                (click)="img.accepted = !img.accepted"
+                [class.rotate-180]="img.accepted"
+                class="p-2 rounded-full w-14 h-14 bg-gray-200 hover:bg-gray-300 transition-transform duration-300"
+              >
+                <span class="text-3xl">⬅</span>
+              </button>
+            </div>
+
+            <div>
+              @if (!img.accepted) {
+                <app-slideshow-component [images]="Array.of(img.value)" class="rounded-xl"></app-slideshow-component>
+              }
+            </div>
+          </div>
+        }
       </div>
     }
 

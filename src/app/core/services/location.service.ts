@@ -45,11 +45,15 @@ export class LocationService {
     return this.http.post(url, formData);
   }
 
-  getLocationImages(locationId: string): Observable<string[]> {
+  deleteLocationImage(imageServiceId: string, imageId: string) {
+    return this.http.delete(`${this.imageStorageUrl}locations/${imageServiceId}/image/${imageId}`);
+  }
+
+  getLocationImages(locationId: string): Observable<{ key: string; value: any }[]> {
     const params = {type: 'LOCATION'};
 
     return this.http.get<any>(`${this.imageStorageUrl}locations/${locationId}/image/url`, {params})
-      .pipe(map((res: Response) => Object.values(res)));
+      .pipe(map((res: Response) => Object.entries(res).map(([key, value]) => ({key, value}))));
   }
 
   imageIsValid(imageServiceId: string, imageId: string, file: File): Observable<any> {
@@ -144,6 +148,10 @@ export class LocationService {
       `${this.baseUrl}locations/${locationId}/pending_copy/${pendingCopyId}`,
       data
     );
+  }
+
+  deletePendingCopy(pendingCopyId: number) {
+    return this.http.delete(`${this.baseUrl}locations/pending_copy/${pendingCopyId}`);
   }
 
   updateDuplicateFromLocation(locationId: string, duplicateId: string, data: any) {

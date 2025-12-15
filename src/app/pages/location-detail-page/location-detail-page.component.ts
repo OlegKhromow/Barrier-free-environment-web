@@ -4,6 +4,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {LocationService} from '../../core/services/location.service';
 import {Location} from '../../core/models/location';
 import * as L from 'leaflet';
+import {v4 as uuidv4} from 'uuid';
 import {LocationInfoComponent} from '../../components/location-info/location-info.component';
 import {SlideshowComponent} from '../../components/slideshow-component/slideshow-component';
 import {LocationEditDialogComponent} from '../../components/location-edit-dialog/location-edit-dialog.component';
@@ -59,12 +60,12 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
         this.loadPendingLocations();
         this.locationService.getLocationImages(this.location.imageServiceId).subscribe({
           next: res => {
-            this.images = res;
+            this.images = res.map(item => item.value);
           }
         })
 
-        // ✅ Викликати checkDuplicates лише якщо статус pending або rejected
-          this.checkDuplicates();
+        // Викликати checkDuplicates лише якщо статус pending або rejected
+        this.checkDuplicates();
       });
     }
   }
@@ -305,8 +306,16 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
     this.selectedPending = null;
   }
 
-  confirmChanges(update: any) {
+  async confirmChanges(update: any) {
     if (update && this.location) {
+      console.log(update);
+      await this.uploadPendingImages(update);
+    }
+  }
+
+
+  private updateLocation(update: any) {
+    if (Object.keys(update).length && this.location) {
       const locationId = this.location.id;
       this.locationService.updateLocationFromPending(locationId, this.selectedPending.id, update)
         .subscribe({
@@ -318,11 +327,74 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
           },
           error: (err) => {
             console.error('Помилка при оновленні:', err);
-            this.alertService.open('Помилка при підтвердженні змін');
           }
         });
+    } else {
+
     }
   }
+
+  async uploadPendingImages(update: any) {
+    if (update && update.images?.length > 0 && this.location) {
+      const imageUrls = update.images;
+      const imageServiceId = this.location.imageServiceId;
+
+      let imgCount = 0;
+
+      for (const img of imageUrls) {
+        const file = await this.urlToFile(img.value, `image-${Date.now()}.jpg`);
+
+        const imageId = uuidv4();
+        this.locationService.uploadLocationImage(imageServiceId, imageId, file).subscribe({
+          next: () =>
+            this.locationService.deleteLocationImage(this.selectedPending.imageServiceId, img.key).subscribe({
+              next: () => {
+                imgCount++;
+                if (imgCount === imageUrls.length) {
+                  this.locationService.getLocationImages(imageServiceId).subscribe({
+                    next: res => this.images = res.map(item => item.value)
+                  });
+                  delete update.images;
+                  if (Object.keys(update).length > 0) {
+                    this.updateLocation(update);
+                  } else {
+                    this.locationService.deletePendingCopy(this.selectedPending.id).subscribe({
+                      next: () => {
+                        this.alertService.open('Зміни підтверджено успішно!');
+                        this.closeModal();
+                        this.loadPendingLocations(); // оновимо список
+                      },
+                      error: err => console.error('Помилка видалення пендінгу:', err)
+                    });
+
+                  }
+                }
+              },
+              error: err => console.error('Помилка видалення зображення:', err)
+            }),
+
+          error: err => {
+            console.error('Помилка завантаження зображення:', err);
+          }
+        });
+      }
+
+    } else {
+      this.updateLocation(update);
+    }
+  }
+
+  async urlToFile(url: string, filename: string): Promise<File> {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch file: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return new File([blob], filename, {type: blob.type});
+  }
+
 
   submitPendingRejection(reason: string) {
     this.locationService.rejectPending(this.selectedPending.id, reason).subscribe({
@@ -354,7 +426,8 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
       const duplicateId = this.dublicateLocation.id;
       this.locationService.updateDuplicateFromLocation(this.location.id, duplicateId, update)
         .subscribe({
-          next: () => {
+          next: (res) => {
+            console.log(res);
             this.alertService.open('Зміни підтверджено успішно!');
             this.closeDuplicateModal();
 
