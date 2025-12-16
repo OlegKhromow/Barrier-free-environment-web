@@ -7,20 +7,13 @@
     <div class="flex-1 bg-white rounded-lg shadow-sm border p-4">
 
       @if (user) {
-        <div class="space-y-1 text-gray-700">
-          @if (isAdmin) {
-            <p><strong>ID:</strong> {{ user.id }}</p>
-            <p><strong>Роль:</strong> {{ user.role }}</p>
-          }
+        <!-- Контент для роутера -->
+        <div class="mt-6">
+          <router-outlet></router-outlet>
         </div>
       } @else {
         <p>Завантаження...</p>
       }
-
-      <!-- Контент для роутера -->
-      <div class="mt-6">
-        <router-outlet></router-outlet>
-      </div>
     </div>
   </div>
 </div>

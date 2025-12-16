@@ -1,70 +1,114 @@
-<div class="p-6 space-y-6">
-  <h1 class="text-3xl font-semibold">Адмін-панель</h1>
+<div class="min-h-screen bg-gray-50 p-6 space-y-8">
 
-  <div *ngIf="loading" class="p-4 bg-gray-50 rounded shadow">
-    Завантаження даних...
-  </div>
+  <!-- Заголовок -->
+  <header class="flex items-center justify-between">
+    <h1 class="text-3xl font-semibold text-gray-900">Адмін-панель</h1>
+  </header>
 
-  <div *ngIf="error" class="p-4 bg-red-50 text-red-800 rounded shadow">
-    {{ error }}
-  </div>
+  <!-- Стани -->
+  @if (loading) {
+    <div class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm text-gray-600">
+      <span class="animate-pulse h-3 w-3 rounded-full bg-gray-400"></span>
+      Завантаження даних…
+    </div>
+  }
 
-  <!-- Статистика по місту -->
-  <section class="bg-white p-4 rounded shadow">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-medium">Статистика безбар'єрності по місту</h2>
-      <a routerLink="/admin/stats" class="text-sm underline">Детальніше</a>
+  @if (error) {
+    <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl shadow-sm">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Статистика -->
+  <section class="bg-white rounded-xl shadow-sm p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-medium text-gray-900">
+        Статистика безбар’єрності по місту
+      </h2>
+      <a
+        routerLink="/admin/stats"
+        class="text-sm text-gray-600 hover:text-gray-900 underline">
+        Детальніше
+      </a>
     </div>
 
-    <div *ngIf="cityStats?.length; else noStats">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div *ngFor="let s of cityStats" class="p-3 border rounded">
-          <div class="flex justify-between items-center mb-2">
-            <div class="font-semibold">{{ s.name }}</div>
-            <div class="text-sm">Доступних: {{ s.accessibleLocations }} / {{ s.totalLocations }}</div>
-          </div>
+    @if (cityStats?.length) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (s of cityStats; track s.name) {
+          <div class="rounded-lg border border-gray-200 p-4 hover:shadow transition">
+            <div class="flex justify-between items-start mb-3">
+              <div class="font-semibold text-gray-800">
+                {{ s.name }}
+              </div>
+              <div class="text-xs text-gray-500">
+                {{ s.accessibleLocations }} / {{ s.totalLocations }}
+              </div>
+            </div>
 
-          <!-- Простий SVG-бар як "діаграма" -->
-          <div class="w-full h-6 bg-gray-100 rounded overflow-hidden">
-            <svg viewBox="0 0 100 10" preserveAspectRatio="none" class="w-full h-full">
-              <rect x="0" y="0" width="2" height="10"></rect>
-            </svg>
-          </div>
+            <!-- Прогрес -->
+            <div class="h-2 w-full bg-gray-100 rounded overflow-hidden">
+              <div
+                class="h-full bg-gray-800"
+                [style.width.%]="(s.accessibleLocations / s.totalLocations) * 100">
+              </div>
+            </div>
 
-          <div class="mt-2 text-xs text-gray-600">
-            Доступність: %
+            <div class="mt-2 text-xs text-gray-500">
+              Рівень доступності
+            </div>
           </div>
+        }
+      </div>
+    } @else {
+      <div class="text-sm text-gray-500">
+        Статистика відсутня.
+      </div>
+    }
+  </section>
+
+  <!-- Швидкі дії -->
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- Локації -->
+    <div class="bg-white rounded-xl shadow-sm p-6 flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">
+          Керування локаціями
+        </h3>
+        <p class="text-sm text-gray-500 mt-1">
+          Перевірка та модерація обʼєктів
+        </p>
+      </div>
+
+      <a
+        routerLink="/admin/locations"
+        class="inline-flex items-center px-4 py-2 rounded-lg bg-deep-dark-blue text-white hover:bg-gray-800 transition">
+        Список локацій
+      </a>
+    </div>
+
+    <!-- Користувачі -->
+    <div class="bg-white rounded-xl shadow-sm p-6 flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">
+          Користувачі
+        </h3>
+        <p class="text-sm text-gray-500 mt-1">
+          Облікові записи та ролі
+        </p>
+      </div>
+
+      <div class="text-right">
+        <div class="text-2xl font-semibold text-gray-900">
+          {{ usersCount ?? '—' }}
         </div>
+        <a
+          routerLink="/users"
+          class="inline-block mt-2 px-4 py-2 rounded-lg bg-deep-dark-blue text-white hover:bg-gray-800 transition">
+          Список користувачів
+        </a>
       </div>
     </div>
 
-    <ng-template #noStats>
-      <div class="text-sm text-gray-500">Статистика відсутня.</div>
-    </ng-template>
-  </section>
-
-  <!-- Блок підтвердження локацій -->
-  <section class="bg-white p-4 rounded shadow flex items-center justify-between">
-    <div>
-      <h3 class="text-lg font-medium">Керування локаціями</h3>
-      @if (isAdmin) {
-        <a routerLink="/admin/locations" class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">Список Локацій</a>
-      }
-    </div>
-  </section>
-
-  <!-- Панель керування користувачами -->
-  <section class="bg-white p-4 rounded shadow flex items-center justify-between">
-    <div>
-      <h3 class="text-lg font-medium">Керування користувачами</h3>
-      <p class="text-sm text-gray-600">Перегляд і керування обліковими записами</p>
-    </div>
-
-    <div class="text-right">
-      <div class="text-2xl font-bold">{{ usersCount ?? '-' }}</div>
-      <button routerLink="/users" class="mt-2 px-4 py-1 rounded bg-gray-800 text-white text-sm hover:opacity-90">
-        Список користувачів
-      </button>
-    </div>
   </section>
 </div>

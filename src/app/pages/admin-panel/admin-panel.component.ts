@@ -1,9 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../../core/services/security/auth.service';
-import { catchError, of } from 'rxjs';
+import {Component, inject, OnInit} from '@angular/core';
+import {Router, RouterLink} from '@angular/router';
+import {CommonModule} from '@angular/common';
+import {HttpClient} from '@angular/common/http';
+import {AuthService} from '../../core/services/security/auth.service';
+import {catchError, of} from 'rxjs';
 
 interface CityStat {
   name: string;
@@ -65,6 +65,5 @@ export class AdminPanelComponent implements OnInit {
   private loadDashboardData() {
     this.loading = true;
     this.error = null;
-
   }
 }

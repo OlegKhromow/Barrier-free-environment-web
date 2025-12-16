@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
-import { AuthService } from '../../core/services/security/auth.service';
-import { inject } from '@angular/core';
-import { CabinetSideMenu } from '../../components/cabinet-side-menu/cabinet-side-menu';
-import { RouterOutlet } from '@angular/router';
+import {Component, inject, OnInit} from '@angular/core';
+import {AuthService} from '../../core/services/security/auth.service';
+import {CabinetSideMenu} from '../../components/cabinet-side-menu/cabinet-side-menu';
+import {RouterOutlet} from '@angular/router';
 
 
 @Component({
@@ -11,7 +10,7 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './cabinet.html',
   styleUrl: './cabinet.css'
 })
-export class Cabinet {
+export class Cabinet implements OnInit {
   private authService = inject(AuthService);
 
   user: any = null;

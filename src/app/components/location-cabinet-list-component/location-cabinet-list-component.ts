@@ -1,19 +1,18 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {PaginationInstance,NgxPaginationModule} from 'ngx-pagination';
-import { OnInit, inject } from '@angular/core';
-import { LocationService } from '../../core/services/location.service';
-import { Location } from '../../core/models/location';
-import { ActivatedRoute,RouterModule } from '@angular/router';
-import { TruncateDescriptionPipePipe } from '../../filters/truncate-description-pipe';
-import { ElementsByStringPipe } from '../../filters/location-by-title-pipe';
-import { LocationType } from '../../core/models/location-type';
-import { LocationStatusEnum } from '../../core/models/location-status-enum';
-import { FormsModule } from '@angular/forms';
+import {Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {NgxPaginationModule, PaginationInstance} from 'ngx-pagination';
+import {LocationService} from '../../core/services/location.service';
+import {Location} from '../../core/models/location';
+import {ActivatedRoute, RouterModule} from '@angular/router';
+import {TruncateDescriptionPipePipe} from '../../filters/truncate-description-pipe';
+import {ElementsByStringPipe} from '../../filters/location-by-title-pipe';
+import {LocationType} from '../../core/models/location-type';
+import {LocationStatusEnum} from '../../core/models/location-status-enum';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-location-cabinet-list-component',
-  imports: [CommonModule, RouterModule,NgxPaginationModule,ElementsByStringPipe, TruncateDescriptionPipePipe, FormsModule],
+  imports: [CommonModule, RouterModule, NgxPaginationModule, ElementsByStringPipe, TruncateDescriptionPipePipe, FormsModule],
   templateUrl: './location-cabinet-list-component.html',
   styleUrl: './location-cabinet-list-component.css'
 })
@@ -29,7 +28,7 @@ export class LocationCabinetListComponent implements OnInit {
 
 // Pagination settings
   currentPage = 1;
-  itemsPerPage = 8;
+  itemsPerPage = 9;
   totalItems = 0;
   pendingCounts: Record<string, number> = {};
 
@@ -42,10 +41,10 @@ export class LocationCabinetListComponent implements OnInit {
   selectedStatus: LocationStatusEnum | 'all' = 'all'
 
   public pagingConfig: PaginationInstance = {
-      itemsPerPage: this.itemsPerPage,
-      currentPage: this.currentPage,
-      totalItems: this.totalItems
-    };
+    itemsPerPage: this.itemsPerPage,
+    currentPage: this.currentPage,
+    totalItems: this.totalItems
+  };
 
   ngOnInit() {
     this.loadUserLocations();
@@ -54,8 +53,8 @@ export class LocationCabinetListComponent implements OnInit {
     });
     this.locationService.loadLocationTypes();
     this.locationService.getLocationTypesObservable().subscribe(types => {
-    this.locationTypes = types;
-  });
+      this.locationTypes = types;
+    });
   }
 
 
@@ -95,14 +94,14 @@ export class LocationCabinetListComponent implements OnInit {
     return this.pendingCounts[locationId] || 0;
   }
 
-   onTableDataChange(event: any): void {
-        this.pagingConfig.currentPage = event;
-    }
+  onTableDataChange(event: any): void {
+    this.pagingConfig.currentPage = event;
+  }
 
-    onTableSizeChange(event: any): void {
-        this.pagingConfig.itemsPerPage = event.target.value;
-        this.pagingConfig.currentPage = 1;
-    }
+  onTableSizeChange(event: any): void {
+    this.pagingConfig.itemsPerPage = event.target.value;
+    this.pagingConfig.currentPage = 1;
+  }
 
   clearFiltersInputs() {
     this.filterTitle = '';

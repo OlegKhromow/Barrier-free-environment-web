@@ -189,7 +189,7 @@
                     (click)="viewLocation(loc.id)">
               Переглянути
             </button>
-            @if (mode === 'admin' && location?.status === 'published') {
+            @if (mode === 'admin' && location?.status !== 'published') {
               <button class="text-red-600 hover:underline"
                       (click)="openDuplicateModal(loc)">
                 Перенести дані
