@@ -32,7 +32,7 @@
       </a>
     </div>
 
-    @if (cityStats?.length) {
+    @if (cityStats.length) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @for (s of cityStats; track s.name) {
           <div class="rounded-lg border border-gray-200 p-4 hover:shadow transition">

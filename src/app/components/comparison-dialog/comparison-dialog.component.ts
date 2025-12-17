@@ -111,14 +111,12 @@ export class ComparisonDialogComponent implements OnInit {
     if (hasChanges || imagesAccepted) {
       const updatedData: any = {};
 
-      if (hasChanges) {
-        const fields = ['name', 'address', 'description', 'contacts', 'workingHours'];
-        for (const key of fields) {
-          const field = this.differentFields.find(el => el.key === key);
-          const value = field?.original ?? this.originalLocation[key];
-          if (value)
-            updatedData[key] = value;
-        }
+      const fields = ['name', 'address', 'description', 'contacts', 'workingHours'];
+      for (const key of fields) {
+        const field = this.differentFields.find(el => el.key === key);
+        const value = field?.original ?? this.originalLocation[key];
+        if (value)
+          updatedData[key] = value;
       }
 
       let unacceptedImages;

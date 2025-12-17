@@ -337,7 +337,13 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
   async uploadPendingImages(update: any) {
     if (update && update.images?.length > 0 && this.location) {
       const imageUrls = update.images;
-      const imageServiceId = this.location.imageServiceId;
+      let imageServiceId: string;
+      if (this.location.imageServiceId) {
+        imageServiceId = this.location.imageServiceId;
+      } else {
+        imageServiceId = uuidv4();
+        update.imageServiceId = imageServiceId;
+      }
 
       let imgCount = 0;
 
