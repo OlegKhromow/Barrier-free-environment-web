@@ -26,14 +26,19 @@ export class CabinetPageComponent implements OnInit {
   ngOnInit() {
     this.loading = true;
 
-    // 1️⃣ Спочатку перевіряємо валідність сесії
+    //TODO: Зробити логіку Перевірки і запуску оновлення рефреш токену в authInterceptor для всіх запитів,
+    //що потребують автентифікації по прикладу знизу. Map-page повинен бути виключений з цих сторінок, оскільки
+    //неавтентифікований користувач може з нею взаємодіяти. Тобто при падінні обох токенів - показуватиметься
+    // локації як для неавтентифікованого, а краще його взагалі розлогінити
+
+    // Спочатку перевіряємо валідність сесії
     this.authService.ensureValidSession().pipe(
       switchMap(() =>
-        // 2️⃣ Якщо все ок — завантажуємо користувача
+        // Якщо все ок — завантажуємо користувача
         this.authService.getByUsername()
       ),
       catchError((err) => {
-        // ❌ Якщо сесія невалідна (refresh теж протух)
+        // Якщо сесія невалідна (refresh теж протух)
         console.warn('Сесія користувача невалідна:', err);
         alert('Сесія завершена. Будь ласка, увійдіть знову.');
         this.authService.openLoginModal();
@@ -45,16 +50,16 @@ export class CabinetPageComponent implements OnInit {
         if (!data) return; // якщо користувач не залогінений
         this.user = data;
 
-        // 3️⃣ Отримуємо ролі
+        // Отримуємо ролі
         this.authService.getAuthoritiesByUsername().subscribe({
           next: (roles) => (this.isAdmin = roles.includes('ADMIN')),
           error: (err) => console.error('Помилка при завантаженні ролей', err),
         });
 
-        // 4️⃣ Завантажуємо типи локацій
+        // Завантажуємо типи локацій
         this.locationService.loadLocationTypes();
 
-        // 5️⃣ Завантажуємо локації користувача
+        // Завантажуємо локації користувача
         this.loadUserLocations();
       },
       error: (err) => {

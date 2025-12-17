@@ -119,27 +119,27 @@ export class AuthService {
 
 
   ensureValidSession(): Observable<void> {
-    // 1️⃣ Якщо користувач не залогінений — нічого не робимо
+    // Якщо користувач не залогінений — нічого не робимо
     if (!this.isLoggedIn()) {
       return of(void 0);
     }
 
-    // 2️⃣ Перевіряємо access токен
+    // Перевіряємо access токен
     return this.isAccessNotExpired().pipe(
       switchMap((accessValid) => {
         if (accessValid) {
-          // ✅ Access токен ще живий
+          // Access токен ще живий
           return of(void 0);
         }
 
-        // ⚠️ Access протух → перевіряємо refresh
+        // Access протух → перевіряємо refresh
         return this.isRefreshNotExpired().pipe(
           switchMap((refreshValid) => {
             if (refreshValid) {
-              // 🔁 Refresh ще живий → оновлюємо токени
+              // Refresh ще живий → оновлюємо токени
               return this.refreshToken().pipe(map(() => void 0));
             } else {
-              // ❌ Refresh теж протух → виходимо із системи
+              // Refresh теж протух → виходимо із системи
               this.logout();
               return throwError(() => new Error('Session expired'));
             }

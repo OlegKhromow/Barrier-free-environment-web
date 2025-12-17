@@ -5,7 +5,7 @@ import { AuthService } from '../core/services/security/auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
-  // 🧩 Визначаємо, який токен потрібен
+  // Визначаємо, який токен потрібен
   const isRefreshRequest =
     req.url.includes('/validate/refresh') || req.url.includes('/refresh_token');
 
