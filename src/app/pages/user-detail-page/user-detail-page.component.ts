@@ -53,7 +53,7 @@ export class UserDetailPageComponent implements OnInit {
   loadUserLocationsbyUsername(username: string) {
     this.loadingLocations = false;
 
-    // 1️⃣ Отримуємо обидва списки: звичайні і pending локації
+    // Отримуємо обидва списки: звичайні і pending локації
     this.locationService.getUserModifiedLocationsByUsername(username).subscribe({
       next: (locations) => {
         this.locations = locations;
