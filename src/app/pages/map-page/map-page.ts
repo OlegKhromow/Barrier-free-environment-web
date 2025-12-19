@@ -228,8 +228,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     this.locationStore.clear();
   }
 
-
-
   private loadRoutes(): void {
     // Якщо є попередній маршрут — видаляємо
     if (this.currentRoute) {
@@ -387,6 +385,13 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     this.isPageLoading = true;
     console.log(dto);
 
+    this.validateAndCreateLocation(dto);
+  }
+
+  private validateAndCreateLocation(dto: any) {
+    if (!dto.imageServiceId){
+      dto.imageServiceId = uuidv4();
+    }
     // Step 1: check location validity first
     this.locationService.isValid(dto).subscribe({
       next: () => {
@@ -436,13 +441,21 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private createLocationAndUploadImages(dto: any) {
+  private createLocationAndUploadImages(dto: any, onSuccess?: () => void) {
     // Step 3: create location
     this.locationService.createLocation(dto).subscribe({
       next: (createdLocation) => {
+
+        const finish = () => {
+          this.isPageLoading = false;
+          this.showCreateForm = false;
+          this.fetchLocations();
+          onSuccess?.();
+        };
+
         // Step 4: upload images if they exist
         if (dto.selectedImages && dto.selectedImages.length > 0) {
-          const imageServiceId = createdLocation.imageServiceId;
+          const imageServiceId = createdLocation.imageServiceId ? createdLocation.imageServiceId : '';
           let uploadsCompleted = 0;
           const totalUploads = dto.selectedImages.length;
 
@@ -450,14 +463,11 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
             const imageId = uuidv4();
             this.locationService.uploadLocationImage(imageServiceId, imageId, img.file).subscribe({
               next: () => {
-                console.log(`🖼️ Завантажено зображення ${img.file.name}`);
                 uploadsCompleted++;
 
                 // Коли всі завантаження завершені
                 if (uploadsCompleted === totalUploads) {
-                  this.isPageLoading = false;
-                  this.showCreateForm = false;
-                  this.fetchLocations();
+                  finish();
                 }
               },
               error: err => {
@@ -469,15 +479,12 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
 
           // Якщо немає зображень для завантаження
           if (totalUploads === 0) {
-            this.isPageLoading = false;
-            this.showCreateForm = false;
-            this.fetchLocations();
+            finish();
           }
         } else {
           // Якщо зображень немає
-          this.isPageLoading = false;
-          this.showCreateForm = false;
-          this.fetchLocations();
+          finish();
+          return;
         }
       },
       error: (err) => {
@@ -557,15 +564,11 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
 
       if (result.action === 'proceed') {
         this.formState.clearFormData();
+
         if (this.duplicateDto) {
-          this.locationService.createLocation(this.duplicateDto).subscribe({
-            next: () => {
-              this.fetchLocations();
-              this.resetDuplicateState();
-              this.showCreateForm = false;
-            },
-            error: err => console.error('Помилка при створенні локації (duplicate proceed):', err)
-          });
+          this.isPageLoading = true;
+          this.validateAndCreateLocation(this.duplicateDto);
+          this.resetDuplicateState();
         } else {
           this.resetDuplicateState();
         }

@@ -19,6 +19,7 @@ import {MatDialog} from '@angular/material/dialog';
 import {DuplicatesDialogComponent} from '../duplicates-dialog/duplicates-dialog.component';
 import {NgxMaskDirective, provideNgxMask} from 'ngx-mask';
 import {AlertService} from '../../core/services/alert.service';
+import {ImageTempStoreService} from '../../core/services/image-temp-store.service';
 
 @Component({
   selector: 'app-location-create-form',
@@ -41,8 +42,11 @@ export class LocationCreateFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private locationService = inject(LocationService);
   private alertService = inject(AlertService);
+  private imageStore = inject(ImageTempStoreService);
   private formState = inject(FormStateService);
   private dialog = inject(MatDialog);
+
+
   days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   selectedDays: { [key: string]: boolean } = {};
 
@@ -77,7 +81,12 @@ export class LocationCreateFormComponent implements OnInit {
 
     if (saved) {
       this.form.patchValue(saved.formValue);
-      this.selectedImages = saved.selectedImages || [];
+
+      const storedFiles = this.imageStore.get();
+      this.selectedImages = (saved.selectedImages || []).map((img: any, index: number) => ({
+        preview: img.preview,
+        file: storedFiles[index] ?? null
+      }));
     }
   }
 
@@ -121,7 +130,7 @@ export class LocationCreateFormComponent implements OnInit {
     this.form.patchValue({
       name: data.name || '',
       address: data.address || '',
-      ...(this.mode === 'create' ? { type: data.type.id || '' } : {}),
+      ...(this.mode === 'create' ? {type: data.type.id || ''} : {}),
       description: data.description || '',
       contacts: data.contacts || {},
       workingHours: data.workingHours || {}
@@ -141,15 +150,15 @@ export class LocationCreateFormComponent implements OnInit {
       }),
       workingHours: this.fb.group(
         this.days.reduce((acc, day) => {
-          acc[day] = this.fb.group({ open: [''], close: [''] });
+          acc[day] = this.fb.group({open: [''], close: ['']});
           return acc;
         }, {} as Record<string, FormGroup>),
-        { validators: [workingHoursValidator] }
+        {validators: [workingHoursValidator]}
       ),
       quickTime: this.fb.group({
         open: [''],
         close: ['']
-      }, { validators: [this.quickTimeValidator] }),
+      }, {validators: [this.quickTimeValidator]}),
       selectedDays: this.fb.group(
         this.days.reduce((acc, day) => {
           acc[day] = [false];
@@ -343,7 +352,7 @@ export class LocationCreateFormComponent implements OnInit {
 
     let dto = {
       ...raw,
-      ...(this.mode === 'pendingCopy' && { location_id: this.locationId }),
+      ...(this.mode === 'pendingCopy' && {location_id: this.locationId}),
       workingHours: normalizedWorkingHours,
       coordinates: this.mode === 'create' ? {lat: this.lat, lng: this.lng} : this.prefillData.coordinates,
       status: LocationStatusEnum.PENDING,
@@ -352,7 +361,7 @@ export class LocationCreateFormComponent implements OnInit {
     console.log("dto:")
     console.log(dto);
 
-    if (this.mode === 'create'){
+    if (this.mode === 'create') {
       this.locationService.checkDuplicates(dto).subscribe({
         next: (res) => {
           if (res.status === 409) {
@@ -417,6 +426,8 @@ export class LocationCreateFormComponent implements OnInit {
 
       // upload photo and create pending copy
       this.saved.emit(dto);
+      this.imageStore.clear();
+      this.formState.clearFormData();
     }
   }
 
@@ -438,8 +449,18 @@ export class LocationCreateFormComponent implements OnInit {
     latitude?: number,
     longitude?: number
   }>, dto: any) {
-    console.log("this.formState");
-    this.formState.saveFormData({formValue: this.form.value, selectedImages: this.selectedImages});
+
+    this.imageStore.set(
+      this.selectedImages
+        .map(i => i.file)
+        .filter((f): f is File => !!f)
+    );
+
+    this.formState.saveFormData({
+      formValue: this.form.value,
+      selectedImages: this.selectedImages.map(i => ({preview: i.preview}))
+    });
+
     console.log("this.formState");
     console.log(this.formState.getFormData());
 
@@ -457,6 +478,7 @@ export class LocationCreateFormComponent implements OnInit {
   }
 
   cancel() {
+    this.imageStore.clear();
     this.formState.clearFormData();
     this.initForm();
     this.close.emit(null);
