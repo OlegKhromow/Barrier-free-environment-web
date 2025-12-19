@@ -183,7 +183,7 @@ export class LocationInfoComponent implements OnChanges {
           if (comments) {
             const filtered = comments.filter(
               (cm: any) =>
-                cm.imageServiceId !== imageServiceId          // або він має текст
+                cm.comment !== null         // або він має текст
             );
 
             this.preparedComments.set(check, filtered);
