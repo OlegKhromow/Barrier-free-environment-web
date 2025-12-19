@@ -6,7 +6,7 @@
     </button>
 
     <h2 class="text-2xl font-bold text-center mb-6">
-      Порівняння змінених даних локації
+      {{ duplicateMode ? 'Перенесення даних з дублікату' : 'Порівняння змінених даних локації' }}
     </h2>
 
     <!-- Лише змінені поля -->
@@ -17,7 +17,7 @@
         @if (item.key !== 'contacts' && item.key !== 'workingHours') {
           <div class="grid grid-cols-3 gap-6">
             <div>
-              <h4 class="text-sm text-gray-500">Поточне значення</h4>
+              <h4 class="text-sm text-gray-500">{{ duplicateMode ? 'Значення дублікату' : 'Поточне значення' }}</h4>
               <pre class="text-sm whitespace-pre-line max-h-40 overflow-auto">{{ item.original || '—' }}</pre>
             </div>
 

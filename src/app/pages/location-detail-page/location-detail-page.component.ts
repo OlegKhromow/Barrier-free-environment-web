@@ -62,7 +62,7 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
           next: res => {
             this.images = res.map(item => item.value);
           }
-        })
+        });
 
         // Викликати checkDuplicates лише якщо статус pending або rejected
         this.checkDuplicates();
@@ -307,16 +307,28 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
   }
 
   async confirmChanges(update: any) {
-    if (update && this.location) {
-      console.log(update);
-      await this.uploadPendingImages(update);
-    }
+    if (!update || !this.location) return;
+
+    let imageServiceId = this.location.imageServiceId ? this.location.imageServiceId : uuidv4();
+    update.imageServiceId = imageServiceId;
+
+    console.log(update);
+
+    await this.processImages(
+      update,
+      imageServiceId,
+      this.selectedPending.imageServiceId,
+      () => this.updateLocation(update)
+    );
   }
 
 
   private updateLocation(update: any) {
-    if (Object.keys(update).length && this.location) {
+    if (this.location) {
+
       const locationId = this.location.id;
+      const imageServiceId = this.location.imageServiceId;
+
       this.locationService.updateLocationFromPending(locationId, this.selectedPending.id, update)
         .subscribe({
           next: () => {
@@ -324,71 +336,54 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
             this.closeModal();
             this.loadPendingLocations(); // оновимо список
             this.locationService.getLocationById(locationId).subscribe(loc => this.location = loc); // оновити головну локацію
+            this.locationService.getLocationImages(imageServiceId).subscribe({
+              next: res => {
+                this.images = res.map(item => item.value);
+              }
+            });
           },
           error: (err) => {
             console.error('Помилка при оновленні:', err);
           }
         });
-    } else {
-
     }
   }
 
-  async uploadPendingImages(update: any) {
-    if (update && update.images?.length > 0 && this.location) {
-      const imageUrls = update.images;
-      let imageServiceId: string;
-      if (this.location.imageServiceId) {
-        imageServiceId = this.location.imageServiceId;
-      } else {
-        imageServiceId = uuidv4();
-        update.imageServiceId = imageServiceId;
-      }
+  async processImages(update: any, targetImageServiceId: string, sourceImageServiceId: string, afterImages?: () => void): Promise<void> {
 
-      let imgCount = 0;
-
-      for (const img of imageUrls) {
-        const file = await this.urlToFile(img.value, `image-${Date.now()}.jpg`);
-
-        const imageId = uuidv4();
-        this.locationService.uploadLocationImage(imageServiceId, imageId, file).subscribe({
-          next: () =>
-            this.locationService.deleteLocationImage(this.selectedPending.imageServiceId, img.key).subscribe({
-              next: () => {
-                imgCount++;
-                if (imgCount === imageUrls.length) {
-                  this.locationService.getLocationImages(imageServiceId).subscribe({
-                    next: res => this.images = res.map(item => item.value)
-                  });
-                  delete update.images;
-                  if (Object.keys(update).length > 0) {
-                    this.updateLocation(update);
-                  } else {
-                    this.locationService.deletePendingCopy(this.selectedPending.id).subscribe({
-                      next: () => {
-                        this.alertService.open('Зміни підтверджено успішно!');
-                        this.closeModal();
-                        this.loadPendingLocations(); // оновимо список
-                      },
-                      error: err => console.error('Помилка видалення пендінгу:', err)
-                    });
-
-                  }
-                }
-              },
-              error: err => console.error('Помилка видалення зображення:', err)
-            }),
-
-          error: err => {
-            console.error('Помилка завантаження зображення:', err);
-          }
-        });
-      }
-
-    } else {
-      this.updateLocation(update);
+    if (!update?.images?.length) {
+      afterImages?.();
+      return;
     }
+
+    const images = update.images;
+    let completed = 0;
+
+    for (const img of images) {
+      const file = await this.urlToFile(img.value, `image-${Date.now()}.jpg`);
+      const imageId = uuidv4();
+
+      this.locationService.uploadLocationImage(targetImageServiceId, imageId, file).subscribe({
+        next: () =>
+          this.locationService.deleteLocationImage(sourceImageServiceId, img.key).subscribe({
+            next: () => onImageDone(),
+            error: err => console.error('Помилка видалення зображення:', err)
+          }),
+        error: err => {
+          console.error('Помилка завантаження зображення:', err);
+        }
+      });
+    }
+
+    const onImageDone = () => {
+      completed++;
+      if (completed === images.length) {
+        delete update.images;
+        afterImages?.();
+      }
+    };
   }
+
 
   async urlToFile(url: string, filename: string): Promise<File> {
     const response = await fetch(url);
@@ -427,13 +422,22 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
     this.dublicateLocation = null;
   }
 
-  confirmDuplicateChanges(update: any) {
-    if (update && this.location && this.dublicateLocation) {
-      const duplicateId = this.dublicateLocation.id;
-      this.locationService.updateDuplicateFromLocation(this.location.id, duplicateId, update)
-        .subscribe({
-          next: (res) => {
-            console.log(res);
+  async confirmDuplicateChanges(update: any) {
+
+    if (!update || !this.location || !this.dublicateLocation) return;
+
+    const duplicateId = this.dublicateLocation.id;
+    const currentId = this.location.id;
+    const imageServiceId = this.dublicateLocation.imageServiceId ?? uuidv4();
+    update.imageServiceId = imageServiceId;
+
+    await this.processImages(
+      update,
+      imageServiceId,
+      this.location.imageServiceId,
+      () => {
+        this.locationService.updateDuplicateFromLocation(currentId, duplicateId, update).subscribe({
+          next: () => {
             this.alertService.open('Зміни підтверджено успішно!');
             this.closeDuplicateModal();
 
@@ -441,11 +445,12 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
               window.location.reload();
             });
           },
-          error: (err) => {
+          error: err => {
             console.error('Помилка при оновленні:', err);
             this.alertService.open('Помилка при підтвердженні змін');
           }
         });
-    }
+      }
+    );
   }
 }
