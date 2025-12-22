@@ -1,9 +1,10 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {LocationService} from '../../core/services/location.service';
 import {BarrierlessCriteriaCheckService} from '../../core/services/barrierless-criteria-check.service';
 import {v4 as uuidv4} from 'uuid';
+import {AlertService} from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-criteria-evaluation',
@@ -22,8 +23,10 @@ export class CriteriaEvaluationComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private locationService: LocationService,
     private checkService: BarrierlessCriteriaCheckService,
+    private alertService: AlertService,
   ) {
   }
 
@@ -32,7 +35,7 @@ export class CriteriaEvaluationComponent implements OnInit {
     this.loadCriteriaTreeForUser();
   }
 
-  /** 🔹 Отримує дерево критеріїв і заповнює форму, якщо є старі відгуки */
+  /** Отримує дерево критеріїв і заповнює форму, якщо є старі відгуки */
   loadCriteriaTreeForUser() {
     this.isLoading = true;
 
@@ -68,6 +71,10 @@ export class CriteriaEvaluationComponent implements OnInit {
   initializeScoresFromTree(tree: any) {
     if (!tree?.group?.types) return;
 
+    tree.group.types = tree.group.types.filter(
+      (type: any) => type.criterias && type.criterias.length > 0
+    );
+
     tree.group.types.forEach((type: any) => {
       type.criterias.forEach((criteria: any) => {
 
@@ -78,7 +85,6 @@ export class CriteriaEvaluationComponent implements OnInit {
             value: userCheck.hasIssue ? 'no' : 'yes',
             comment: userCheck.comment || '',
             photos: [],  // спочатку порожнє
-            imageServiceId: userCheck.imageServiceId
           };
 
           console.log('Завантаження фото для критерію:', userCheck.imageServiceId, "##", userCheck);
@@ -112,37 +118,14 @@ export class CriteriaEvaluationComponent implements OnInit {
   }
 
   onEvaluationChange(criteriaId: string, value: 'yes' | 'no') {
-    if (!this.scores[criteriaId]) this.scores[criteriaId] = {};
     this.scores[criteriaId].value = value;
   }
 
   onCommentChange(event: Event, criteriaId: string) {
     const input = event.target as HTMLTextAreaElement;
-    if (!this.scores[criteriaId]) this.scores[criteriaId] = {};
     this.scores[criteriaId].comment = input.value;
   }
 
-  /*
-  onFileChange(event: Event, criteriaId: string) {
-    const input = event.target as HTMLInputElement;
-    const files = input.files;
-    if (!files) return;
-
-    const fileReaders: Promise<string>[] = Array.from(files).map(file => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target?.result as string);
-        reader.onerror = err => reject(err);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(fileReaders).then(images => {
-      if (!this.scores[criteriaId]) this.scores[criteriaId] = {};
-      this.scores[criteriaId].photos = images;
-    });
-  }
-*/
   onFileChange(event: any, criteriaId: string) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -164,43 +147,6 @@ export class CriteriaEvaluationComponent implements OnInit {
       reader.readAsDataURL(file);
     }
   }
-
-  /** Відправка на бекенд */
-
-  /*
-submitEvaluation() {
-  const formData = new FormData();
-
-  Object.entries(this.scores).forEach(([criteriaId, data]: any) => {
-    const dto = {
-      locationId: this.locationId,
-      barrierlessCriteriaId: criteriaId,
-      comment: data.comment || null,
-      hasIssue: data.value === 'no',
-      barrierFreeRating: null
-    };
-
-    formData.append('checks', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
-
-    if (data.photos) {
-      data.photos.forEach((p: { file: File }) => {
-        formData.append('photos', p.file);
-      });
-    }
-  });
-
-  this.checkService.saveAll(formData).subscribe({
-    next: res => {
-      console.log('Відповідь бекенду:', res);
-      alert('Оцінку успішно надіслано!');
-    },
-    error: err => {
-      console.error('Помилка при відправці:', err);
-      alert('Не вдалося надіслати оцінку.');
-    }
-  });
-}
-*/
 
   submitEvaluation() {
     const checkList: any[] = [];
@@ -228,7 +174,7 @@ submitEvaluation() {
         this.checkService.uploadAllCheckImages(this.locationId, imageId, formData).subscribe({
           next: res => console.log('Фото завантажено для', imageId, res),
           error: err => {
-            alert('УВАГА: ' + err.error.message);
+            this.alertService.open('УВАГА: ' + err.error.message);
             console.error('Помилка при завантаженні фото:', err)
           },
         });
@@ -238,11 +184,12 @@ submitEvaluation() {
     this.checkService.saveAll(checkList).subscribe({
       next: res => {
         console.log('Відповідь бекенду:', res);
-        alert('Оцінку успішно надіслано!');
+        this.alertService.open('Оцінку успішно надіслано!');
+        this.router.navigate(['/map']);
       },
       error: err => {
         console.error('Помилка при відправці чеків:', err);
-        alert('Не вдалося надіслати оцінку.');
+        this.alertService.open('Не вдалося надіслати оцінку.');
       }
     });
   }
@@ -287,7 +234,7 @@ submitEvaluation() {
         },
         error: err => {
           console.error('Не вдалося видалити фото:', err);
-          alert("Помилка при видаленні фото");
+          this.alertService.open("Помилка при видаленні фото");
         }
       });
   }

@@ -1,148 +1,191 @@
-<div class="p-6 max-w-5xl mx-auto">
-  <h1 class="text-2xl font-bold text-gray-800 mb-6">
-    Оцінка критеріїв безбар’єрності
-  </h1>
+<div class="max-w-6xl mx-auto px-6 py-10">
 
-  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
-    <p class="text-gray-600 text-lg font-medium animate-pulse">
-      Завантаження...
+  <!-- Заголовок -->
+  <div class="mb-10">
+    <h1 class="text-3xl font-semibold text-gray-900">
+      Оцінка критеріїв безбар’єрності
+    </h1>
+    <p class="text-gray-600 mt-2 max-w-3xl">
+      Заповніть оцінку доступності локації за визначеними критеріями.
+      Додайте коментарі та фото для об’єктивної фіксації стану.
     </p>
   </div>
 
-  <ng-container *ngIf="!isLoading">
-    <!-- Вибір типів критеріїв -->
-    <div *ngIf="criteriaTree">
-      <h2 class="text-lg font-semibold text-gray-700 mb-3">
-        Оберіть типи критеріїв для оцінювання:
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-6">
-        <label *ngFor="let type of criteriaTree.group.types" class="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            [checked]="isTypeSelected(type)"
-            (change)="toggleType(type)"
-            class="h-4 w-4 accent-green-600"
-          />
-          <span class="text-gray-700">{{ type.name }}</span>
-        </label>
-      </div>
+  @if (isLoading) {
+    <div class="flex justify-center items-center py-24">
+      <span class="text-gray-500 text-lg animate-pulse">
+        Завантаження даних…
+      </span>
     </div>
 
-    <ng-container *ngIf="selectedTypes.length === 0">
-      <p class="text-gray-500 italic">
-        Оберіть хоча б один тип критеріїв, щоб розпочати оцінку.
-      </p>
-    </ng-container>
+  } @else {
 
-    <!-- Динамічні блоки критеріїв -->
-    <div *ngFor="let type of selectedTypes" class="mb-8 border-t pt-4">
-      <h3 class="text-xl font-semibold text-green-700 mb-3">{{ type.name }}</h3>
+    <!-- Вибір типів -->
+    @if (criteriaTree) {
+      <div class="mb-10 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-medium text-gray-800 mb-4">
+          Типи критеріїв
+        </h2>
 
-      <div *ngIf="type.criterias && type.criterias.length > 0; else noCriteria">
-        <div
-          *ngFor="let c of type.criterias"
-          class="mb-6 p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
-        >
-          <p class="text-gray-800 font-medium mb-2">{{ c.description }}</p>
-
-          <!-- ✅ Оцінка (radio buttons) -->
-          <div class="flex items-center space-x-4 mb-3">
-            <label class="flex items-center space-x-1">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          @for (type of criteriaTree.group.types; track type.id) {
+            <label
+              class="flex items-center gap-3 px-4 py-2 rounded-xl
+                     border border-gray-200 cursor-pointer
+                     hover:bg-gray-50 transition">
               <input
-                type="radio"
-                name="criteria-{{ c.id }}"
-                [value]="'yes'"
-                [checked]="scores[c.id]?.value === 'yes'"
-                (change)="onEvaluationChange(c.id, 'yes')"
-                class="accent-green-600"
+                type="checkbox"
+                [checked]="isTypeSelected(type)"
+                (change)="toggleType(type)"
+                class="accent-deep-dark-blue h-4 w-4"
               />
-              <span class="text-sm text-gray-700">Відповідає критерію</span>
+              <span class="text-gray-700 text-sm font-medium">
+                {{ type.name }}
+              </span>
             </label>
-
-            <label class="flex items-center space-x-1">
-              <input
-                type="radio"
-                name="criteria-{{ c.id }}"
-                [value]="'no'"
-                [checked]="scores[c.id]?.value === 'no'"
-                (change)="onEvaluationChange(c.id, 'no')"
-                class="accent-red-600"
-              />
-              <span class="text-sm text-gray-700">Не відповідає</span>
-            </label>
-          </div>
-
-          <!-- ✅ Коментар -->
-          <div class="mb-3">
-            <label class="text-sm text-gray-600 block mb-1">Коментар:</label>
-            <textarea
-              rows="2"
-              class="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-              placeholder="Додайте коментар..."
-              (input)="onCommentChange($event, c.id)"
-            >{{ scores[c.id]?.comment || '' }}</textarea>
-          </div>
-
-          <!-- ✅ Фото -->
-<div>
-  <label class="text-sm text-gray-600 block mb-1">Додати фотографії:</label>
-  <input
-    type="file"
-    multiple
-    accept="image/*"
-    (change)="onFileChange($event, c.id)"
-    class="text-sm"
-  />
-
-<div *ngIf="scores[c.id]?.photos?.length"
-     class="mt-3 grid grid-cols-3 gap-3">
-
-  <div *ngFor="let img of scores[c.id].photos; let i = index"
-       class="relative group">
-
-    <!-- Фото -->
-    <img
-      [src]="img.preview"
-      alt="Фото критерію"
-      class="w-full aspect-square object-cover rounded-lg border shadow-sm"
-    />
-
-    <!-- Хрестик -->
-    <button
-      (click)="removePhoto(c.id, i, img)"
-      class="absolute top-1 right-1 bg-black/70 text-white rounded-full w-6 h-6 text-sm
-             hidden group-hover:flex items-center justify-center"
-    >
-      ✕
-    </button>
-
-    <!-- Назва -->
-    <p class="text-xs text-center mt-1 truncate">
-      {{ img.file?.name || 'Завантажено' }}
-    </p>
-  </div>
-</div>
-
-
-
-</div>
-
+          }
         </div>
       </div>
+    }
 
-      <ng-template #noCriteria>
-        <p class="text-gray-500">Немає критеріїв у цьому типі.</p>
-      </ng-template>
-    </div>
+    @if (selectedTypes.length === 0) {
+      <div class="text-gray-500 italic">
+        Оберіть хоча б один тип критеріїв для початку оцінювання.
+      </div>
+    }
 
-    <!-- Підсумок -->
-    <div *ngIf="selectedTypes.length > 0" class="mt-8 border-t pt-4">
-      <button
-        (click)="submitEvaluation()"
-        class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-      >
-        Надіслати оцінку
-      </button>
-    </div>
-  </ng-container>
+    <!-- Критерії -->
+    @for (type of selectedTypes; track type.id) {
+      <section class="mb-14">
+
+        <h3 class="text-2xl font-semibold text-deep-dark-blue mb-6">
+          {{ type.name }}
+        </h3>
+
+        @if (type.criterias?.length) {
+
+          <div class="space-y-6">
+            @for (c of type.criterias; track c.id) {
+
+              <div
+                class="bg-white rounded-2xl border border-gray-100
+                       shadow-sm p-6 transition hover:shadow-md">
+
+                <!-- Опис -->
+                <p class="text-gray-900 font-medium mb-4">
+                  {{ c.description }}
+                </p>
+
+                <!-- Оцінка -->
+                <div class="flex flex-wrap gap-6 mb-4">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="criteria-{{ c.id }}"
+                      [checked]="scores[c.id]?.value === 'yes'"
+                      (change)="onEvaluationChange(c.id, 'yes')"
+                      class="accent-green-600"
+                    />
+                    <span class="text-sm text-gray-700">
+                      Відповідає
+                    </span>
+                  </label>
+
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="criteria-{{ c.id }}"
+                      [checked]="scores[c.id]?.value === 'no'"
+                      (change)="onEvaluationChange(c.id, 'no')"
+                      class="accent-red-500"
+                    />
+                    <span class="text-sm text-gray-700">
+                      Не відповідає
+                    </span>
+                  </label>
+                </div>
+
+                <!-- Коментар -->
+                <div class="mb-4">
+                  <label class="text-sm text-gray-500 block mb-1">
+                    Коментар
+                  </label>
+                  <textarea
+                    rows="2"
+                    class="w-full rounded-xl border border-gray-200
+                           px-4 py-2 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                    placeholder="Опишіть деталі або зауваження"
+                    (input)="onCommentChange($event, c.id)"
+                  >{{ scores[c.id]?.comment || '' }}</textarea>
+                </div>
+
+                <!-- Фото -->
+                <div class="border-t pt-4">
+
+                  <!-- Dropzone -->
+                  <div
+                    class="flex flex-col items-center justify-center w-full border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:bg-gray-100
+                          transition duration-200 shadow-sm hover:shadow-md text-gray-600 text-center p-6 relative">
+                    <label class="cursor-pointer w-full h-full flex flex-col items-center justify-center gap-1">
+                      <span class="font-medium">Натисніть сюди щоб вибрати зображення</span>
+                      <span class="text-xs text-gray-400">Підтримуються лише зображення</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        (change)="onFileChange($event, c.id)"
+                        class="hidden"/>
+                    </label>
+
+                    <!-- Превʼю -->
+                    @if (scores[c.id]?.photos?.length) {
+                      <div class="mt-4 grid grid-cols-3 md:grid-cols-4 gap-4 w-full">
+                        @for (img of scores[c.id].photos; track $index; let i = $index) {
+                          <div class="relative group">
+
+                            <img [src]="img.preview"
+                              alt="Фото критерію"
+                              class="aspect-square w-full object-cover rounded-xl border border-gray-200 shadow-sm transition-transform duration-200 group-hover:scale-105"/>
+
+                            <!-- Кнопка видалення -->
+                            <button
+                              type="button"
+                              (click)="removePhoto(c.id, i, img)"
+                              class="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 text-white text-sm flex items-center justify-center opacity-80 hover:opacity-100 hover:scale-110 transition">
+                              ✕
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+        } @else {
+          <p class="text-gray-500 italic">
+            У цьому типі поки що немає критеріїв.
+          </p>
+        }
+
+      </section>
+    }
+
+    <!-- Submit -->
+    @if (selectedTypes.length > 0) {
+      <div class="pt-8 border-t border-gray-200 flex justify-end">
+        <button
+          (click)="submitEvaluation()"
+          class="px-8 py-3 rounded-full
+                 bg-deep-dark-blue text-white font-medium
+                 hover:bg-sky-900 transition shadow-md">
+          Надіслати оцінку
+        </button>
+      </div>
+    }
+
+  }
 </div>
