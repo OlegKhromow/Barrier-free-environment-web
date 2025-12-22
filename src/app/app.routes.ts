@@ -15,17 +15,19 @@ import {
   LocationCabinetListComponent
 } from './components/location-cabinet-list-component/location-cabinet-list-component';
 import {Cabinet} from './pages/cabinet/cabinet.component';
+import {AboutPage} from './pages/about-page/about-page';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'map',
-    pathMatch: 'full'
+    component: AboutPage
   },
+
   {
     path: 'map',
     component: MapPage
   },
+
   {path: 'evaluate/:id', component: CriteriaEvaluationComponent, canActivate: [authGuard]},
 
   {

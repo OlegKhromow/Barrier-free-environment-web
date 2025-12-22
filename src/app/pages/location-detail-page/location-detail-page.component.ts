@@ -269,6 +269,7 @@ export class LocationDetailPageComponent implements OnInit, AfterViewInit {
     const id = this.location.id;
     // todo create custom confirm
     if (!confirm('Ви впевнені, що хочете видалити локацію?')) return;
+
     this.locationService.deleteLocation(id).subscribe({
       next: () => {
         this.alertService.open('Локацію видалено');

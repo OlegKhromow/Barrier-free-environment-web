@@ -71,7 +71,7 @@ export class MenuBarComponent implements OnInit {
 
   menuItems = [
     {label: 'Карта', link: '/map', show: () => true},
-    {label: 'Про проєкт', link: '/about', show: () => true},
+    {label: 'Про проєкт', link: '/', show: () => true},
     {label: 'Адмін-панель', link: '/admin', show: () => this.isAdmin},
   ];
 
