@@ -18,10 +18,11 @@
             </button>
           </div>
         }
-        @if (currentView === 'location'){
+        @if (currentView === 'location') {
           <app-location-info [location]="displayData" [criteriaTree]="criteriaTree"></app-location-info>
         } @else {
-          <app-location-info [pendingLocation]="displayData" [criteriaTree]="criteriaTree" [location]="location"></app-location-info>
+          <app-location-info [pendingLocation]="displayData" [criteriaTree]="criteriaTree"
+                             [location]="location"></app-location-info>
         }
 
       } @else {
@@ -62,13 +63,35 @@
     </div>
 
     <!-- Нижній блок (дублікат) -->
-    <div *ngIf="duplicateMode && location" class="mt-4 border-t pt-3">
-      <p class="font-medium text-gray-700 mb-2">Це ваша локація? (перейти до редагування)</p>
-      <div class="flex gap-3">
-        <button (click)="confirmYes()" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Так</button>
-        <button (click)="confirmNo()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Ні</button>
+    @if (duplicateMode && location) {
+      <div class="mt-6 border-t border-gray-200 pt-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-2xl bg-gray-50 shadow-sm">
+          <!-- Текст -->
+          <div>
+            <p class="text-sm uppercase tracking-wide text-gray-500 mb-1">
+              Підтвердження
+            </p>
+            <p class="text-base font-medium text-gray-800">
+              Це ваша локація?<br>
+              <span class="text-gray-500 text-xs">(ви зможете перейти до редагування)</span>
+            </p>
+          </div>
+
+          <!-- Кнопки -->
+          <div class="flex gap-3 shrink-0">
+            <button type="button" (click)="confirmYes()"
+              class="px-4 rounded-2xl bg-[#0A1828] text-white font-medium hover:bg-[#132a46] transition shadow-md">
+              Так
+            </button>
+
+            <button type="button" (click)="confirmNo()"
+              class="px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
+              Ні
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    }
   </div>
 
   <!-- Нижній блок із посиланнями -->
@@ -96,9 +119,7 @@
         </div>
       } @else {
         <div class="p-2 bg-gray-50 rounded-lg border border-gray-200 text-gray-500 italic shadow-sm;">
-          Оцінювання @if (!duplicateMode) {
-          та редагування
-        } можливе лише для опублікованих локацій.
+          Оцінювання @if (!duplicateMode) {та редагування} можливе лише для опублікованих локацій.
         </div>
       }
 

@@ -67,7 +67,7 @@ export class CriteriaEvaluationComponent implements OnInit {
     });
   }
 
-  /** 🧩 Заповнює форму попередніми оцінками користувача */
+  /** Заповнює форму попередніми оцінками користувача */
   initializeScoresFromTree(tree: any) {
     if (!tree?.group?.types) return;
 
@@ -150,7 +150,10 @@ export class CriteriaEvaluationComponent implements OnInit {
 
   submitEvaluation() {
     const checkList: any[] = [];
-
+    if (Object.entries(this.scores).length == 0){
+      this.alertService.open('Не внесено жодних даних!');
+      return;
+    }
     Object.entries(this.scores).forEach(([criteriaId, data]: any) => {
       const imageId = uuidv4();
       const dto = {

@@ -35,7 +35,8 @@ export class LocationCreateFormComponent implements OnInit {
   @Output() viewDuplicate = new EventEmitter<{ id: string, similar: Array<any>, dto: any }>();
 
   @Input() mode: 'create' | 'pendingCopy' = 'create';
-  @Input() locationId?: string;
+  @Input() duplicate: boolean = false;
+  @Input() locationId?: string | null;
   @Input() prefillData?: any;
   @Output() saved = new EventEmitter<any>(); // як у pending copy
 
@@ -53,7 +54,8 @@ export class LocationCreateFormComponent implements OnInit {
   form: FormGroup = new FormGroup({});
 
   locationTypes$: Observable<LocationType[]> = this.locationService.getLocationTypesObservable();
-  selectedImages: { file: File | null, preview: string }[] = [];
+  selectedImages: (null | { id: any; file: File; preview: string; name: any })[] = [];
+
   isDragOver = false;
   isLoading = false;
 
@@ -70,6 +72,7 @@ export class LocationCreateFormComponent implements OnInit {
     if (this.mode === 'pendingCopy') {
       if (this.prefillData) {
         this.applyPrefill(this.prefillData);
+        this.restoreImagesFromStore();
       } else if (this.locationId) {
         this.locationService.getLocationById(this.locationId).subscribe({
           next: loc => this.applyPrefill(loc),
@@ -82,11 +85,20 @@ export class LocationCreateFormComponent implements OnInit {
     if (saved) {
       this.form.patchValue(saved.formValue);
 
-      const storedFiles = this.imageStore.get();
-      this.selectedImages = (saved.selectedImages || []).map((img: any, index: number) => ({
-        preview: img.preview,
-        file: storedFiles[index] ?? null
-      }));
+      this.selectedImages = (saved.selectedImages || [])
+        .map((meta: any) => {
+          const file = this.imageStore.get(meta.id);
+          if (!file) return null;
+
+          return {
+            id: meta.id,
+            file,
+            preview: URL.createObjectURL(file),
+            name: meta.name
+          };
+        })
+        .filter(Boolean);
+
     }
   }
 
@@ -135,8 +147,8 @@ export class LocationCreateFormComponent implements OnInit {
       contacts: data.contacts || {},
       workingHours: data.workingHours || {}
     });
-  }
 
+  }
 
   private async initForm() {
     const baseForm: any = {
@@ -306,12 +318,33 @@ export class LocationCreateFormComponent implements OnInit {
 // Функція для обробки файлів
   handleFiles(files: File[]) {
     files.forEach(file => {
-      if (!file.type.startsWith('image/')) return; // пропускаємо не картинки
-      this.selectedImages.push({file, preview: URL.createObjectURL(file)})
+      if (!file.type.startsWith('image/')) return;
+
+      const id = this.imageStore.save(file);
+
+      this.selectedImages.push({
+        id,
+        file,
+        name: file.name,
+        preview: URL.createObjectURL(file)
+      });
     });
   }
 
+  private restoreImagesFromStore() {
+    this.selectedImages = this.imageStore.getAll().map(({id, file}) => ({
+      id,
+      file,
+      name: file.name,
+      preview: URL.createObjectURL(file)
+    }));
+  }
+
   removeImage(index: number) {
+    const img = this.selectedImages[index];
+    if (!img) return;
+    URL.revokeObjectURL(img.preview);
+    this.imageStore.remove(img.id);
     this.selectedImages.splice(index, 1);
   }
 
@@ -356,7 +389,9 @@ export class LocationCreateFormComponent implements OnInit {
       workingHours: normalizedWorkingHours,
       coordinates: this.mode === 'create' ? {lat: this.lat, lng: this.lng} : this.prefillData.coordinates,
       status: LocationStatusEnum.PENDING,
-      selectedImages: this.selectedImages
+      selectedImages: this.selectedImages.map(img => ({
+        file: img?.file
+      }))
     };
     console.log("dto:")
     console.log(dto);
@@ -414,19 +449,20 @@ export class LocationCreateFormComponent implements OnInit {
 
       const objectsEqual = this.deepEqual(dtoNormalized, prefillNormalized);
 
-      if (objectsEqual && this.selectedImages.length === 0) {
+      if (objectsEqual && this.selectedImages.length === 0 && this.duplicate) {
         this.setLoadingState(false);
         this.alertService.open("Ви не внесли жодних змін.");
         return;
       }
       if (!this.locationId) {
         console.error('locationId is missing');
+        this.alertService.open('Щось пішло не так')
+        this.setLoadingState(false);
         return;
       }
 
       // upload photo and create pending copy
       this.saved.emit(dto);
-      this.imageStore.clear();
       this.formState.clearFormData();
     }
   }
@@ -450,15 +486,12 @@ export class LocationCreateFormComponent implements OnInit {
     longitude?: number
   }>, dto: any) {
 
-    this.imageStore.set(
-      this.selectedImages
-        .map(i => i.file)
-        .filter((f): f is File => !!f)
-    );
-
     this.formState.saveFormData({
       formValue: this.form.value,
-      selectedImages: this.selectedImages.map(i => ({preview: i.preview}))
+      selectedImages: this.selectedImages.map(img => ({
+        id: img?.id,
+        name: img?.name
+      }))
     });
 
     console.log("this.formState");
@@ -472,6 +505,7 @@ export class LocationCreateFormComponent implements OnInit {
         this.formState.clearFormData();
         this.close.emit({...dto, force: true});
       } else if (result.action === 'view' && result.id) {
+        dto.imageStorage = this.imageStore.getAll();
         this.viewDuplicate.emit({id: result.id, similar: similar, dto: dto});
       }
     });

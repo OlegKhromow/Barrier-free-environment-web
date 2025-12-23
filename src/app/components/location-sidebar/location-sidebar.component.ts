@@ -1,15 +1,15 @@
-import {Component, Input, Output, EventEmitter, OnChanges, OnInit} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Location } from '../../core/models/location';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Location} from '../../core/models/location';
 import {LocationService} from '../../core/services/location.service';
-import { Router } from '@angular/router';
+import {Router} from '@angular/router';
 
 import {LocationInfoComponent} from '../location-info/location-info.component';
 import {AuthService} from '../../core/services/security/auth.service';
 import {SlideshowComponent} from '../slideshow-component/slideshow-component';
 import {LocationCreateFormComponent} from '../location-create-form/location-create-form.component';
-import {v4 as uuidv4} from 'uuid';
 import {AlertService} from '../../core/services/alert.service';
+import {PendingCopyFacadeService} from '../../core/services/pending-copy-facade.service';
 
 @Component({
   selector: 'app-location-sidebar',
@@ -22,6 +22,7 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
   @Input() location: Location | null = null;
   // Новий @Input для duplicate режиму
   @Input() duplicateMode: boolean = false;
+  @Input() duplicateLocation: any | null = null;
   @Input() locationPendingMap: Map<Location, any> | null = null;
   images: string[] | null = null;
   imagesPending: string[] | null = null;
@@ -41,7 +42,9 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
   constructor(private locationService: LocationService,
               private router: Router,
               private authService: AuthService,
-              private alertService: AlertService) {}
+              private pendingCopyFacade: PendingCopyFacadeService,
+              private alertService: AlertService) {
+  }
 
   openPendingCopyForm(event: Event) {
     if (!this.authService.isLoggedIn()) {
@@ -76,101 +79,25 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
   }
 
   onPendingCopySaved(res: any) {
-    if (res){
-      this.loadingState.emit(true);
+    if (!res) return;
 
-      res.imageServiceId = uuidv4();
-      if (res.selectedImages && res.selectedImages.length > 0) {
-        this.checkImagesValidity(res);
-      } else {
-        // Якщо зображень немає - створюємо локацію одразу
-        this.createPendingCopyAndUploadImages(res);
-      }
-    }
-  }
-
-  private checkImagesValidity(dto: any) {
-    const imageServiceId = dto.imageServiceId;
-    let validImagesCount = 0;
-    const totalImages = dto.selectedImages.length;
-
-    dto.selectedImages.forEach((img: { file: File }) => {
-      const imageId = uuidv4();
-
-      this.locationService.imageIsValid(imageServiceId, imageId, img.file).subscribe({
-        next: () => {
-          validImagesCount++;
-
-          // Якщо всі зображення перевірені і валідні
-          if (validImagesCount === totalImages) {
-            this.createPendingCopyAndUploadImages(dto);
-          }
-        },
-        error: (err) => {
-          const message = err?.error?.message || err?.message || 'Сталася помилка при перевірці зображення.';
-          this.alertService.open(`Зображення невалідне (${img.file.name}):\n${message}`);
-        }
-      });
-    });
-  }
-
-  private createPendingCopyAndUploadImages(dto: any) {
-    // create pending copy
-    this.locationService.createPendingCopy(dto.location_id, dto).subscribe({
-      next: (pendingCopy) => {
-        // upload images if they exist
-        if (dto.selectedImages && dto.selectedImages.length > 0) {
-          const imageServiceId = pendingCopy.imageServiceId;
-          let uploadsCompleted = 0;
-          const totalUploads = dto.selectedImages.length;
-
-          dto.selectedImages.forEach((img: { file: File }) => {
-            const imageId = uuidv4();
-            this.locationService.uploadLocationImage(imageServiceId, imageId, img.file).subscribe({
-              next: () => {
-                uploadsCompleted++;
-
-                // Коли всі завантаження завершені
-                if (uploadsCompleted === totalUploads) {
-                  this.loadingState.emit(false);
-                  this.showPendingCopyForm = false;
-                  this.setPendingCopy(dto);
-                  this.alertService.open('Дані надіслано на перевірку');
-                }
-              },
-              error: err => {
-                this.loadingState.emit(false);
-                this.showPendingCopyForm = false;
-                this.alertService.open('Помилка завантаження зображення');
-                console.error('Помилка завантаження зображення:', err);
-              }
-            });
-          });
-
-        } else {
-          // Якщо зображень немає
-          this.loadingState.emit(false);
-          this.showPendingCopyForm = false;
-          this.setPendingCopy(dto);
-          this.alertService.open('Дані надіслано на перевірку');
-        }
-      },
-      error: (err) => {
+    this.pendingCopyFacade.createPendingCopy(res, {
+      onStart: () => this.loadingState.emit(true),
+      onFinish: () => {
         this.loadingState.emit(false);
-        const message =
-          err?.error?.description ||
-          err?.error?.message ||
-          err?.message ||
-          'Сталася невідома помилка при створенні локації.';
-        this.alertService.open(`Помилка при створенні локації:\n${message}`);
+        this.showPendingCopyForm = false;
+      },
+      onSuccess: pending => {
+        this.setPendingCopy(pending);
+        this.alertService.open('Дані надіслано на перевірку');
       }
     });
   }
 
-  // обробники кнопок дублікатного питання
+// обробники кнопок дублікатного питання
   confirmYes() {
     if (this.location?.id) {
-      this.router.navigate(['/evaluate', this.location.id]);
+      this.duplicateAnswer.emit('yes');
     }
   }
 
@@ -196,7 +123,7 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
   }
 
   ngOnChanges() {
-    if (this.location?.id) {
+    if (this.location) {
       this.locationService.getCriteriaTreeByTypeId(this.location.id)
         .subscribe(tree => {
           this.criteriaTree = tree
@@ -222,6 +149,8 @@ export class LocationSidebarComponent implements OnChanges, OnInit {
           this.images = res.map(item => item.value);
         }
       })
+    } else {
+      this.images = null;
     }
   }
 

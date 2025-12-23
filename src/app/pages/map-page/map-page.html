@@ -27,6 +27,7 @@
         [locationPendingMap]="locationPendingMap"
         (loadingState)="isPageLoading = $event"
         (duplicateAnswer)="onDuplicateAnswer($event)"
+        [duplicateLocation]="duplicateDto"
         (requestLogin)="openLoginModal()" class="bg-[#F0F0F0]">
       </app-location-sidebar>
 
@@ -104,12 +105,16 @@
       </div>
 
       <!-- Рендеримо компонент модалки напряму — він сам створює fixed overlay -->
-
       @if (showCreateForm && clickedLat && clickedLng) {
         <app-location-create-form
+          [mode]="createFormMode"
+          [locationId]="duplicateTargetId"
+          [prefillData]="duplicateDto"
           [lat]="clickedLat"
           [lng]="clickedLng"
+          [duplicate]="duplicateMode"
           (close)="handleFormClose($event)"
+          (saved)="onPendingCopySaved($event)"
           (viewDuplicate)="handleViewDuplicate($event)"
         ></app-location-create-form>
       }

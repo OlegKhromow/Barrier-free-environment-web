@@ -1,22 +1,33 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class ImageTempStoreService {
-  private files: File[] = [];
+  private files = new Map<string, File>();
 
-  set(files: File[]) {
-    this.files = files;
+  save(file: File): string {
+    const id = crypto.randomUUID();
+    this.files.set(id, file);
+    return id;
   }
 
-  get(): File[] {
-    return this.files;
+  get(id: string): File | null {
+    return this.files.get(id) ?? null;
+  }
+
+  getAll(): { id: string; file: File }[] {
+    return Array.from(this.files.entries()).map(([id, file]) => ({id, file}));
+  }
+
+  remove(id: string) {
+    this.files.delete(id);
   }
 
   clear() {
-    this.files = [];
+    this.files.clear();
   }
 
   has(): boolean {
-    return this.files.length > 0;
+    return this.files.size > 0;
   }
 }
+

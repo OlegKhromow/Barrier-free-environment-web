@@ -16,8 +16,10 @@ import {FormsModule} from '@angular/forms';
 import {LocateControl} from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import {LocationStore} from '../../core/stores/LocationStore';
-import { ActivatedRoute } from '@angular/router';
+import {ActivatedRoute} from '@angular/router';
 import {AlertService} from '../../core/services/alert.service';
+import {ImageTempStoreService} from '../../core/services/image-temp-store.service';
+import {PendingCopyFacadeService} from '../../core/services/pending-copy-facade.service';
 
 
 @Component({
@@ -45,6 +47,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   addingMode = false;
   tempMarker: L.Marker | null = null;
   showCreateForm = false;
+  createFormMode: 'create' | 'pendingCopy' = 'create';
   clickedLat: number | null = null;
   clickedLng: number | null = null;
   locationPendingMap = new Map<Location, any>();
@@ -64,6 +67,8 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   private locationService = inject(LocationService);
   private alertService = inject(AlertService);
   private locationStore = inject(LocationStore);
+  private imageStore = inject(ImageTempStoreService);
+  private pendingCopyFacade = inject(PendingCopyFacadeService);
   private dialog = inject(MatDialog);
   private formState = inject(FormStateService);
   private authService = inject(AuthService);
@@ -122,7 +127,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       sessionStorage.setItem('mapPageLoaded', 'true');
     }
   }
-
 
 
   toggleAddingMode(): void {
@@ -389,7 +393,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private validateAndCreateLocation(dto: any) {
-    if (!dto.imageServiceId){
+    if (!dto.imageServiceId) {
       dto.imageServiceId = uuidv4();
     }
     // Step 1: check location validity first
@@ -449,6 +453,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
         const finish = () => {
           this.isPageLoading = false;
           this.showCreateForm = false;
+          this.imageStore.clear();
           this.fetchLocations();
           onSuccess?.();
         };
@@ -540,7 +545,9 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     console.log('<<< Вийшов з duplicateMode');
 
     if (answer === 'yes') {
-      window.location.href = '/';
+      this.createFormMode = 'pendingCopy';
+      this.duplicateMode = false;
+      this.showCreateForm = true;
       return;
     }
 
@@ -661,7 +668,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const { lat, lng } = lastEvent.latlng;
+    const {lat, lng} = lastEvent.latlng;
     console.log("latlng")
     console.log(lat)
     console.log(lng)
@@ -684,6 +691,35 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
         alert("Помилка при побудові маршруту");
       }
     });
+  }
+
+  onPendingCopySaved(res: any) {
+    if (!res) return;
+
+    this.pendingCopyFacade.createPendingCopy(res, {
+      onStart: () => (this.isPageLoading = true),
+      onFinish: () => {
+        this.reloadPage();
+      },
+      onSuccess: () => {
+        this.reloadPage();
+        this.fetchLocations();
+        this.alertService.open('Pending copy створено');
+      }
+    });
+  }
+
+  private reloadPage() {
+    this.duplicateMode = false;
+    this.createFormMode = 'create';
+    this.selectedLocation = null;
+    this.duplicateSimilar = null;
+    this.duplicateDto = null;
+    this.duplicateTargetId = null;
+    this.isPageLoading = false;
+    this.showCreateForm = false;
+    this.fetchLocations();
+
   }
 
 }
