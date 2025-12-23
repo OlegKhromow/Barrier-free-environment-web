@@ -102,6 +102,21 @@ export class CriteriaEvaluationComponent implements OnInit {
     });
   }
 
+  private ensureScore(criteriaId: string) {
+    if (!this.scores[criteriaId]) {
+      this.scores[criteriaId] = {
+        value: null,
+        comment: '',
+        photos: []
+      };
+    } else {
+      this.scores[criteriaId].photos ??= [];
+      this.scores[criteriaId].comment ??= '';
+      this.scores[criteriaId].value ??= null;
+    }
+  }
+
+
 
   toggleType(type: any) {
     const index = this.selectedTypes.indexOf(type);
@@ -118,10 +133,12 @@ export class CriteriaEvaluationComponent implements OnInit {
   }
 
   onEvaluationChange(criteriaId: string, value: 'yes' | 'no') {
+    this.ensureScore(criteriaId);
     this.scores[criteriaId].value = value;
   }
 
   onCommentChange(event: Event, criteriaId: string) {
+    this.ensureScore(criteriaId);
     const input = event.target as HTMLTextAreaElement;
     this.scores[criteriaId].comment = input.value;
   }
@@ -130,9 +147,7 @@ export class CriteriaEvaluationComponent implements OnInit {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    if (!this.scores[criteriaId]) {
-      this.scores[criteriaId] = {value: null, comment: '', photos: []};
-    }
+    this.ensureScore(criteriaId);
 
     for (let file of files) {
       const reader = new FileReader();
