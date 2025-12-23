@@ -85,6 +85,7 @@ export class CriteriaEvaluationComponent implements OnInit {
             value: userCheck.hasIssue ? 'no' : 'yes',
             comment: userCheck.comment || '',
             photos: [],  // спочатку порожнє
+            imageServiceId: userCheck.imageServiceId || null,
           };
 
           console.log('Завантаження фото для критерію:', userCheck.imageServiceId, "##", userCheck);
@@ -115,7 +116,6 @@ export class CriteriaEvaluationComponent implements OnInit {
       this.scores[criteriaId].value ??= null;
     }
   }
-
 
 
   toggleType(type: any) {
@@ -155,7 +155,8 @@ export class CriteriaEvaluationComponent implements OnInit {
       reader.onload = () => {
         this.scores[criteriaId].photos.push({
           file,
-          preview: reader.result as string   // <<< ОЦЕ ВАЖЛИВО
+          preview: reader.result as string,   // <<< ОЦЕ ВАЖЛИВО
+          backendId: null,
         });
       };
 
@@ -165,12 +166,12 @@ export class CriteriaEvaluationComponent implements OnInit {
 
   submitEvaluation() {
     const checkList: any[] = [];
-    if (Object.entries(this.scores).length == 0){
+    if (Object.entries(this.scores).length == 0) {
       this.alertService.open('Не внесено жодних даних!');
       return;
     }
     Object.entries(this.scores).forEach(([criteriaId, data]: any) => {
-      const imageId = uuidv4();
+      const imageId = data.imageServiceId ? data.imageServiceId : uuidv4();
       const dto = {
         locationId: this.locationId,
         barrierlessCriteriaId: criteriaId,
@@ -185,14 +186,15 @@ export class CriteriaEvaluationComponent implements OnInit {
       if (data.photos?.length) {
         const formData = new FormData();
         data.photos.forEach((p: { file: File }) => {
-          formData.append('files', p.file); // Тепер масив файлів
+          if (p.file)
+            formData.append('files', p.file); // Тепер масив файлів
         });
 
         console.log('Завантаження фото для', imageId);
         this.checkService.uploadAllCheckImages(this.locationId, imageId, formData).subscribe({
           next: res => console.log('Фото завантажено для', imageId, res),
           error: err => {
-            this.alertService.open('УВАГА: ' + err.error.message);
+            // this.alertService.open('УВАГА: ' + err.error.message);
             console.error('Помилка при завантаженні фото:', err)
           },
         });
